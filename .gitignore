@@ -29,6 +29,9 @@ dist-ssr
 .env.*.local
 .supabase
 
+# Firebase client config (restored in CI from GOOGLE_SERVICES_JSON_B64)
+google-services.json
+
 # Ignore unrelated old projects (keep BudgetApp clean)
 Tier-App-Generator/
 attendance_new/

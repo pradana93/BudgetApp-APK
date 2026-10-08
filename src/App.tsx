@@ -5,6 +5,7 @@ import { SessionProvider } from "@/hooks/useSession";
 import { ToastProvider } from "@/components/ui/toast";
 import { Layout } from "@/components/Layout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { NativeEffects } from "@/components/NativeEffects";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Dashboard from "@/pages/Dashboard";
@@ -29,6 +30,7 @@ export default function App(){
     <LanguageProvider>
     <SessionProvider>
       <ToastProvider>
+        <NativeEffects />
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
