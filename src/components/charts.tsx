@@ -27,7 +27,7 @@ export const smallTick = {
 export const barTrack: { fill: string; radius: number } = { fill: "hsl(var(--muted))", radius: 7 };
 
 /** Rounded solid pine bars on a tonal track. */
-export const pineBar: { fill: string; radius: number[]; barSize: number } = {
+export const pineBar: { fill: string; radius: [number, number, number, number]; barSize: number } = {
   fill: "hsl(var(--primary))",
   radius: [7, 7, 3, 3],
   barSize: 26,
