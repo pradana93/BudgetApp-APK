@@ -38,19 +38,24 @@ jobs:
         run: |
           echo "$GOOGLE_SERVICES_JSON_B64" | base64 -d > /tmp/google-services.json
           mkdir -p ~/.android
-          echo "$ANDROID_KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
-          keytool -list -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey > /dev/null
-          keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey 2>/dev/null | grep SHA256
+          echo "$ANDROID_KEYSTORE_B64" | base64 -d > /tmp/budgetapp.keystore
+          cp /tmp/budgetapp.keystore ~/.android/debug.keystore
+          keytool -list -keystore /tmp/budgetapp.keystore -storepass android -alias androiddebugkey > /dev/null
+          keytool -list -v -keystore /tmp/budgetapp.keystore -storepass android -alias androiddebugkey 2>/dev/null | grep SHA256
           GOOGLE_SERVICES_JSON_PATH=/tmp/google-services.json npm run android:patch
         env:
           GOOGLE_SERVICES_JSON_B64: ${{ secrets.GOOGLE_SERVICES_JSON_B64 }}
           ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
 
-      - name: Gradle assembleDebug
+      - name: Gradle assembleDebug (explicit shared signing)
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug \
+            -Pandroid.injected.signing.store.file=/tmp/budgetapp.keystore \
+            -Pandroid.injected.signing.store.password=android \
+            -Pandroid.injected.signing.key.alias=androiddebugkey \
+            -Pandroid.injected.signing.key.password=android
 
       - name: Verify APK signature (fail on key drift)
         run: |
