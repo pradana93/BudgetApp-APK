@@ -35,17 +35,39 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
   const loc = useLocation();
   const nav = useNavigate();
   const [drawer, setDrawer] = React.useState(false);
-  const drawerRef = React.useRef(false);
-  drawerRef.current = drawer;
+  const [closing, setClosing] = React.useState(false);
+  const stateRef = React.useRef({ drawer: false, closing: false });
+  stateRef.current = { drawer, closing };
+  const closeTimer = React.useRef<number | null>(null);
+
+  const closeDrawer = React.useCallback((animated: boolean) => {
+    if (closeTimer.current) {
+      window.clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+    if (!stateRef.current.drawer) return;
+    if (animated) {
+      setClosing(true);
+      closeTimer.current = window.setTimeout(() => {
+        setDrawer(false);
+        setClosing(false);
+        closeTimer.current = null;
+      }, 180);
+    } else {
+      setDrawer(false);
+      setClosing(false);
+    }
+  }, []);
+
+  const closeDrawerRef = React.useRef(closeDrawer);
+  closeDrawerRef.current = closeDrawer;
 
   React.useEffect(
     () =>
       registerDrawerCloser(() => {
-        if (drawerRef.current) {
-          setDrawer(false);
-          return true;
-        }
-        return false;
+        if (!stateRef.current.drawer) return false;
+        closeDrawerRef.current(true);
+        return true;
       }),
     []
   );
@@ -78,7 +100,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
 
   const go = (to: string) => {
     void tapLight();
-    setDrawer(false);
+    closeDrawer(false);
     nav(to);
   };
 
@@ -152,7 +174,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
           type="button"
           aria-label={t("req.new")}
           onClick={() => go("/requests/new")}
-          className="m3-press fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom))] right-4 z-40 h-14 rounded-2xl bg-primary px-4 flex items-center gap-2 text-primary-foreground shadow-lg"
+          className="m3-press m3-fab-in fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom))] right-4 z-40 h-14 rounded-2xl bg-primary px-4 flex items-center gap-2 text-primary-foreground shadow-lg"
         >
           <Plus className="h-6 w-6" />
           <span className="text-sm font-medium pr-1">{t("req.new")}</span>
@@ -173,11 +195,11 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
                 className="m3-press flex flex-col items-center gap-1 min-w-0"
               >
                 <span
-                  className={`relative rounded-full px-5 py-1.5 transition-colors ${
+                  className={`relative rounded-full px-5 py-1.5 transition-all duration-200 ${
                     active ? "bg-primary/15 text-foreground" : "text-muted-foreground"
                   }`}
                 >
-                  <Icon className="h-6 w-6" strokeWidth={active ? 2.25 : 2} />
+                  <Icon className={`h-6 w-6 transition-transform duration-200 ${active ? "scale-110" : ""}`} strokeWidth={active ? 2.25 : 2} />
                   {!!tb.badge && tb.badge > 0 && (
                     <span className="absolute top-0 right-2 rounded-full bg-destructive text-destructive-foreground text-[10px] px-1 leading-4">
                       {tb.badge}
@@ -196,8 +218,8 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
       {/* M3 modal navigation drawer */}
       {drawer && (
         <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setDrawer(false)} />
-          <aside className="absolute left-0 top-0 bottom-0 w-[85%] max-w-[320px] bg-background rounded-r-2xl flex flex-col pt-[env(safe-area-inset-top)]">
+          <div className={`absolute inset-0 bg-black/40 ${closing ? "m3-scrim-out" : "m3-scrim-in"}`} onClick={() => closeDrawer(true)} />
+          <aside className={`absolute left-0 top-0 bottom-0 w-[85%] max-w-[320px] bg-background rounded-r-2xl flex flex-col pt-[env(safe-area-inset-top)] ${closing ? "m3-drawer-out" : "m3-drawer-in"}`}>
             <div className="flex items-center gap-3 px-5 h-16">
               <span className="rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 p-2 text-white">
                 <Wallet className="h-5 w-5" />
@@ -206,12 +228,12 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
                 <div className="font-semibold truncate">BudgetApp</div>
                 <div className="text-xs text-muted-foreground truncate">{displayName}</div>
               </div>
-              <button type="button" aria-label="Close" onClick={() => setDrawer(false)} className="m3-press rounded-full p-2">
+              <button type="button" aria-label="Close" onClick={() => closeDrawer(true)} className="m3-press rounded-full p-2">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
-              {drawerItems.map((n) => {
+              {drawerItems.map((n, i) => {
                 const active = n.to === "/" ? loc.pathname === "/" : loc.pathname.startsWith(n.to);
                 const Icon = n.icon;
                 return (
@@ -219,7 +241,8 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
                     key={n.to}
                     type="button"
                     onClick={() => go(n.to)}
-                    className={`m3-press w-full flex items-center gap-3 px-4 h-14 rounded-full text-sm ${
+                    style={{ animationDelay: `${Math.min(i, 8) * 28}ms` }}
+                    className={`m3-press m3-item-in w-full flex items-center gap-3 px-4 h-14 rounded-full text-sm ${
                       active ? "bg-primary/15 font-semibold" : "font-medium text-muted-foreground"
                     }`}
                   >
@@ -232,7 +255,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
             <div className="p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
               <button
                 type="button"
-                onClick={async () => { await signOut(); setDrawer(false); nav("/login"); }}
+                onClick={async () => { await signOut(); closeDrawer(false); nav("/login"); }}
                 className="m3-press w-full flex items-center gap-3 px-4 h-14 rounded-full text-sm font-medium text-muted-foreground"
               >
                 <LogOut className="h-5 w-5 shrink-0" />

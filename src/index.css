@@ -212,3 +212,50 @@ body {
   user-select: none;
   -webkit-user-select: none;
 }
+
+/* ---- M3 motion (native shell) ---- */
+@keyframes m3-drawer-in {
+  from { transform: translateX(-48px); opacity: 0.4; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes m3-drawer-out {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(-32px); opacity: 0; }
+}
+@keyframes m3-scrim-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes m3-scrim-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes m3-fab-in {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes m3-banner-in {
+  from { transform: translateY(28px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes m3-item-in {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.m3-drawer-in { animation: m3-drawer-in 0.28s cubic-bezier(0.2, 0, 0, 1) both; }
+.m3-drawer-out { animation: m3-drawer-out 0.18s cubic-bezier(0.4, 0, 1, 1) both; }
+.m3-scrim-in { animation: m3-scrim-in 0.2s ease-out both; }
+.m3-scrim-out { animation: m3-scrim-out 0.18s ease-in both; }
+.m3-fab-in { animation: m3-fab-in 0.3s cubic-bezier(0.34, 1.4, 0.64, 1) both; }
+.m3-banner-in { animation: m3-banner-in 0.32s cubic-bezier(0.2, 0, 0, 1) both; }
+.m3-item-in { animation: m3-item-in 0.26s cubic-bezier(0.2, 0, 0, 1) both; }
+.native-app .m3-press {
+  transition: transform 0.18s cubic-bezier(0.2, 0, 0, 1), background-color 0.18s ease;
+}
+.native-app .m3-press:active {
+  transform: scale(0.96);
+}
+/* snappier page switches on phones; desktop keeps the slower fade */
+.native-app .animate-fade-up {
+  animation-duration: 0.25s;
+}

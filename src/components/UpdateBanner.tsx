@@ -15,7 +15,7 @@ export function UpdateBanner({ update, onDismiss }: { update: AppUpdate; onDismi
   };
 
   return (
-    <div className="fixed inset-x-3 bottom-24 md:bottom-3 mb-[env(safe-area-inset-bottom)] z-50 rounded-xl border border-border bg-card p-4 shadow-lg">
+    <div className="m3-banner-in fixed inset-x-3 bottom-24 md:bottom-3 mb-[env(safe-area-inset-bottom)] z-50 rounded-xl border border-border bg-card p-4 shadow-lg">
       <div className="text-sm font-semibold">Update available: {update.versionName}</div>
       <p className="mt-1 text-xs text-muted-foreground">
         Download the new version and tap the file to install. Your data is safe.
