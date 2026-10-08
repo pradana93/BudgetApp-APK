@@ -6,11 +6,11 @@ export type AvatarTheme = {
 };
 
 export const AVATAR_THEMES: AvatarTheme[] = [
-  { id: "ocean", cls: "from-blue-500 to-violet-600" },
-  { id: "forest", cls: "from-emerald-500 to-teal-600" },
-  { id: "sunset", cls: "from-amber-500 to-rose-500" },
-  { id: "grape", cls: "from-fuchsia-500 to-purple-700" },
-  { id: "slate", cls: "from-slate-500 to-slate-800" },
+  { id: "ocean", cls: "bg-emerald-900" },
+  { id: "forest", cls: "bg-teal-700" },
+  { id: "sunset", cls: "bg-amber-600" },
+  { id: "grape", cls: "bg-rose-800" },
+  { id: "slate", cls: "bg-stone-800" },
 ];
 
 const keyFor = (userId: string) => `budgetapp-avatar-${userId}`;
@@ -37,7 +37,7 @@ export function setAvatarTheme(userId: string, themeId: string): void {
   }
 }
 
-/** Reactive avatar gradient for the signed-in user (updates live across the app). */
+/** Reactive avatar color for the signed-in user (updates live across the app). */
 export function useAvatarTheme(userId: string | null | undefined): string {
   const [themeId, setThemeId] = React.useState<string>(() => {
     if (!userId || typeof window === "undefined") return AVATAR_THEMES[0].id;

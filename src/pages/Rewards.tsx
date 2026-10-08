@@ -70,8 +70,8 @@ export default function Rewards() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white p-6 flex flex-wrap items-center gap-4">
-        <span className="rounded-2xl bg-white/15 p-3 backdrop-blur"><Trophy className="h-8 w-8" /></span>
+      <div className="rounded-xl bg-amber-600 text-white p-6 flex flex-wrap items-center gap-4">
+        <span className="rounded-2xl bg-white/15 p-3"><Trophy className="h-8 w-8" /></span>
         <div className="flex-1 min-w-[200px]">
           <h1 className="text-2xl font-bold">{t("reward.title")}</h1>
           <p className="text-sm text-white/85">{t("reward.sub")}</p>
@@ -106,13 +106,13 @@ export default function Rewards() {
           return (
             <Card key={u.id} className={open ? "card-lift border-amber-500/40" : "opacity-70"}>
               <CardContent className="pt-6 flex flex-col items-center gap-2 text-center">
-                <span className={`rounded-2xl p-3 ${open ? "bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg" : "bg-muted text-muted-foreground"}`}>
+                <span className={`rounded-2xl p-3 ${open ? "bg-amber-500 text-white shadow-lg" : "bg-muted text-muted-foreground"}`}>
                   <Icon className="h-6 w-6" />
                 </span>
                 <div className="font-bold">{meta.name}</div>
                 <div className="text-xs text-muted-foreground">{meta.desc}</div>
                 <div className="w-full h-1.5 rounded bg-muted overflow-hidden">
-                  <div className={`h-1.5 rounded ${open ? "bg-gradient-to-r from-amber-500 to-orange-500" : "bg-muted-foreground/40"}`} style={{ width: `${Math.round((u.progress / u.goal) * 100)}%` }} />
+                  <div className={`h-1.5 rounded ${open ? "bg-amber-500" : "bg-muted-foreground/40"}`} style={{ width: `${Math.round((u.progress / u.goal) * 100)}%` }} />
                 </div>
                 <div className="text-xs tabular text-muted-foreground">{u.progress}/{u.goal}</div>
               </CardContent>

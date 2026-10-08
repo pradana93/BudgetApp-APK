@@ -39,14 +39,14 @@ export function PullToRefresh({ onRefresh, children }: { onRefresh: () => Promis
       const ready = progress >= 1;
       if (wrap) {
         if (ready) {
-          wrap.classList.add("bg-gradient-to-br", "from-violet-600", "to-blue-600", "text-white", "border-violet-500/40", "shadow-lg");
+          wrap.classList.add("bg-foreground", "text-background", "border-transparent", "shadow-lg");
           wrap.classList.remove("bg-white", "border-border", "shadow-md");
-          (ic.firstChild as HTMLElement)?.classList.add("text-white");
+          (ic.firstChild as HTMLElement)?.classList.add("text-background");
           (ic.firstChild as HTMLElement)?.classList.remove("text-muted-foreground");
         } else {
-          wrap.classList.remove("bg-gradient-to-br", "from-violet-600", "to-blue-600", "text-white", "border-violet-500/40", "shadow-lg");
+          wrap.classList.remove("bg-foreground", "text-background", "border-transparent", "shadow-lg");
           wrap.classList.add("bg-white", "border-border", "shadow-md");
-          (ic.firstChild as HTMLElement)?.classList.remove("text-white");
+          (ic.firstChild as HTMLElement)?.classList.remove("text-background");
           (ic.firstChild as HTMLElement)?.classList.add("text-muted-foreground");
         }
       }

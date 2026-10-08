@@ -88,7 +88,7 @@ export default function Notifications() {
       </div>
       <Card><CardHeader><CardTitle>{t("notif.recent")}</CardTitle></CardHeader><CardContent className="space-y-2">
         {isLoading && <div className="text-sm text-muted-foreground">{t("common.loading")}</div>}
-        {(data?.length ?? 0) === 0 && !isLoading && <div className="flex flex-col items-center gap-2 py-8 text-center"><span className="rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-3 text-white shadow-lg"><Bell className="h-6 w-6" /></span><div className="text-sm text-muted-foreground">{t("notif.empty")}</div></div>}
+        {(data?.length ?? 0) === 0 && !isLoading && <div className="flex flex-col items-center gap-2 py-8 text-center"><span className="rounded-2xl bg-accent p-3 text-accent-foreground shadow-lg"><Bell className="h-6 w-6" /></span><div className="text-sm text-muted-foreground">{t("notif.empty")}</div></div>}
         {data?.map((n) => (
           <SwipeRow
             key={n.id}

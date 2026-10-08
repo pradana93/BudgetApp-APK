@@ -185,7 +185,7 @@ export function CommandPalette({ open, onClose, onAsk }: { open: boolean; onClos
                 <button
                   onClick={() => item.run()}
                   onMouseEnter={() => setActive(idx)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-left ${item.id === "focus-ask" ? "border border-violet-500/30 bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md" : ""} ${item.id !== "focus-ask" && idx === safeActive ? "bg-primary text-primary-foreground" : item.id !== "focus-ask" ? "hover:bg-accent" : ""}`}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-left ${item.id === "focus-ask" ? "border border-primary/30 bg-primary text-primary-foreground shadow-md" : ""} ${item.id !== "focus-ask" && idx === safeActive ? "bg-primary text-primary-foreground" : item.id !== "focus-ask" ? "hover:bg-accent" : ""}`}
                 >
                   <item.icon className="h-4 w-4 shrink-0" />
                   <span className="flex-1 truncate">{item.label}</span>

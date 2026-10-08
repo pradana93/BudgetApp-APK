@@ -30,7 +30,7 @@ type Recurring = { id: string; title: string; body: string; amount: number; cate
 type Template = { title: string; amount: string; category_id: string; direction: "expense" | "income"; account_id: string };
 
 const ICONS: Record<string, React.ElementType> = { wallet: Wallet, cash: DollarSign, bca: CreditCard, bank: Landmark, entertainment: Film, food: Utensils, car: Car, bills: Receipt, shopping: ShoppingCart, investment: PiggyBank, transfer: ArrowLeftRight };
-const GRAD: Record<string, string> = { blue: "from-blue-500 to-indigo-500", violet: "from-violet-500 to-purple-500", emerald: "from-emerald-500 to-teal-500", amber: "from-amber-500 to-orange-500", rose: "from-rose-500 to-pink-500", slate: "from-slate-500 to-slate-600", cyan: "from-cyan-500 to-teal-500", orange: "from-orange-500 to-red-500" };
+const GRAD: Record<string, string> = { blue: "bg-blue-800", violet: "bg-violet-800", emerald: "bg-emerald-800", amber: "bg-amber-600", rose: "bg-rose-700", slate: "bg-slate-700", cyan: "bg-cyan-800", orange: "bg-orange-700" };
 const TAG_COLORS = ["blue","violet","emerald","amber","rose","slate","cyan","orange"];
 const FREQUENCIES = [{ value: "weekly", label: "Weekly" }, { value: "biweekly", label: "Biweekly" }, { value: "monthly", label: "Monthly" }, { value: "yearly", label: "Yearly" }];
 
@@ -469,7 +469,7 @@ export default function Space() {
             return (
               <button key={a.id} onClick={() => setAccFilter(active ? "all" : a.id)} className={cn("snap-start shrink-0 rounded-lg px-2.5 sm:px-3 py-2 text-left min-w-[88px] sm:min-w-[100px] border transition-all relative group/acct", active ? "bg-card border-primary shadow-sm" : "bg-card border-border hover:shadow-sm")}>
                 <div className="flex items-center gap-1.5 mb-1">
-                  <span className={cn("h-5 w-5 rounded flex items-center justify-center text-white bg-gradient-to-br shrink-0", GRAD[a.color] ?? GRAD.blue)}><Icon className="h-3 w-3" /></span>
+                  <span className={cn("h-5 w-5 rounded flex items-center justify-center text-white shrink-0", GRAD[a.color] ?? GRAD.blue)}><Icon className="h-3 w-3" /></span>
                   <span className="font-medium text-xs truncate">{a.name}</span>
                 </div>
                 <div className="font-bold text-sm text-primary tabular">{formatMoney(bal.toNumber())}</div>
@@ -514,7 +514,7 @@ export default function Space() {
           <div className="space-y-1.5">{[0,1,2,3].map(i => <div key={i} className="skeleton h-[52px]" />)}</div>
         ) : grouped.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center animate-fade-up">
-            <span className="rounded-2xl bg-gradient-to-br from-violet-500 to-blue-600 p-3 text-white shadow-lg"><Wallet className="h-6 w-6" /></span>
+            <span className="rounded-2xl bg-primary p-3 text-primary-foreground shadow-lg"><Wallet className="h-6 w-6" /></span>
             <div className="font-medium">No transactions this month</div>
             <div className="text-sm text-muted-foreground">Track spending, income & transfers between ledgers</div>
             <div className="flex gap-2">
@@ -546,12 +546,12 @@ export default function Space() {
                       const toAcc = accById(e.transfer_to_account_id);
                       const isTransfer = e.direction === "transfer";
                       const Icon = isTransfer ? ArrowLeftRight : catIcon(cat?.name ?? e.title);
-                      const iconGrad = isTransfer ? "from-blue-500 to-cyan-500" : e.direction === "income" ? "from-emerald-500 to-teal-500" : cat ? GRAD[cat.color] ?? GRAD.slate : "from-rose-500 to-pink-500";
+                      const iconGrad = isTransfer ? "bg-sky-800" : e.direction === "income" ? "bg-emerald-800" : cat ? GRAD[cat.color] ?? GRAD.slate : "bg-rose-700";
                       const amtColor = isTransfer ? "text-blue-600" : e.direction === "income" ? "text-emerald-600" : "text-rose-600";
                       return (
                         <SwipeRow key={e.id} actions={[{ label: "Edit", onClick: () => openEdit(e) }, { label: "Delete", kind: "destructive", onClick: () => setConfirmDelete(e.id) }]}>
                         <div className="flex items-center gap-2 py-1.5 px-1 rounded-lg hover:bg-muted/30 active:bg-muted/50 transition-colors group cursor-pointer overflow-hidden" onClick={() => openEdit(e)}>
-                          <span className={cn("h-8 w-8 rounded-lg flex items-center justify-center text-white shrink-0 bg-gradient-to-br shadow-sm", iconGrad)}><Icon className="h-3.5 w-3.5" /></span>
+                          <span className={cn("h-8 w-8 rounded-lg flex items-center justify-center text-white shrink-0 shadow-sm", iconGrad)}><Icon className="h-3.5 w-3.5" /></span>
                           <div className="flex-1 min-w-0 overflow-hidden">
                             <div className="flex items-center gap-1.5">
                               <span className="font-medium text-[13px] truncate">{e.title}</span>

@@ -4,48 +4,48 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 46 30% 95%;
+    --foreground: 162 28% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 162 28% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --popover-foreground: 162 28% 11%;
+    --primary: 158 55% 27%;
+    --primary-foreground: 48 30% 97%;
+    --secondary: 150 18% 89%;
+    --secondary-foreground: 162 30% 14%;
+    --muted: 46 22% 89%;
+    --muted-foreground: 160 10% 38%;
+    --accent: 38 85% 88%;
+    --accent-foreground: 32 70% 24%;
+    --destructive: 0 68% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 150 14% 84%;
+    --input: 150 14% 84%;
+    --ring: 158 55% 27%;
     --radius: 0.75rem;
     color-scheme: light;
   }
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --background: 162 26% 7%;
+    --foreground: 46 24% 92%;
+    --card: 162 22% 10%;
+    --card-foreground: 46 24% 92%;
+    --popover: 162 22% 10%;
+    --popover-foreground: 46 24% 92%;
+    --primary: 152 48% 62%;
+    --primary-foreground: 162 45% 9%;
+    --secondary: 160 18% 14%;
+    --secondary-foreground: 46 20% 88%;
+    --muted: 160 16% 12%;
+    --muted-foreground: 150 10% 62%;
+    --accent: 36 55% 26%;
+    --accent-foreground: 40 80% 80%;
+    --destructive: 0 60% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 160 16% 16%;
+    --input: 160 16% 16%;
+    --ring: 152 48% 62%;
     color-scheme: dark;
   }
 }
@@ -149,10 +149,7 @@ body {
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, hsl(var(--primary)), #8b5cf6);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: hsl(var(--primary));
 }
 
 .tabular {
@@ -165,11 +162,22 @@ main h1 {
   text-wrap: balance;
 }
 
+/* Display serif for figures and editorial headers (falls back to Georgia offline) */
+.font-display {
+  font-family: "Fraunces", Georgia, "Times New Roman", serif;
+  letter-spacing: -0.01em;
+}
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
 /* Stat numbers: shrink on phones, wrap long currency strings instead of overflowing the card */
 .stat-value {
-  font-weight: 700;
+  font-family: "Fraunces", Georgia, "Times New Roman", serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   line-height: 1.75rem;
   overflow-wrap: break-word;
   min-width: 0;

@@ -44,7 +44,7 @@ export function Tour({ userId }: { userId: string }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog" aria-label={t("tour.s1t")}>
       <div className="w-full max-w-sm rounded-2xl border bg-card p-6 text-center shadow-2xl animate-pop">
-        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 text-white shadow-lg">
+        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
           <s.icon className="h-7 w-7" />
         </span>
         <h2 className="mt-4 text-xl font-bold tracking-tight">{t(s.title)}</h2>

@@ -125,11 +125,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex bg-muted/30 relative">
-      <div aria-hidden className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute top-1/3 -right-32 h-96 w-96 rounded-full bg-violet-500/10 blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute top-1/3 -right-32 h-96 w-96 rounded-full bg-amber-500/10 blur-3xl" />
       <aside className="w-[270px] shrink-0 border-r border-border/60 bg-card/80 backdrop-blur hidden md:flex flex-col sticky top-0 h-screen">
         <div className="p-5 pb-4 flex items-center gap-3">
-          <span className="rounded-2xl bg-gradient-to-br from-blue-600 to-violet-600 p-2.5 text-white shadow-lg shadow-blue-500/25 shrink-0">
+          <span className="rounded-2xl bg-primary p-2.5 text-primary-foreground shadow-lg shrink-0">
             <Wallet className="h-5 w-5" />
           </span>
           <div className="min-w-0">
@@ -148,8 +148,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             const active = loc.pathname === n.to || (n.to !== "/" && loc.pathname.startsWith(n.to));
             const isChangelog = n.key === "nav.changelogs" && changelogNew > 0;
             return (
-              <Link key={n.to} to={n.to} className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all ${active ? "bg-gradient-to-r from-blue-600 to-violet-600 text-white shadow-md shadow-blue-500/25" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`}>
-                <n.icon className="h-4 w-4 shrink-0" /> {t(n.key)} {isChangelog && <span className="ml-auto rounded-full bg-violet-600 text-white text-[10px] px-1.5 py-0.5 leading-none">{changelogNew}</span>}
+              <Link key={n.to} to={n.to} className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all ${active ? "bg-foreground text-background shadow-md" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`}>
+                <n.icon className="h-4 w-4 shrink-0" /> {t(n.key)} {isChangelog && <span className="ml-auto rounded-full bg-accent text-accent-foreground text-[10px] px-1.5 py-0.5 leading-none">{changelogNew}</span>}
               </Link>
             );
           })}
@@ -159,7 +159,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {profile ? (
               <UserAvatar userId={profile.id} name={displayName} className="h-9 w-9 rounded-full" />
             ) : (
-              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${avatarCls} text-xs font-bold text-white`}>{initialsOf(displayName)}</span>
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${avatarCls} text-xs font-bold text-white`}>{initialsOf(displayName)}</span>
             )}
             <div className="min-w-0 flex-1">
               <div className="text-sm font-semibold truncate" title={profile?.email ?? undefined}>{profile?.email ?? profile?.display_name ?? t("nav.userFallback")}</div>
@@ -185,12 +185,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <LanguageToggle />
             {profile
               ? <UserAvatar userId={profile.id} name={displayName} className="ml-1 h-8 w-8 text-[11px]" />
-              : <span title={profile?.email ?? undefined} className={`ml-1 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br ${avatarCls} text-[11px] font-bold text-white`}>{initialsOf(displayName)}</span>}
+              : <span title={profile?.email ?? undefined} className={`ml-1 flex h-8 w-8 items-center justify-center rounded-full ${avatarCls} text-[11px] font-bold text-white`}>{initialsOf(displayName)}</span>}
           </div>
         </header>
         <header className="md:hidden sticky top-0 z-30 border-b border-border/60 bg-card/95 backdrop-blur p-3 pt-[calc(0.75rem+env(safe-area-inset-top))] flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <span className="rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 p-1.5 text-white"><Wallet className="h-4 w-4" /></span>
+            <span className="rounded-lg bg-primary p-1.5 text-primary-foreground"><Wallet className="h-4 w-4" /></span>
             <span className="font-bold">BudgetApp</span>
           </span>
           <span className="flex items-center gap-1">
@@ -210,7 +210,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   onClick={() => { void tapLight(); navgt(tb.to); }}
                   className={`relative flex min-w-0 flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors ${active ? "text-primary" : "text-muted-foreground"}`}
                 >
-                  {active && <span className="absolute top-0 h-0.5 w-10 rounded-full bg-gradient-to-r from-blue-500 to-violet-500" />}
+                  {active && <span className="absolute top-0 h-0.5 w-10 rounded-full bg-primary" />}
                   <span className="relative">
                     <tb.icon className="h-5 w-5" />
                     {!!tb.badge && tb.badge > 0 && <span className="absolute -top-1.5 -right-2.5 rounded-full bg-destructive text-destructive-foreground text-[10px] px-1 leading-4">{tb.badge}</span>}
@@ -221,7 +221,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             })}
           </div>
         </nav>
-        <button onClick={() => setPaletteOpen(true)} aria-label={t("cmd.search")} className="md:hidden fixed bottom-24 right-4 z-40 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 p-3.5 text-white shadow-xl active:scale-95 transition-transform">
+        <button onClick={() => setPaletteOpen(true)} aria-label={t("cmd.search")} className="md:hidden fixed bottom-24 right-4 z-40 rounded-full bg-primary p-3.5 text-primary-foreground shadow-xl active:scale-95 transition-transform">
           <Search className="h-5 w-5" />
         </button>
         <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} onAsk={() => setAskOpen(true)} />

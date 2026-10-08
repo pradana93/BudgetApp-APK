@@ -69,7 +69,7 @@ function patchFile(file, transform, label) {
   if (fs.existsSync(bgXml)) {
     fs.writeFileSync(
       bgXml,
-      `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#1D4ED8</color>\n</resources>\n`
+      `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#14532D</color>\n</resources>\n`
     );
     n++;
   }

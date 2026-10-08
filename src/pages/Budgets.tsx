@@ -82,7 +82,7 @@ export default function Budgets(){
       {isLoading ? <div className="space-y-2">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-12" />)}</div>
       : (data?.length ?? 0) === 0 ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center animate-fade-up">
-          <span className="rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-3 text-white shadow-lg"><Wallet className="h-6 w-6" /></span>
+          <span className="rounded-2xl bg-primary p-3 text-primary-foreground shadow-lg"><Wallet className="h-6 w-6" /></span>
           <div className="font-medium">{t("budgets.noBudgets")}</div>
       {isOwner && <Button onClick={()=>nav("/budgets/new")}>{t("budgets.new")}</Button>}
         </div>

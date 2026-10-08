@@ -14,13 +14,13 @@ export default function Changelogs() {
   }, []);
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div className="rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white p-6">
-        <h1 className="text-2xl font-bold flex items-center gap-2"><History className="h-6 w-6" />{t("changelog.title")}</h1>
-        <p className="text-sm text-white/80 mt-1">{t("changelog.sub")}</p>
+      <div className="rounded-2xl bg-foreground text-background p-6">
+        <h1 className="font-display text-2xl font-semibold flex items-center gap-2"><History className="h-6 w-6" />{t("changelog.title")}</h1>
+        <p className="text-sm opacity-80 mt-1">{t("changelog.sub")}</p>
       </div>
       {CHANGELOGS.map((c) => (
         <Card key={c.version} className="overflow-hidden">
-          <div className={`h-1 w-full ${c.tag === "flagship" ? "bg-gradient-to-r from-violet-600 to-blue-600" : c.tag === "feat" ? "bg-emerald-500" : "bg-muted"}`} />
+          <div className={`h-1 w-full ${c.tag === "flagship" ? "bg-primary" : c.tag === "feat" ? "bg-emerald-500" : "bg-muted"}`} />
           <CardHeader className="pb-2">
             <CardTitle className="flex flex-wrap items-center gap-2 text-base">
               {c.version} <Badge variant={c.tag === "flagship" ? "default" : c.tag === "feat" ? "approved" : "secondary"}>{c.tag ?? "update"}</Badge>

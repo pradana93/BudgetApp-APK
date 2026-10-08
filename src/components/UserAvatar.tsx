@@ -46,7 +46,7 @@ export function UserAvatar({ userId, name, className, textClass, avatarUrl, vers
   return (
     <span
       className={cn(
-        "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-xs font-bold text-white",
+        "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white",
         hashCls(userId),
         className,
         textClass

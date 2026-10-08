@@ -303,7 +303,7 @@ export default function NewRequest(){
                 {suggestion.auto && <Badge variant="approved">{t("match.auto")}</Badge>}
                 {form.category !== suggestion.category && <Button size="sm" variant="outline" onClick={()=>{ setManualCat(true); setForm({...form,category:suggestion.category}); }}>{t("match.apply")}</Button>}
               </div>
-              <div className="h-1.5 rounded bg-muted overflow-hidden"><div className="h-1.5 rounded bg-gradient-to-r from-blue-500 to-violet-500 transition-all" style={{ width: `${suggestion.confidence}%` }} /></div>
+              <div className="h-1.5 rounded bg-muted overflow-hidden"><div className="h-1.5 rounded bg-primary transition-all" style={{ width: `${suggestion.confidence}%` }} /></div>
               <ul className="text-xs text-muted-foreground space-y-0.5">{suggestion.reasons.map((r, i) => <li key={i}>• {r}</li>)}</ul>
             </div>
           )}
@@ -391,7 +391,7 @@ export default function NewRequest(){
                   </div>
                 </div>
                 {ocr && (
-                  <div className="rounded-lg bg-gradient-to-r from-violet-600 to-blue-600 text-white p-3 text-xs space-y-1">
+                  <div className="rounded-lg bg-accent text-accent-foreground p-3 text-xs space-y-1">
                     <div className="font-bold flex items-center gap-1.5">✨ {t("new.ocrTitle")}</div>
                     <div>{t("new.ocrMerchant", { name: ocr.merchant })}</div>
                     <div>{t("new.ocrAmount", { amount: formatMoney(Number(ocr.amount)) })}</div>

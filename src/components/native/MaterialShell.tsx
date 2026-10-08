@@ -158,7 +158,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
             {profile ? (
               <UserAvatar userId={profile.id} name={displayName} className="h-8 w-8 text-[11px]" />
             ) : (
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-violet-600 text-[11px] font-bold text-white">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
                 {initialsOf(displayName)}
               </span>
             )}
@@ -221,7 +221,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
           <div className={`absolute inset-0 bg-black/40 ${closing ? "m3-scrim-out" : "m3-scrim-in"}`} onClick={() => closeDrawer(true)} />
           <aside className={`absolute left-0 top-0 bottom-0 w-[85%] max-w-[320px] bg-background rounded-r-2xl flex flex-col pt-[env(safe-area-inset-top)] ${closing ? "m3-drawer-out" : "m3-drawer-in"}`}>
             <div className="flex items-center gap-3 px-5 h-16">
-              <span className="rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 p-2 text-white">
+              <span className="rounded-xl bg-primary p-2 text-primary-foreground">
                 <Wallet className="h-5 w-5" />
               </span>
               <div className="min-w-0 flex-1">

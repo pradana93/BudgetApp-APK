@@ -315,7 +315,7 @@ export default function Admin() {
 
   return (
     <PullToRefresh onRefresh={refresh}><div className="space-y-6">
-      <div className="rounded-xl bg-gradient-to-r from-primary to-blue-500 text-primary-foreground p-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="rounded-xl bg-foreground text-background p-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t("admin.title")}</h1>
           <p className="text-sm opacity-90">{t("admin.sub")}</p>
@@ -352,11 +352,11 @@ export default function Admin() {
       </Card>
 
       <Card className="overflow-hidden">
-        <div className="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-4">
+        <div className="bg-foreground text-background p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <div className="font-bold flex items-center gap-2">{t("admin.inbox")} {approved.length > 0 && <Badge variant="secondary" className="bg-white text-slate-900">{t("admin.ready", { n: approved.length })}</Badge>}</div>
-              <div className="text-xs text-white/70">{t("admin.inboxSub")}</div>
+              <div className="font-bold flex items-center gap-2">{t("admin.inbox")} {approved.length > 0 && <Badge variant="secondary" className="bg-background text-foreground">{t("admin.ready", { n: approved.length })}</Badge>}</div>
+              <div className="text-xs opacity-70">{t("admin.inboxSub")}</div>
             </div>
             <Button size="sm" variant="secondary" onClick={() => bulkReconcile(80)} disabled={bulk.running || reconcileOne.isPending || approved.filter((r) => scoreOf(r).score >= 80).length === 0}>
               {bulk.running ? t("admin.reconciling", { done: bulk.done, total: bulk.total }) : t("admin.reconcileAll", { n: 80 })}

@@ -129,12 +129,12 @@ export default function NewBudget() {
         <ArrowLeft className="h-4 w-4" /> {t("budgets.backToBudgets")}
       </Link>
 
-      <div className="rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 text-white p-6 md:p-8 flex items-center gap-4 overflow-hidden relative">
-        <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-        <span className="rounded-2xl bg-white/15 p-3 backdrop-blur shrink-0"><Wallet className="h-7 w-7" /></span>
+      <div className="rounded-2xl bg-foreground text-background p-6 md:p-8 flex items-center gap-4 overflow-hidden relative">
+        <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-primary/25 blur-2xl" />
+        <span className="rounded-2xl bg-background/10 p-3 shrink-0"><Wallet className="h-7 w-7" /></span>
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{t("budgets.dialogTitle")}</h1>
-          <p className="text-sm text-white/85 mt-1">{t("budgets.dialogSub")}</p>
+          <h1 className="font-display text-2xl md:text-3xl font-semibold tracking-tight">{t("budgets.dialogTitle")}</h1>
+          <p className="text-sm opacity-80 mt-1">{t("budgets.dialogSub")}</p>
         </div>
       </div>
 
@@ -214,9 +214,9 @@ export default function NewBudget() {
 
         <aside className="lg:sticky lg:top-6">
           <Card className="overflow-hidden border-primary/25 shadow-xl shadow-primary/10">
-            <div className="bg-gradient-to-br from-blue-600 to-violet-700 text-white p-5">
-              <div className="text-xs uppercase tracking-wider text-white/70">{t("budgets.summary")}</div>
-              <div className="mt-1 text-3xl font-bold tabular">
+            <div className="bg-foreground text-background p-5">
+              <div className="text-xs uppercase tracking-wider opacity-70">{t("budgets.summary")}</div>
+              <div className="mt-1 font-display tnum text-3xl font-semibold tracking-tight">
                 {valid ? formatMoney(Number(form.total_amount), form.currency || "IDR") : "—"}
               </div>
               <div className="mt-1 text-sm text-white/80">

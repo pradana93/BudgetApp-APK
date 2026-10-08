@@ -169,15 +169,15 @@ export default function Settings(){
   };
 
   return <div className="space-y-6 max-w-2xl">
-    <div className="rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white p-6 flex flex-wrap items-center gap-4 shadow-lg overflow-hidden relative">
-      <div aria-hidden className="pointer-events-none absolute -right-10 -top-14 h-44 w-44 rounded-full bg-white/15 blur-2xl" />
+    <div className="rounded-2xl bg-foreground text-background p-6 flex flex-wrap items-center gap-4 shadow-lg overflow-hidden relative">
+      <div aria-hidden className="pointer-events-none absolute -right-10 -top-14 h-44 w-44 rounded-full bg-primary/25 blur-2xl" />
       <div className="relative shrink-0">
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={uploading}
           aria-label={photoSrc ? t("profile.change") : t("profile.upload")}
-          className={`group relative block h-20 w-20 overflow-hidden rounded-3xl ring-4 ring-white/30 shadow-xl transition-transform hover:scale-[1.03] active:scale-95 ${photoSrc ? "" : `bg-gradient-to-br ${avatarCls}`}`}
+          className={`group relative block h-20 w-20 overflow-hidden rounded-3xl ring-4 ring-white/30 shadow-xl transition-transform hover:scale-[1.03] active:scale-95 ${photoSrc ? "" : `${avatarCls}`}`}
         >
           {photoSrc
             ? <img src={photoSrc} alt={name} onError={() => setImgFailed(true)} className="h-full w-full object-cover" />
@@ -225,7 +225,7 @@ export default function Settings(){
           return (
             <button key={th.id} type="button" title={th.id} aria-label={th.id} aria-pressed={selected}
               onClick={() => { if (profile) setAvatarTheme(profile.id, th.id); }}
-              className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br ${th.cls} text-white shadow-md transition-transform active:scale-95 ${selected ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : "hover:scale-105"}`}>
+              className={`flex h-12 w-12 items-center justify-center rounded-full ${th.cls} text-white shadow-md transition-transform active:scale-95 ${selected ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : "hover:scale-105"}`}>
               {selected && <Check className="h-5 w-5" />}
             </button>
           );

@@ -93,7 +93,7 @@ export default function Dashboard(){
     return [...map.entries()];
   }, [budgets]);
   const chartData = budgets?.map(b=> ({ name: String(b.name ?? "").slice(0,12), spend: Number(b.allocated_amount), total: Number(b.total_amount) })) ?? [];
-  const statusColors: Record<string, string> = { pending: "#f59e0b", approved: "#10b981", rejected: "#ef4444", reconciled: "#3b82f6" };
+  const statusColors: Record<string, string> = { pending: "#f59e0b", approved: "#10b981", rejected: "#ef4444", reconciled: "#0d9488" };
   const statusData = ["pending", "approved", "rejected", "reconciled"]
     .map((s) => ({ name: s, value: requests?.filter((r) => r.status === s).length ?? 0 }))
     .filter((d) => d.value > 0);
@@ -230,20 +230,24 @@ export default function Dashboard(){
   }, [qc]);
 
   return <PullToRefresh onRefresh={refresh}><div className="space-y-6">
-    <div className="rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white p-5 md:p-6 shadow-lg overflow-hidden relative">
-      <div aria-hidden className="pointer-events-none absolute -right-10 -top-14 h-44 w-44 rounded-full bg-white/15 blur-2xl" />
-      <div aria-hidden className="pointer-events-none absolute -left-8 -bottom-10 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-      <div className="relative flex flex-col lg:flex-row lg:items-center gap-4 justify-between">
+    <div className="rounded-2xl bg-foreground text-background p-5 md:p-6 shadow-lg overflow-hidden relative">
+      <div aria-hidden className="pointer-events-none absolute -right-10 -top-14 h-44 w-44 rounded-full bg-primary/25 blur-2xl" />
+      <div className="relative flex flex-col lg:flex-row lg:items-end gap-4 justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">{t(greetKey)}{who ? `, ${who}` : ""} <span className={`h-2 w-2 rounded-full animate-pulse ${pulseHealth === "over" ? "bg-red-300" : pulseHealth === "atRisk" ? "bg-amber-300" : "bg-emerald-300"}`} /></h1>
-          <p className="text-sm text-white/80 mt-0.5">{today} • {formatMoney(totalAvailable)} {t("dash.available")} • {burn30 > 0 ? `${formatMoney(burn30)}/day` : t("dash.noBurn")}</p>
+          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.14em] opacity-70">
+            <span className={`h-2 w-2 rounded-full animate-pulse ${pulseHealth === "over" ? "bg-red-400" : pulseHealth === "atRisk" ? "bg-amber-400" : "bg-emerald-400"}`} />
+            {today}
+          </div>
+          <h1 className="font-display text-lg mt-1 font-medium opacity-90">{t(greetKey)}{who ? `, ${who}` : ""}</h1>
+          <div className="font-display tnum text-4xl md:text-5xl font-semibold tracking-tight mt-1">{formatMoney(totalAvailable)}</div>
+          <p className="text-sm opacity-70 mt-1">{t("dash.available")} • {burn30 > 0 ? `${formatMoney(burn30)}/day` : t("dash.noBurn")}</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="hidden sm:block h-12 w-28 opacity-90">
             <ResponsiveContainer width="100%" height="100%"><AreaChart data={trend}><Area type="monotone" dataKey="total" stroke="#fff" strokeWidth={2} fill="rgba(255,255,255,0.18)" dot={false} /></AreaChart></ResponsiveContainer>
           </div>
           <div className="flex flex-col gap-1.5 items-end">
-            <Badge variant="pending" className="bg-white text-indigo-700 hover:bg-white">{t("dash.pendingBadge", { count: pending })}</Badge>
+            <Badge variant="pending" className="bg-background text-foreground hover:bg-background">{t("dash.pendingBadge", { count: pending })}</Badge>
             {runway !== null && <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${pulseHealth === "over" ? "bg-red-500/20 text-white border border-red-300/30" : pulseHealth === "atRisk" ? "bg-amber-500/20 text-white border border-amber-300/30" : "bg-emerald-500/20 text-white border border-emerald-300/30"}`}>{t("dash.runwayBadge", { n: runway })}</span>}
           </div>
         </div>
@@ -251,30 +255,30 @@ export default function Dashboard(){
     </div>
     {!loading && (budgets?.length ?? 0) === 0 && (requests?.length ?? 0) === 0 && (
       <Card className="overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white p-6 md:p-8 text-center">
-          <h2 className="text-xl md:text-2xl font-bold tracking-tight">{t("dash.welcome")}</h2>
-          <p className="mt-1 text-sm text-white/85 max-w-md mx-auto">{t("dash.welcomeSub")}</p>
+        <div className="bg-foreground text-background p-6 md:p-8 text-center">
+          <h2 className="font-display text-xl md:text-2xl font-semibold tracking-tight">{t("dash.welcome")}</h2>
+          <p className="mt-1 text-sm opacity-80 max-w-md mx-auto">{t("dash.welcomeSub")}</p>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             {isOwner && <Link to="/budgets/new"><Button variant="secondary">{t("budgets.new")}</Button></Link>}
             <Link to="/requests/new"><Button variant="secondary">{t("req.new")}</Button></Link>
-            <Link to="/rewards"><Button variant="outline" className="bg-white/10 text-white border-white/30 hover:bg-white/20 hover:text-white">{t("nav.rewards")}</Button></Link>
+            <Link to="/rewards"><Button variant="outline" className="bg-background/10 text-background border-background/30 hover:bg-background/20 hover:text-background">{t("nav.rewards")}</Button></Link>
           </div>
         </div>
       </Card>
     )}
     <div className="grid gap-4 md:grid-cols-3">
       {loading ? [0, 1, 2].map((i) => <div key={i} className="skeleton h-[104px]" />) : <>
-      <Card className="card-lift"><CardHeader><CardTitle className="text-sm font-medium flex items-center gap-2"><span className="rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 p-1.5 text-white"><Wallet className="h-4 w-4" /></span>{t("dash.budgets")}</CardTitle></CardHeader><CardContent><div className="stat-value">{budgetsCount}</div></CardContent></Card>
-      <Card className="card-lift"><CardHeader><CardTitle className="text-sm font-medium flex items-center gap-2"><span className="rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 p-1.5 text-white"><TrendingUp className="h-4 w-4" /></span>{t("dash.totalAllocated")}</CardTitle></CardHeader><CardContent><div className="space-y-1">{spendByCurrency.length===0 ? <div className="stat-value">{formatMoney(0)}</div> : spendByCurrency.map(([c, v]) => <div key={c} className="stat-value">{formatMoney(v, c)}</div>)}</div></CardContent></Card>
-      <Card className="card-lift"><CardHeader><CardTitle className="text-sm font-medium flex items-center gap-2"><span className="rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 p-1.5 text-white"><Clock className="h-4 w-4" /></span>{t("dash.pendingRequests")}</CardTitle></CardHeader><CardContent><div className="stat-value">{pendingCount}</div></CardContent></Card>
+      <Card className="card-lift"><CardHeader><CardTitle className="text-sm font-medium flex items-center gap-2"><span className="rounded-lg bg-primary/12 text-primary p-1.5"><Wallet className="h-4 w-4" /></span>{t("dash.budgets")}</CardTitle></CardHeader><CardContent><div className="stat-value">{budgetsCount}</div></CardContent></Card>
+      <Card className="card-lift"><CardHeader><CardTitle className="text-sm font-medium flex items-center gap-2"><span className="rounded-lg bg-primary/12 text-primary p-1.5"><TrendingUp className="h-4 w-4" /></span>{t("dash.totalAllocated")}</CardTitle></CardHeader><CardContent><div className="space-y-1">{spendByCurrency.length===0 ? <div className="stat-value">{formatMoney(0)}</div> : spendByCurrency.map(([c, v]) => <div key={c} className="stat-value">{formatMoney(v, c)}</div>)}</div></CardContent></Card>
+      <Card className="card-lift"><CardHeader><CardTitle className="text-sm font-medium flex items-center gap-2"><span className="rounded-lg bg-accent text-accent-foreground p-1.5"><Clock className="h-4 w-4" /></span>{t("dash.pendingRequests")}</CardTitle></CardHeader><CardContent><div className="stat-value">{pendingCount}</div></CardContent></Card>
       </>}
     </div>
     <Card className="overflow-hidden">
-      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4 flex flex-wrap items-center gap-3">
+      <div className="bg-accent text-accent-foreground p-4 flex flex-wrap items-center gap-3">
         <Trophy className="h-6 w-6 shrink-0" />
         <div className="flex-1 min-w-[160px]">
           <div className="font-bold">{t("reward.level", { n: myLvl.level })} • {myXp} XP</div>
-          <div className="mt-1.5 h-2 rounded-full bg-white/25 overflow-hidden"><div className="h-2 rounded-full bg-white transition-all" style={{ width: `${Math.round((myLvl.into / myLvl.span) * 100)}%` }} /></div>
+          <div className="mt-1.5 h-2 rounded-full bg-accent-foreground/20 overflow-hidden"><div className="h-2 rounded-full bg-accent-foreground transition-all" style={{ width: `${Math.round((myLvl.into / myLvl.span) * 100)}%` }} /></div>
         </div>
         <div className="hidden sm:flex gap-1.5">
           {myUnlocks.filter(isUnlocked).slice(0, 3).map((u) => (

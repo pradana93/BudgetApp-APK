@@ -41,7 +41,7 @@ async function applyNativeShell(): Promise<void> {
     const apply = () => {
       const dark = document.documentElement.classList.contains("dark");
       void StatusBar.setOverlaysWebView({ overlay: false }).catch(() => undefined);
-      void StatusBar.setBackgroundColor({ color: dark ? "#020817" : "#ffffff" }).catch(() => undefined);
+      void StatusBar.setBackgroundColor({ color: dark ? "#0C1511" : "#F6F2E9" }).catch(() => undefined);
       void StatusBar.setStyle({ style: dark ? Style.Dark : Style.Light }).catch(() => undefined);
     };
     apply();
