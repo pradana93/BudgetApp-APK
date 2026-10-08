@@ -13,6 +13,7 @@ import { AskDrawer } from "@/components/AskDrawer";
 import { Tour } from "@/components/Tour";
 import { LanguageToggle, useLang } from "@/i18n/LanguageContext";
 import { initialsOf, useAvatarTheme } from "@/lib/avatar";
+import { tapLight } from "@/lib/haptics";
 import { CHANGELOGS } from "@/lib/changelogs";
 import type { StringKey } from "@/i18n/translations";
 
@@ -206,7 +207,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               return (
                 <button
                   key={tb.to}
-                  onClick={() => navgt(tb.to)}
+                  onClick={() => { void tapLight(); navgt(tb.to); }}
                   className={`relative flex min-w-0 flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors ${active ? "text-primary" : "text-muted-foreground"}`}
                 >
                   {active && <span className="absolute top-0 h-0.5 w-10 rounded-full bg-gradient-to-r from-blue-500 to-violet-500" />}

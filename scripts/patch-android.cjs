@@ -57,6 +57,40 @@ function patchFile(file, transform, label) {
     fs.copyFileSync(splashSrc, splashDest);
     n++;
   }
+  // adaptive-icon foreground (anydpi-v26 shadows PNGs on Android 8+)
+  const fgSrc = path.join(ROOT, "assets", "icon", "ic_launcher_foreground.png");
+  const fgDest = path.join(RES, "drawable", "ic_launcher_foreground.png");
+  if (fs.existsSync(fgSrc) && fs.existsSync(path.dirname(fgDest))) {
+    fs.copyFileSync(fgSrc, fgDest);
+    n++;
+  }
+  // launcher background brand blue
+  const bgXml = path.join(RES, "values", "ic_launcher_background.xml");
+  if (fs.existsSync(bgXml)) {
+    fs.writeFileSync(
+      bgXml,
+      `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#1D4ED8</color>\n</resources>\n`
+    );
+    n++;
+  }
+  // deterministic adaptive-icon XMLs (API 26+)
+  const anydpi = path.join(RES, "mipmap-anydpi-v26");
+  const adaptive = (round) =>
+    `<?xml version="1.0" encoding="utf-8"?>\n<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n    <background android:drawable="@color/ic_launcher_background" />\n    <foreground android:drawable="@drawable/ic_launcher_foreground" />\n</adaptive-icon>\n`;
+  if (fs.existsSync(anydpi)) {
+    fs.writeFileSync(path.join(anydpi, "ic_launcher.xml"), adaptive(false));
+    fs.writeFileSync(path.join(anydpi, "ic_launcher_round.xml"), adaptive(true));
+    n += 2;
+  }
+  // app shortcuts artwork
+  const scDir = path.join(RES, "drawable");
+  for (const sc of ["sc_new", "sc_dash"]) {
+    const src = path.join(ROOT, "assets", "shortcuts", `${sc}.png`);
+    if (fs.existsSync(src) && fs.existsSync(scDir)) {
+      fs.copyFileSync(src, path.join(scDir, `${sc}.png`));
+      n++;
+    }
+  }
   console.log(`brand assets copied (${n} files)`);
 }
 if (process.env.GOOGLE_SERVICES_JSON_PATH) {
@@ -144,5 +178,56 @@ patchFile(
   },
   "adjustResize"
 );
+
+// 8. predictive back (Android 14 gesture preview)
+patchFile(
+  MANIFEST,
+  (s) => {
+    if (s.includes("enableOnBackInvokedCallback")) return s;
+    return s.replace("<application", '<application\n        android:enableOnBackInvokedCallback="true"');
+  },
+  "predictive back"
+);
+
+// 9. app shortcuts (long-press launcher): Dashboard + New request
+{
+  const RES = path.join(ANDROID, "app", "src", "main", "res");
+  const xmlDir = path.join(RES, "xml");
+  const shortcuts = `<?xml version="1.0" encoding="utf-8"?>\n<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">\n    <shortcut android:shortcutId="dashboard" android:enabled="true" android:icon="@drawable/sc_dash" android:shortcutShortLabel="@string/app_name">\n        <intent android:action="android.intent.action.VIEW" android:targetPackage="com.pradana93.budgetapp" android:targetClass="com.pradana93.budgetapp.MainActivity" android:data="budgetapp://dashboard" />\n    </shortcut>\n    <shortcut android:shortcutId="new-request" android:enabled="true" android:icon="@drawable/sc_new" android:shortcutShortLabel="@string/title_activity_main">\n        <intent android:action="android.intent.action.VIEW" android:targetPackage="com.pradana93.budgetapp" android:targetClass="com.pradana93.budgetapp.MainActivity" android:data="budgetapp://new-request" />\n    </shortcut>\n</shortcuts>\n`;
+  if (fs.existsSync(xmlDir)) {
+    fs.writeFileSync(path.join(xmlDir, "shortcuts.xml"), shortcuts);
+    console.log("shortcuts.xml written");
+  }
+  patchFile(
+    MANIFEST,
+    (s) => {
+      if (s.includes("android.app.shortcuts")) return s;
+      return s.replace(
+        "</activity>",
+        '            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />\n        </activity>'
+      );
+    },
+    "shortcuts meta-data"
+  );
+}
+
+// 10. navigation bar matches light theme (dark icons on white)
+{
+  const styles = path.join(ANDROID, "app", "src", "main", "res", "values", "styles.xml");
+  patchFile(
+    styles,
+    (s) => {
+      let out = s;
+      if (!out.includes("navigationBarColor")) {
+        out = out.replace(
+          /(<style name="AppTheme"[^>]*>)/,
+          `$1\n        <item name="android:navigationBarColor">@android:color/white</item>\n        <item name="android:windowLightNavigationBar">true</item>`
+        );
+      }
+      return out;
+    },
+    "navigation bar theme"
+  );
+}
 
 console.log("android patch complete");
