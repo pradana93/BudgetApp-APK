@@ -43,29 +43,21 @@ jobs:
           npx cap add android
           npx cap sync android
           echo "$GOOGLE_SERVICES_JSON_B64" | base64 -d > /tmp/google-services.json
-          echo "$ANDROID_KEYSTORE_B64" | base64 -d > /tmp/budgetapp.keystore
+          mkdir -p ~/.android
+          echo "$ANDROID_KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
           GOOGLE_SERVICES_JSON_PATH=/tmp/google-services.json \
           APK_VERSION_CODE="${{ inputs.version_code }}" \
           APK_VERSION_NAME="${{ inputs.version_name }}" \
-          APK_KEYSTORE_PATH=/tmp/budgetapp.keystore \
           npm run android:patch
         env:
           GOOGLE_SERVICES_JSON_B64: ${{ secrets.GOOGLE_SERVICES_JSON_B64 }}
           ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
       - name: Gradle assembleDebug
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
-        env:
-          APK_KEYSTORE_PATH: /tmp/budgetapp.keystore
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
       - name: Publish GitHub Release
         run: |

@@ -34,30 +34,21 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      - name: Restore google-services.json + stable signing
+      - name: Restore google-services.json + shared debug keystore
         run: |
           echo "$GOOGLE_SERVICES_JSON_B64" | base64 -d > /tmp/google-services.json
-          echo "$ANDROID_KEYSTORE_B64" | base64 -d > /tmp/budgetapp.keystore
-          GOOGLE_SERVICES_JSON_PATH=/tmp/google-services.json \
-          APK_KEYSTORE_PATH=/tmp/budgetapp.keystore \
-          npm run android:patch
+          mkdir -p ~/.android
+          echo "$ANDROID_KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
+          GOOGLE_SERVICES_JSON_PATH=/tmp/google-services.json npm run android:patch
         env:
           GOOGLE_SERVICES_JSON_B64: ${{ secrets.GOOGLE_SERVICES_JSON_B64 }}
           ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
       - name: Gradle assembleDebug
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
-        env:
-          APK_KEYSTORE_PATH: /tmp/budgetapp.keystore
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
       - uses: actions/upload-artifact@v4
         with:

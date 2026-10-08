@@ -7,8 +7,10 @@
  *   GOOGLE_SERVICES_JSON_PATH  copy to android/app/google-services.json
  *   APK_VERSION_CODE             e.g. 3
  *   APK_VERSION_NAME             e.g. 0.1.3
- *   APK_KEYSTORE_PATH            stable keystore so every APK shares a signature
- *   ANDROID_KEYSTORE_PASSWORD / ANDROID_KEY_ALIAS / ANDROID_KEY_PASSWORD
+ *
+ * Stable signing is NOT patched here: CI writes the shared keystore to
+ * ~/.android/debug.keystore so stock `assembleDebug` signs every APK
+ * identically (sideload updates install cleanly).
  */
 const fs = require("fs");
 const path = require("path");
@@ -83,29 +85,6 @@ if (process.env.APK_VERSION_NAME) {
     APP_GRADLE,
     (s) => s.replace(/versionName\s+"[^"]*"/, `versionName "${name}"`),
     "versionName"
-  );
-}
-
-// 5. stable debug signing (every APK shares one signature → sideload updates install cleanly)
-if (process.env.APK_KEYSTORE_PATH) {
-  patchFile(
-    APP_GRADLE,
-    (s) => {
-      if (s.includes("APK_KEYSTORE_PATH")) return s;
-      const block = [
-        "    signingConfigs {",
-        "        debug {",
-        '            storeFile file(System.getenv("APK_KEYSTORE_PATH") ?: "debug.keystore")',
-        '            storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")',
-        '            keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: "budgetapp"',
-        '            keyPassword System.getenv("ANDROID_KEY_PASSWORD")',
-        "        }",
-        "    }",
-        "",
-      ].join("\n");
-      return s.replace(/(\s*buildTypes\s*\{)/, `${block}$1`);
-    },
-    "stable debug signing"
   );
 }
 

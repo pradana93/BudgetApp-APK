@@ -7,8 +7,9 @@
   the latest release tag on launch (native only) and shows `UpdateBanner`.
 - "Download & Install" opens the APK in the system browser; the user taps
   the downloaded file once to install (one-time "allow unknown apps").
-- All APKs share one signing key (CI secret `ANDROID_KEYSTORE_*`), so
-  updates install over the old version without uninstall.
+- All APKs share one debug-convention keystore (CI secret `ANDROID_KEYSTORE_B64`,
+  written to `~/.android/debug.keystore`), so updates install over the old
+  version without uninstall.
 
 Create a release: `gh workflow run release-apk --repo pradana93/BudgetApp-APK
 -f version_code=3 -f version_name=0.1.3 -f notes="..."`,
