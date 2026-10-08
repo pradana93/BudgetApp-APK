@@ -24,13 +24,6 @@ const PRIMARY: Dest[] = [
   { to: "/requests", key: "nav.requests", icon: Receipt },
 ];
 
-const EXTRA: Dest[] = [
-  { to: "/calendar", key: "nav.calendar", icon: CalendarDays },
-  { to: "/space", key: "nav.space", icon: NotebookPen },
-  { to: "/rewards", key: "nav.rewards", icon: Trophy },
-  { to: "/changelogs", key: "nav.changelogs", icon: History },
-];
-
 /**
  * Material shell — rendered INSTEAD of Layout inside the APK.
  * M3 top app bar + navigation bar + FAB + modal drawer.

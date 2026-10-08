@@ -38,7 +38,7 @@ function isNativeApp(): boolean {
 
 /** APK renders the Material shell; web keeps the desktop Layout. Pages are shared untouched. */
 function Shell({ children }: { children: ReactNode }) {
-  return isNativeApp() ? <MaterialShell>{children}</MaterialShell> : <Shell>{children}</Shell>;
+  return isNativeApp() ? <MaterialShell>{children}</MaterialShell> : <Layout>{children}</Layout>;
 }
 
 export default function App(){
