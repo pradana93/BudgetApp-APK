@@ -13,6 +13,7 @@ import { analyzeBudget, budgetHealth, cumulativeSpendSeries } from "@/lib/insigh
 import { dateLocale, formatDate, formatDateTime } from "@/lib/datetime";
 import { useLang } from "@/i18n/LanguageContext";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { ink, slimAxis, smallTick, MoneyTip } from "@/components/charts";
 
 export default function BudgetDetail(){
   const { id } = useParams();
@@ -113,7 +114,7 @@ export default function BudgetDetail(){
           {insights.anomalies.map((a, i) => <div key={i}>• {a}</div>)}
         </div>}
         {series.length > 0 && <div className="h-[220px]">
-          <ResponsiveContainer width="100%" height="100%"><AreaChart data={series}><defs><linearGradient id="bdAreaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#3b82f6" stopOpacity={0.5} /><stop offset="100%" stopColor="#3b82f6" stopOpacity={0.05} /></linearGradient></defs><XAxis dataKey="date" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} /><Tooltip /><Area type="monotone" dataKey="cumulative" name="Net spend" stroke="#3b82f6" fill="url(#bdAreaGrad)" /></AreaChart></ResponsiveContainer>
+          <ResponsiveContainer width="100%" height="100%"><AreaChart data={series} margin={{ top: 4, right: 4, left: -18, bottom: 0 }}><XAxis dataKey="date" {...slimAxis} tick={{ ...smallTick }} minTickGap={32} /><YAxis hide /><Tooltip content={<MoneyTip format={(v) => formatMoney(Number(v), budget.currency)} />} cursor={{ stroke: ink.grid }} /><Area type="monotone" dataKey="cumulative" name="Net spend" stroke={ink.primary} strokeWidth={2.5} fill={ink.primary} fillOpacity={0.12} dot={false} /></AreaChart></ResponsiveContainer>
         </div>}
       </CardContent>
     </Card>
