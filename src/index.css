@@ -188,3 +188,12 @@ main h1 {
     margin: 0;
   }
 }
+
+/* ---- Native shell (Capacitor APK): kill web-isms, respect notches ---- */
+html, body {
+  overscroll-behavior: none;
+}
+body {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}

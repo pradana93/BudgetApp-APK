@@ -37,6 +37,28 @@ function patchFile(file, transform, label) {
 }
 
 // 1. google-services.json
+// 1b. brand icons + splash (committed under assets/, copied every run)
+{
+  const RES = path.join(ANDROID, "app", "src", "main", "res");
+  let n = 0;
+  for (const d of ["mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"]) {
+    for (const kind of ["ic_launcher", "ic_launcher_round"]) {
+      const src = path.join(ROOT, "assets", "icon", `${kind}_${d}.png`);
+      const dest = path.join(RES, `mipmap-${d}`, `${kind}.png`);
+      if (fs.existsSync(src) && fs.existsSync(path.dirname(dest))) {
+        fs.copyFileSync(src, dest);
+        n++;
+      }
+    }
+  }
+  const splashSrc = path.join(ROOT, "assets", "splash", "splash.png");
+  const splashDest = path.join(RES, "drawable", "splash.png");
+  if (fs.existsSync(splashSrc) && fs.existsSync(path.dirname(splashDest))) {
+    fs.copyFileSync(splashSrc, splashDest);
+    n++;
+  }
+  console.log(`brand assets copied (${n} files)`);
+}
 if (process.env.GOOGLE_SERVICES_JSON_PATH) {
   const src = process.env.GOOGLE_SERVICES_JSON_PATH;
   const dest = path.join(ANDROID, "app", "google-services.json");
@@ -108,6 +130,19 @@ patchFile(
     return out;
   },
   "native permissions"
+);
+
+// 7. keyboard resizes the WebView instead of covering inputs
+patchFile(
+  MANIFEST,
+  (s) => {
+    if (s.includes("windowSoftInputMode")) return s;
+    return s.replace(
+      'android:name=".MainActivity"',
+      'android:name=".MainActivity"\n            android:windowSoftInputMode="adjustResize"'
+    );
+  },
+  "adjustResize"
 );
 
 console.log("android patch complete");

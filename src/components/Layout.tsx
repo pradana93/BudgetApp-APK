@@ -187,7 +187,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               : <span title={profile?.email ?? undefined} className={`ml-1 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br ${avatarCls} text-[11px] font-bold text-white`}>{initialsOf(displayName)}</span>}
           </div>
         </header>
-        <header className="md:hidden sticky top-0 z-30 border-b border-border/60 bg-card/95 backdrop-blur p-3 flex items-center justify-between">
+        <header className="md:hidden sticky top-0 z-30 border-b border-border/60 bg-card/95 backdrop-blur p-3 pt-[calc(0.75rem+env(safe-area-inset-top))] flex items-center justify-between">
           <span className="flex items-center gap-2">
             <span className="rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 p-1.5 text-white"><Wallet className="h-4 w-4" /></span>
             <span className="font-bold">BudgetApp</span>
