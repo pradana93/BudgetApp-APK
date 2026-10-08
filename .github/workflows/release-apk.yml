@@ -48,6 +48,8 @@ jobs:
           mkdir -p ~/.android
           echo "$ANDROID_KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
           keytool -list -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey > /dev/null
+          keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey 2>/dev/null | grep SHA256
+          keytool -list -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey > /dev/null
           GOOGLE_SERVICES_JSON_PATH=/tmp/google-services.json \
           APK_VERSION_CODE="${{ inputs.version_code }}" \
           APK_VERSION_NAME="${{ inputs.version_name }}" \

@@ -40,6 +40,7 @@ jobs:
           mkdir -p ~/.android
           echo "$ANDROID_KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
           keytool -list -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey > /dev/null
+          keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey 2>/dev/null | grep SHA256
           GOOGLE_SERVICES_JSON_PATH=/tmp/google-services.json npm run android:patch
         env:
           GOOGLE_SERVICES_JSON_B64: ${{ secrets.GOOGLE_SERVICES_JSON_B64 }}
