@@ -47,7 +47,7 @@ const TITLES: Record<string, StringKey> = {
   "/changelogs": "nav.changelogs",
 };
 
-function titleFor(pathname: string): StringKey {
+export function titleFor(pathname: string): StringKey {
   if (TITLES[pathname]) return TITLES[pathname];
   if (pathname.startsWith("/budgets/")) return "budgets.title";
   if (pathname.startsWith("/requests/")) return "req.title";

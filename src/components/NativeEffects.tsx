@@ -1,5 +1,6 @@
 import * as React from "react";
 import { isNative } from "@/lib/native";
+import { tryCloseDrawer } from "@/lib/nativeUi";
 import { checkForAppUpdate, type AppUpdate } from "@/lib/updater";
 import { initNativePush } from "@/lib/push";
 import { UpdateBanner } from "@/components/UpdateBanner";
@@ -52,6 +53,11 @@ async function applyNativeShell(): Promise<void> {
     const { App } = await import("@capacitor/app");
     await App.removeAllListeners();
     void App.addListener("backButton", ({ canGoBack }) => {
+      try {
+        if (tryCloseDrawer()) return;
+      } catch {
+        // fall through to history navigation
+      }
       if (canGoBack) window.history.back();
       else void App.minimizeApp();
     });

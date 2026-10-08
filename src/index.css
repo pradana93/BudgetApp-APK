@@ -197,3 +197,18 @@ body {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
+
+/* ---- Material shell states (native APK only, scoped under .native-app) ---- */
+.native-app .m3-press {
+  transition: transform 0.12s ease, background-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.native-app .m3-press:active {
+  transform: scale(0.95);
+  background-color: color-mix(in srgb, currentColor 8%, transparent);
+}
+.native-app button {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}

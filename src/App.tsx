@@ -3,7 +3,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { SessionProvider } from "@/hooks/useSession";
 import { ToastProvider } from "@/components/ui/toast";
+import type { ReactNode } from "react";
+import { Capacitor } from "@capacitor/core";
 import { Layout } from "@/components/Layout";
+import { MaterialShell } from "@/components/native/MaterialShell";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { NativeEffects } from "@/components/NativeEffects";
 import Login from "@/pages/Login";
@@ -25,6 +28,19 @@ import Changelogs from "@/pages/Changelogs";
 
 const qc = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } } });
 
+function isNativeApp(): boolean {
+  try {
+    return Capacitor.isNativePlatform();
+  } catch {
+    return false;
+  }
+}
+
+/** APK renders the Material shell; web keeps the desktop Layout. Pages are shared untouched. */
+function Shell({ children }: { children: ReactNode }) {
+  return isNativeApp() ? <MaterialShell>{children}</MaterialShell> : <Shell>{children}</Shell>;
+}
+
 export default function App(){
   return <QueryClientProvider client={qc}>
     <LanguageProvider>
@@ -35,20 +51,20 @@ export default function App(){
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-            <Route path="/budgets" element={<ProtectedRoute><Layout><Budgets /></Layout></ProtectedRoute>} />
-            <Route path="/budgets/new" element={<ProtectedRoute ownerOnly><Layout><NewBudget /></Layout></ProtectedRoute>} />
-            <Route path="/budgets/:id" element={<ProtectedRoute><Layout><BudgetDetail /></Layout></ProtectedRoute>} />
-            <Route path="/requests" element={<ProtectedRoute><Layout><Requests /></Layout></ProtectedRoute>} />
-            <Route path="/requests/new" element={<ProtectedRoute><Layout><NewRequest /></Layout></ProtectedRoute>} />
-            <Route path="/requests/:id" element={<ProtectedRoute><Layout><RequestDetail /></Layout></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute ownerOnly><Layout><Admin /></Layout></ProtectedRoute>} />
-            <Route path="/notifications" element={<ProtectedRoute><Layout><Notifications /></Layout></ProtectedRoute>} />
-            <Route path="/rewards" element={<ProtectedRoute><Layout><Rewards /></Layout></ProtectedRoute>} />
-            <Route path="/calendar" element={<ProtectedRoute><Layout><Calendar /></Layout></ProtectedRoute>} />
-            <Route path="/space" element={<ProtectedRoute><Layout><Space /></Layout></ProtectedRoute>} />
-            <Route path="/changelogs" element={<ProtectedRoute><Layout><Changelogs /></Layout></ProtectedRoute>} />
+            <Route path="/" element={<ProtectedRoute><Shell><Dashboard /></Shell></ProtectedRoute>} />
+            <Route path="/budgets" element={<ProtectedRoute><Shell><Budgets /></Shell></ProtectedRoute>} />
+            <Route path="/budgets/new" element={<ProtectedRoute ownerOnly><Shell><NewBudget /></Shell></ProtectedRoute>} />
+            <Route path="/budgets/:id" element={<ProtectedRoute><Shell><BudgetDetail /></Shell></ProtectedRoute>} />
+            <Route path="/requests" element={<ProtectedRoute><Shell><Requests /></Shell></ProtectedRoute>} />
+            <Route path="/requests/new" element={<ProtectedRoute><Shell><NewRequest /></Shell></ProtectedRoute>} />
+            <Route path="/requests/:id" element={<ProtectedRoute><Shell><RequestDetail /></Shell></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Shell><Settings /></Shell></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute ownerOnly><Shell><Admin /></Shell></ProtectedRoute>} />
+            <Route path="/notifications" element={<ProtectedRoute><Shell><Notifications /></Shell></ProtectedRoute>} />
+            <Route path="/rewards" element={<ProtectedRoute><Shell><Rewards /></Shell></ProtectedRoute>} />
+            <Route path="/calendar" element={<ProtectedRoute><Shell><Calendar /></Shell></ProtectedRoute>} />
+            <Route path="/space" element={<ProtectedRoute><Shell><Space /></Shell></ProtectedRoute>} />
+            <Route path="/changelogs" element={<ProtectedRoute><Shell><Changelogs /></Shell></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
