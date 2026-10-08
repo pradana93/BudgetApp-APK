@@ -47,6 +47,7 @@ jobs:
           echo "$GOOGLE_SERVICES_JSON_B64" | base64 -d > /tmp/google-services.json
           mkdir -p ~/.android
           echo "$ANDROID_KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
+          keytool -list -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey > /dev/null
           GOOGLE_SERVICES_JSON_PATH=/tmp/google-services.json \
           APK_VERSION_CODE="${{ inputs.version_code }}" \
           APK_VERSION_NAME="${{ inputs.version_name }}" \
@@ -60,6 +61,15 @@ jobs:
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
+
+      - name: Verify APK signature (fail on key drift)
+        run: |
+          ACTUAL=$(keytool -printcert -jarfile android/app/build/outputs/apk/debug/app-debug.apk | grep SHA256 | head -1 | sed 's/.*SHA256: //' | tr -d ':[:space:]')
+          echo "APK cert SHA256: $ACTUAL"
+          if [ -n "${{ vars.EXPECTED_CERT_SHA256 }}" ] && [ "$ACTUAL" != "${{ vars.EXPECTED_CERT_SHA256 }}" ]; then
+            echo "SIGNATURE MISMATCH — expected ${{ vars.EXPECTED_CERT_SHA256 }}, got $ACTUAL"
+            exit 1
+          fi
 
       - name: Publish GitHub Release
         run: |

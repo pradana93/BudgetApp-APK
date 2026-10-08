@@ -9,7 +9,8 @@
   the downloaded file once to install (one-time "allow unknown apps").
 - All APKs share one debug-convention keystore (CI secret `ANDROID_KEYSTORE_B64`,
   written to `~/.android/debug.keystore`), so updates install over the old
-  version without uninstall.
+  version without uninstall. CI validates the keystore with keytool and fails
+  the build if the APK certificate drifts from `EXPECTED_CERT_SHA256`.
 
 Create a release: `gh workflow run release-apk --repo pradana93/BudgetApp-APK
 -f version_code=3 -f version_name=0.1.3 -f notes="..."`,
