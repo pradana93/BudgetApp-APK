@@ -338,11 +338,11 @@ export default function Admin() {
           <TableBody>{pending.map((r) => (
             <TableRow key={r.id}>
               <TableCell><Link to={`/requests/${r.id}`} className="text-primary underline">{r.merchant ?? r.category}</Link><div className="text-xs text-muted-foreground">{r.category} • {formatDate(r.created_at, lang)}</div></TableCell>
-              <TableCell>{budgetName(r.budget_id)}</TableCell>
-              <TableCell>{formatMoney(Number(r.amount))}</TableCell>
-              <TableCell><Badge variant={riskMeta[riskOf(r).level].variant} title={riskOf(r).reasons.join(" • ")}>{riskMeta[riskOf(r).level].label}</Badge></TableCell>
-              <TableCell><Input placeholder={t("admin.reasonPh")} value={reasons[r.id] ?? ""} onChange={(e) => setReasons({ ...reasons, [r.id]: e.target.value })} className="min-w-[160px]" /></TableCell>
-              <TableCell><div className="flex gap-2">
+              <TableCell data-label={t("admin.qBudget")}>{budgetName(r.budget_id)}</TableCell>
+              <TableCell data-label={t("admin.qAmount")}>{formatMoney(Number(r.amount))}</TableCell>
+              <TableCell data-label={t("risk.title")}><Badge variant={riskMeta[riskOf(r).level].variant} title={riskOf(r).reasons.join(" • ")}>{riskMeta[riskOf(r).level].label}</Badge></TableCell>
+              <TableCell data-label={t("admin.qReason")}><Input placeholder={t("admin.reasonPh")} value={reasons[r.id] ?? ""} onChange={(e) => setReasons({ ...reasons, [r.id]: e.target.value })} className="min-w-[160px]" /></TableCell>
+              <TableCell data-label={t("admin.qActions")}><div className="flex gap-2">
                 <Button size="sm" onClick={() => approve.mutate(r.id)} disabled={approve.isPending}>{t("admin.approve")}</Button>
                 <Button size="sm" variant="destructive" onClick={() => reject.mutate({ id: r.id, reason: (reasons[r.id] ?? "").trim() })} disabled={reject.isPending || (reasons[r.id] ?? "").trim().length < 3}>{t("admin.reject")}</Button>
               </div></TableCell>
@@ -439,9 +439,9 @@ export default function Admin() {
                 const isSelf = u.id === myId;
                 return (
                 <TableRow key={u.id}><TableCell><span className="flex items-center gap-2 min-w-0"><UserAvatar userId={u.id} name={u.display_name ?? u.email} className="h-7 w-7 text-[10px] shrink-0" /><span className="truncate max-w-[180px] sm:max-w-[220px]" title={u.email}>{u.email}</span></span></TableCell>
-                  <TableCell>{isEditing ? <Input value={editForm.display_name} onChange={(e) => setEditForm({ ...editForm, display_name: e.target.value })} className="h-8 min-w-[120px]" /> : (u.display_name ?? "—")}</TableCell>
-                  <TableCell>{isEditing ? <select value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value as "owner" | "member" })} className="h-8 rounded-md border bg-background px-2 text-sm"><option value="member">member</option><option value="owner">owner</option></select> : <Badge variant={u.role === "owner" ? "default" : "secondary"} className="capitalize">{u.role}</Badge>}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell data-label={t("admin.name")}>{isEditing ? <Input value={editForm.display_name} onChange={(e) => setEditForm({ ...editForm, display_name: e.target.value })} className="h-8 min-w-[120px]" /> : (u.display_name ?? "—")}</TableCell>
+                  <TableCell data-label={t("admin.role")}>{isEditing ? <select value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value as "owner" | "member" })} className="h-8 rounded-md border bg-background px-2 text-sm"><option value="member">member</option><option value="owner">owner</option></select> : <Badge variant={u.role === "owner" ? "default" : "secondary"} className="capitalize">{u.role}</Badge>}</TableCell>
+                  <TableCell data-label={t("admin.usersActions")} className="text-right">
                     {isEditing ? (
                       <span className="flex justify-end gap-1.5">
                         <Button size="sm" className="h-7" onClick={() => updateUser.mutate({ user_id: u.id, display_name: editForm.display_name.trim(), role: editForm.role })} disabled={updateUser.isPending}>{t("common.save")}</Button>
@@ -513,10 +513,10 @@ export default function Admin() {
           <TableBody>{budgets?.map((b) => (
             <TableRow key={b.id}>
               <TableCell><Link to={`/budgets/${b.id}`} className="text-primary underline">{b.name}</Link></TableCell>
-              <TableCell>{formatMoney(Number(b.total_amount), b.currency)}</TableCell>
-              <TableCell>{formatMoney(Number(b.available_amount), b.currency)}</TableCell>
-              <TableCell><Badge variant={b.status === "active" ? "approved" : "secondary"}>{b.status}</Badge></TableCell>
-              <TableCell><div className="flex gap-2">
+              <TableCell data-label={t("admin.bTotal")}>{formatMoney(Number(b.total_amount), b.currency)}</TableCell>
+              <TableCell data-label={t("admin.bAvail")}>{formatMoney(Number(b.available_amount), b.currency)}</TableCell>
+              <TableCell data-label={t("admin.bStatus")}><Badge variant={b.status === "active" ? "approved" : "secondary"}>{b.status}</Badge></TableCell>
+              <TableCell data-label={t("admin.topupCol")}><div className="flex gap-2">
                 <Input placeholder={t("admin.amountPh")} value={topups[b.id] ?? ""} onChange={(e) => setTopups({ ...topups, [b.id]: e.target.value })} className="max-w-[140px]" />
                 <Button size="sm" variant="outline" onClick={() => topup.mutate({ id: b.id, amount: Number(topups[b.id]) })} disabled={topup.isPending || !(Number(topups[b.id]) > 0)}>{t("admin.topup")}</Button>
               </div></TableCell>
@@ -530,8 +530,8 @@ export default function Admin() {
         <CardContent>
           <Table><TableHeader><TableRow><TableHead>{t("admin.lDate")}</TableHead><TableHead>{t("admin.lBudget")}</TableHead><TableHead>{t("admin.lType")}</TableHead><TableHead>{t("admin.lDebit")}</TableHead><TableHead>{t("admin.lCredit")}</TableHead></TableRow></TableHeader>
           <TableBody>{ledger?.map((l) => (
-            <TableRow key={l.id}><TableCell>{formatDateTime(l.created_at, lang)}</TableCell><TableCell>{budgetName(l.budget_id)}</TableCell><TableCell>{l.reference_type}</TableCell>
-            <TableCell>{l.debit > 0 ? formatMoney(Number(l.debit)) : "-"}</TableCell><TableCell>{l.credit > 0 ? formatMoney(Number(l.credit)) : "-"}</TableCell></TableRow>))}
+            <TableRow key={l.id}><TableCell>{formatDateTime(l.created_at, lang)}</TableCell><TableCell data-label={t("admin.lBudget")}>{budgetName(l.budget_id)}</TableCell><TableCell data-label={t("admin.lType")}>{l.reference_type}</TableCell>
+            <TableCell data-label={t("admin.lDebit")}>{l.debit > 0 ? formatMoney(Number(l.debit)) : "-"}</TableCell><TableCell data-label={t("admin.lCredit")}>{l.credit > 0 ? formatMoney(Number(l.credit)) : "-"}</TableCell></TableRow>))}
           </TableBody></Table>
           {(ledger?.length ?? 0) >= limit && <Button variant="outline" className="mt-3" onClick={()=>setLimit((l)=>l + 100)}>{t("admin.loadMore")}</Button>}
         </CardContent>

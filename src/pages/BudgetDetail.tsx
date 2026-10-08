@@ -119,13 +119,13 @@ export default function BudgetDetail(){
     </Card>
     <Card><CardHeader><CardTitle>{t("bd.ledger")}</CardTitle></CardHeader><CardContent>
       <Table><TableHeader><TableRow><TableHead>{t("bd.date")}</TableHead><TableHead>{t("bd.type")}</TableHead><TableHead>{t("bd.debit")}</TableHead><TableHead>{t("bd.credit")}</TableHead><TableHead>{t("bd.description")}</TableHead></TableRow></TableHeader>
-      <TableBody>{ledger?.map(l=> <TableRow key={l.id}><TableCell>{formatDateTime(l.created_at, lang)}</TableCell><TableCell>{l.reference_type}</TableCell><TableCell>{l.debit>0?formatMoney(Number(l.debit),budget.currency):"-"}</TableCell><TableCell>{l.credit>0?formatMoney(Number(l.credit),budget.currency):"-"}</TableCell><TableCell>{l.description}</TableCell></TableRow>)}
+      <TableBody>{ledger?.map(l=> <TableRow key={l.id}><TableCell>{formatDateTime(l.created_at, lang)}</TableCell><TableCell data-label={t("bd.type")}>{l.reference_type}</TableCell><TableCell data-label={t("bd.debit")}>{l.debit>0?formatMoney(Number(l.debit),budget.currency):"-"}</TableCell><TableCell data-label={t("bd.credit")}>{l.credit>0?formatMoney(Number(l.credit),budget.currency):"-"}</TableCell><TableCell data-label={t("bd.description")}>{l.description}</TableCell></TableRow>)}
       {ledger?.length===0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">{t("bd.noLedger")}</TableCell></TableRow>}
       </TableBody></Table>
     </CardContent></Card>
     <Card><CardHeader><CardTitle>{t("bd.requestsIn")}</CardTitle></CardHeader><CardContent>
       <Table><TableHeader><TableRow><TableHead>{t("bd.merchant")}</TableHead><TableHead>{t("bd.amount")}</TableHead><TableHead>{t("bd.status")}</TableHead><TableHead>{t("bd.date")}</TableHead></TableRow></TableHeader>
-      <TableBody>{requests?.map(r=> <TableRow key={r.id}><TableCell>{r.merchant ?? r.category}</TableCell><TableCell>{formatMoney(Number(r.amount),budget.currency)}</TableCell><TableCell>{r.status}</TableCell><TableCell>{formatDate(r.created_at, lang)}</TableCell></TableRow>)}
+      <TableBody>{requests?.map(r=> <TableRow key={r.id}><TableCell>{r.merchant ?? r.category}</TableCell><TableCell data-label={t("bd.amount")}>{formatMoney(Number(r.amount),budget.currency)}</TableCell><TableCell data-label={t("bd.status")}>{r.status}</TableCell><TableCell data-label={t("bd.date")}>{formatDate(r.created_at, lang)}</TableCell></TableRow>)}
       {requests?.length===0 && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">{t("bd.noRequests")}</TableCell></TableRow>}
       </TableBody></Table>
     </CardContent></Card>

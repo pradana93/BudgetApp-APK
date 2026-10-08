@@ -221,6 +221,73 @@ body {
   -webkit-user-select: none;
 }
 
+/* Desktop-only affordances never belong on a phone */
+.native-app kbd {
+  display: none;
+}
+
+/* ---- Statement tables (native APK, phones): rows become ledger cards ---- */
+@media (max-width: 820px) {
+  .native-app table {
+    display: block;
+    min-width: 0;
+  }
+  .native-app table thead {
+    display: none;
+  }
+  .native-app table tbody {
+    display: block;
+  }
+  .native-app table tr {
+    display: block;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border) / 0.7);
+    border-radius: 18px;
+    margin: 0 0 12px;
+    padding: 4px 16px;
+  }
+  .native-app table tr:active {
+    background: hsl(var(--muted) / 0.4);
+  }
+  .native-app table td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 0;
+    padding: 11px 0;
+    min-height: 48px;
+  }
+  .native-app table td + td {
+    border-top: 1px solid hsl(var(--border) / 0.6);
+  }
+  .native-app table td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: hsl(var(--muted-foreground));
+    flex-shrink: 0;
+    max-width: 40%;
+  }
+  .native-app table td:not([data-label])::before,
+  .native-app table td[data-label=""]::before {
+    display: none;
+  }
+  .native-app table td:first-child {
+    font-weight: 600;
+    font-size: 1rem;
+  }
+  .native-app table td > * {
+    min-width: 0;
+  }
+  .native-app table td[colspan] {
+    justify-content: center;
+    text-align: center;
+  }
+}
+
 /* ---- M3 motion (native shell) ---- */
 @keyframes m3-drawer-in {
   from { transform: translateX(-48px); opacity: 0.4; }
