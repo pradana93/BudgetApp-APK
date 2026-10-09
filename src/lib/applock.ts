@@ -21,6 +21,47 @@ export function setAppLockEnabled(on: boolean): void {
   }
 }
 
+const UNLOCKED_AT_KEY = "budgetapp-unlocked-at";
+const INACTIVE_AT_KEY = "budgetapp-inactive-at";
+
+/** Stamp a successful unlock — suppresses re-lock loops from prompt focus blips. */
+export function recordUnlock(): void {
+  try {
+    localStorage.setItem(UNLOCKED_AT_KEY, String(Date.now()));
+  } catch {
+    // ignore
+  }
+}
+
+/** True when an unlock happened within the grace window (default 2 min). */
+export function recentlyUnlocked(windowMs = 120000): boolean {
+  try {
+    const ts = Number(localStorage.getItem(UNLOCKED_AT_KEY) ?? 0);
+    return ts > 0 && Date.now() - ts < windowMs;
+  } catch {
+    return false;
+  }
+}
+
+/** Stamp backgrounding so resumes can tell blips from real away time. */
+export function noteInactive(): void {
+  try {
+    localStorage.setItem(INACTIVE_AT_KEY, String(Date.now()));
+  } catch {
+    // ignore
+  }
+}
+
+/** True when the app was backgrounded only briefly (biometric prompt, share sheet). */
+export function brieflyAway(thresholdMs = 4000): boolean {
+  try {
+    const ts = Number(localStorage.getItem(INACTIVE_AT_KEY) ?? 0);
+    return ts > 0 && Date.now() - ts < thresholdMs;
+  } catch {
+    return false;
+  }
+}
+
 export type LockCheck =
   | { state: "unneeded" }
   | { state: "locked" }

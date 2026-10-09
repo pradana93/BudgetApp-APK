@@ -13,7 +13,7 @@ import { titleFor } from "@/components/Layout";
 import { tapLight } from "@/lib/haptics";
 import { registerDrawerCloser } from "@/lib/nativeUi";
 import { parseDeepLink, runDeepLink } from "@/lib/deeplinks";
-import { shouldLock, unlockApp } from "@/lib/applock";
+import { shouldLock, unlockApp, recordUnlock, recentlyUnlocked, noteInactive, brieflyAway } from "@/lib/applock";
 import { UserAvatar } from "@/components/UserAvatar";
 import { initialsOf } from "@/lib/avatar";
 import { useToast } from "@/components/ui/toast";
@@ -104,9 +104,12 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
   }, [nav, toast]);
 
   // Biometric gate on launch + resume (fail-open by design).
+  // Cooldowns prevent the re-lock loop: the system prompt briefly
+  // backgrounds the app, which must not count as leaving it.
   React.useEffect(() => {
     let alive = true;
     const gate = async () => {
+      if (recentlyUnlocked()) return;
       const check = await shouldLock();
       if (alive && check.state === "locked") setLocked(true);
     };
@@ -116,7 +119,12 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
       try {
         const { App } = await import("@capacitor/app");
         sub = (await App.addListener("appStateChange", ({ isActive }) => {
-          if (isActive) void gate();
+          if (!isActive) {
+            noteInactive();
+            return;
+          }
+          if (recentlyUnlocked() || brieflyAway()) return;
+          void gate();
         })) as unknown as { remove: () => void };
       } catch {
         // ignore
@@ -185,6 +193,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
     try {
       const ok = await unlockApp();
       if (ok) {
+        recordUnlock();
         setLocked(false);
         setLockFails(0);
       } else {
