@@ -5,8 +5,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { formatMoney } from "@/lib/money";
 import { Badge } from "@/components/ui/badge";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from "recharts";
-import { ink, slimAxis, smallTick, barTrack, pineBar, MoneyTip, ChartEmpty } from "@/components/charts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, LabelList } from "recharts";
+import { ink, slimAxis, smallTick, pineBar, MoneyTip, ChartEmpty, compactMoney } from "@/components/charts";
 import { useRealtime } from "@/hooks/useRealtime";
 import { useLang } from "@/i18n/LanguageContext";
 import { useSession } from "@/hooks/useSession";
@@ -293,16 +293,15 @@ export default function Dashboard(){
     <div className="grid gap-4 md:grid-cols-2">
       <Card><CardHeader><CardTitle>{t("dash.spendByBudget")}</CardTitle></CardHeader><CardContent className="h-[260px]">
         {chartData.length===0 ? <ChartEmpty>{t("dash.noBudgets")}</ChartEmpty> :
-        <ResponsiveContainer width="100%" height="100%"><BarChart data={chartData} margin={{ top: 4, right: 4, left: -22, bottom: 0 }}><XAxis dataKey="name" {...slimAxis} tick={{ ...smallTick }} minTickGap={24} /><YAxis hide /><Tooltip content={<MoneyTip format={(v) => formatMoney(v)} />} cursor={{ fill: ink.track, opacity: 0.45 }} /><Bar dataKey="spend" {...pineBar} background={barTrack} /></BarChart></ResponsiveContainer>}
+        <ResponsiveContainer width="100%" height="100%"><BarChart data={chartData} margin={{ top: 16, right: 4, left: -22, bottom: 0 }}><XAxis dataKey="name" {...slimAxis} tick={{ ...smallTick }} interval={0} /><YAxis hide /><Tooltip content={<MoneyTip format={(v) => formatMoney(v)} />} cursor={{ fill: ink.track, opacity: 0.45 }} /><Bar dataKey="spend" {...pineBar}><LabelList dataKey="spend" position="top" fill={ink.muted} fontSize={11} formatter={(v: unknown) => compactMoney(Number(v))} /></Bar></BarChart></ResponsiveContainer>}
       </CardContent></Card>
       <Card><CardHeader><CardTitle>{t("dash.byStatus")}</CardTitle></CardHeader><CardContent className="h-[260px]">
         {statusData.length===0 ? <ChartEmpty>{t("dash.noRequestsYet")}</ChartEmpty> :
         <div className="flex h-full flex-col">
-          <div className="relative flex-1">
-            <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={statusData} dataKey="value" nameKey="name" innerRadius={58} outerRadius={78} paddingAngle={3} cornerRadius={6} strokeWidth={0}>{statusData.map((d) => <Cell key={d.name} fill={statusColors[d.name]} />)}</Pie><Tooltip content={<MoneyTip />} /></PieChart></ResponsiveContainer>
+          <div className="relative h-[168px] shrink-0">
+            <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={statusData} dataKey="value" nameKey="name" innerRadius={58} outerRadius={78} paddingAngle={statusData.length > 1 ? 3 : 0} cornerRadius={6} strokeWidth={0}>{statusData.map((d) => <Cell key={d.name} fill={statusColors[d.name]} />)}</Pie><Tooltip content={<MoneyTip />} /></PieChart></ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <span className="font-display tnum text-3xl font-semibold">{statusData.reduce((a, d) => a + d.value, 0)}</span>
-              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{t("dash.byStatus")}</span>
+              <span className="font-display tnum text-4xl font-semibold">{statusData.reduce((a, d) => a + d.value, 0)}</span>
             </div>
           </div>
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 pt-2">
@@ -318,7 +317,7 @@ export default function Dashboard(){
     </div>
     <Card><CardHeader><CardTitle>{t("dash.trend")}</CardTitle></CardHeader><CardContent className="h-[220px]">
       {trend.every((x) => x.total === 0) ? <ChartEmpty>{t("dash.noRequestsYet")}</ChartEmpty> :
-      <ResponsiveContainer width="100%" height="100%"><BarChart data={trend} margin={{ top: 4, right: 4, left: -22, bottom: 0 }}><XAxis dataKey="label" {...slimAxis} tick={{ ...smallTick }} minTickGap={24} /><YAxis hide /><Tooltip content={<MoneyTip format={(v) => formatMoney(v)} />} cursor={{ fill: ink.track, opacity: 0.45 }} /><Bar dataKey="total" {...pineBar} background={barTrack} /></BarChart></ResponsiveContainer>}
+      <ResponsiveContainer width="100%" height="100%"><BarChart data={trend} margin={{ top: 16, right: 4, left: -22, bottom: 0 }}><XAxis dataKey="label" {...slimAxis} tick={{ ...smallTick }} interval={0} /><YAxis hide /><Tooltip content={<MoneyTip format={(v) => formatMoney(v)} />} cursor={{ fill: ink.track, opacity: 0.45 }} /><Bar dataKey="total" {...pineBar}><LabelList dataKey="total" position="top" fill={ink.muted} fontSize={11} formatter={(v: unknown) => compactMoney(Number(v))} /></Bar></BarChart></ResponsiveContainer>}
     </CardContent></Card>
     <Card><CardHeader><CardTitle>{t("dash.compare")}</CardTitle></CardHeader><CardContent>
       {compare.length===0 ? <ChartEmpty>{t("dash.noRequestsYet")}</ChartEmpty> :
@@ -328,7 +327,7 @@ export default function Dashboard(){
           <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ background: ink.primary }} />{t("dash.thisMonth")}</span>
         </div>
         <div className="h-[200px]">
-          <ResponsiveContainer width="100%" height="100%"><BarChart data={compare} margin={{ top: 4, right: 4, left: -22, bottom: 0 }}><XAxis dataKey="name" {...slimAxis} tick={{ ...smallTick }} minTickGap={24} /><YAxis hide /><Tooltip content={<MoneyTip format={(v) => formatMoney(v)} />} cursor={{ fill: ink.track, opacity: 0.45 }} /><Bar dataKey="prev" name={t("dash.lastMonth")} fill={ink.faint} radius={[5, 5, 2, 2]} barSize={18} /><Bar dataKey="cur" name={t("dash.thisMonth")} {...pineBar} background={barTrack} /></BarChart></ResponsiveContainer>
+          <ResponsiveContainer width="100%" height="100%"><BarChart data={compare} margin={{ top: 16, right: 4, left: -22, bottom: 0 }}><XAxis dataKey="name" {...slimAxis} tick={{ ...smallTick }} interval={0} /><YAxis hide /><Tooltip content={<MoneyTip format={(v) => formatMoney(v)} />} cursor={{ fill: ink.track, opacity: 0.45 }} /><Bar dataKey="prev" name={t("dash.lastMonth")} fill={ink.faint} radius={[5, 5, 2, 2]} barSize={18} /><Bar dataKey="cur" name={t("dash.thisMonth")} {...pineBar}><LabelList dataKey="cur" position="top" fill={ink.muted} fontSize={11} formatter={(v: unknown) => compactMoney(Number(v))} /></Bar></BarChart></ResponsiveContainer>
         </div>
       </div>}
     </CardContent></Card>

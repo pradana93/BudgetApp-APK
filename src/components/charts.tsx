@@ -33,8 +33,19 @@ export const pineBar: { fill: string; radius: [number, number, number, number]; 
   barSize: 26,
 };
 
-/** Dark-ink tooltip card with serif figures. Never shows raw numbers when a formatter is given. */
-export function MoneyTip(props: {
+/** Compact axis-top figure: "1,2 jt", "450 rb". Empty for zero. */
+export function compactMoney(v: number): string {
+  if (!isFinite(v) || v === 0) return "";
+  const abs = Math.abs(v);
+  const fmt = (n: number, suffix: string) =>
+    `${n.toLocaleString("id-ID", { maximumFractionDigits: 1 })} ${suffix}`.trim();
+  if (abs >= 1e9) return fmt(v / 1e9, "M");
+  if (abs >= 1e6) return fmt(v / 1e6, "jt");
+  if (abs >= 1e3) return fmt(v / 1e3, "rb");
+  return String(Math.round(v));
+}
+
+/** Dark-ink tooltip card with serif figures. Never shows raw numbers when a formatter is given. */export function MoneyTip(props: {
   active?: boolean;
   payload?: Array<{ name?: string; value?: number | string; color?: string; payload?: Record<string, unknown> }>;
   label?: string | number;

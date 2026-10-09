@@ -18,8 +18,8 @@ import { useRealtime } from "@/hooks/useRealtime";
 import { normalizeCategory, useCategories } from "@/hooks/useCategories";
 import { useLang } from "@/i18n/LanguageContext";
 import { useSession } from "@/hooks/useSession";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { ink, slimAxis, smallTick, barTrack, pineBar, MoneyTip, ChartEmpty } from "@/components/charts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList } from "recharts";
+import { ink, slimAxis, smallTick, pineBar, MoneyTip, ChartEmpty, compactMoney } from "@/components/charts";
 
 type Budget = { id: string; name: string; total_amount: number; allocated_amount: number; available_amount: number; currency: string; status: string };
 type Req = { id: string; budget_id: string; amount: number; category: string; merchant: string | null; status: string; created_at: string; receipt_url: string | null; due_date: string | null };
@@ -407,7 +407,7 @@ export default function Admin() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card><CardHeader><CardTitle>{t("admin.spendCat")}</CardTitle></CardHeader><CardContent className="h-[260px]">
           {byCategory.length === 0 ? <ChartEmpty>{t("admin.noSpend")}</ChartEmpty> :
-          <ResponsiveContainer width="100%" height="100%"><BarChart data={byCategory} margin={{ top: 4, right: 4, left: -22, bottom: 0 }}><XAxis dataKey="name" {...slimAxis} tick={{ ...smallTick }} minTickGap={24} /><YAxis hide /><Tooltip content={<MoneyTip format={(v) => formatMoney(v)} />} cursor={{ fill: ink.track, opacity: 0.45 }} /><Bar dataKey="total" {...pineBar} background={barTrack} /></BarChart></ResponsiveContainer>}
+          <ResponsiveContainer width="100%" height="100%"><BarChart data={byCategory} margin={{ top: 16, right: 4, left: -22, bottom: 0 }}><XAxis dataKey="name" {...slimAxis} tick={{ ...smallTick }} interval={0} /><YAxis hide /><Tooltip content={<MoneyTip format={(v) => formatMoney(v)} />} cursor={{ fill: ink.track, opacity: 0.45 }} /><Bar dataKey="total" {...pineBar}><LabelList dataKey="total" position="top" fill={ink.muted} fontSize={11} formatter={(v: unknown) => compactMoney(Number(v))} /></Bar></BarChart></ResponsiveContainer>}
         </CardContent></Card>
         <Card className="overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between gap-2">
