@@ -48,8 +48,8 @@ attendance_new/
 coverage/
 
 # Capacitor native projects (generated in CI via `npx cap add android`)
-android/
-ios/
+/android/
+/ios/
 
 # Local APK/AAB outputs
 *.apk

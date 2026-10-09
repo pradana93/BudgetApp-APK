@@ -1,0 +1,14 @@
+apply plugin: 'com.android.library'
+
+android {
+    namespace "com.pradana93.nativeextras"
+    compileSdk 34
+    defaultConfig {
+        minSdkVersion 24
+    }
+}
+
+dependencies {
+    implementation project(':capacitor-android')
+    implementation 'com.google.firebase:firebase-messaging:23.3.1'
+}
