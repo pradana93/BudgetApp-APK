@@ -23,6 +23,10 @@ export function NativeEffects() {
       const found = await checkForAppUpdate();
       if (!cancelled && found) setUpdate(found);
       await initNativePush();
+      if (!cancelled) {
+        const { maybeFireReminders } = await import("@/lib/reminders");
+        await maybeFireReminders();
+      }
     }, 2500);
     return () => {
       cancelled = true;

@@ -19,6 +19,7 @@ import { dateLocale, timeAgo } from "@/lib/datetime";
 import { Wallet, TrendingUp, Clock, ArrowDownLeft, ArrowUpRight, Receipt, Trophy } from "lucide-react";
 import AskBudgetApp from "@/components/AskBudgetApp";
 import { PullToRefresh } from "@/components/PullToRefresh";
+import { useWidgetSnapshot } from "@/lib/widget";
 
 export default function Dashboard(){
   useRealtime();
@@ -37,6 +38,7 @@ export default function Dashboard(){
     const { data, error } = await supabase.from("ledger_entries").select("id,budget_id,debit,credit,reference_type,description,created_at").order("created_at",{ascending:false}).limit(20); if(error) throw error; return data;
   }});
   const loading = loadingBudgets || loadingRequests;
+  useWidgetSnapshot(budgets, requests);
   const pending = requests?.filter(r=>r.status==="pending").length ?? 0;
   const budgetsCount = Math.round(useCountUp(budgets?.length ?? 0));
   const pendingCount = Math.round(useCountUp(pending));

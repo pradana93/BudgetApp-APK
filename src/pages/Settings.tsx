@@ -9,11 +9,51 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
 import { useLang } from "@/i18n/LanguageContext";
 import { usePwa } from "@/hooks/usePwa";
-import { Download } from "lucide-react";
+import { Download, Fingerprint } from "lucide-react";
 import { AVATAR_THEMES, initialsOf, setAvatarTheme, useAvatarTheme, isAcceptedAvatar, prepareAvatar, avatarPublicUrl } from "@/lib/avatar";
 import { xpOf, levelOf, type ReqLite } from "@/lib/gamify";
 import { formatDate } from "@/lib/datetime";
 import { Check, Trophy } from "lucide-react";
+import { isNative } from "@/lib/native";
+import { isAppLockEnabled, setAppLockEnabled } from "@/lib/applock";
+
+/** Native-only biometric gate toggle. Renders nothing on web. */
+function DeviceLockCard() {
+  const [on, setOn] = React.useState(false);
+  React.useEffect(() => {
+    setOn(isAppLockEnabled());
+  }, []);
+  if (!isNative()) return null;
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Fingerprint className="h-4 w-4" /> App lock
+        </CardTitle>
+        <CardDescription>
+          Require biometrics to open BudgetApp on this device.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={on}
+          onClick={() => {
+            const v = !on;
+            setAppLockEnabled(v);
+            setOn(v);
+          }}
+          className={`relative h-8 w-14 rounded-full transition-colors ${on ? "bg-primary" : "bg-muted"}`}
+        >
+          <span
+            className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-all ${on ? "left-7" : "left-1"}`}
+          />
+        </button>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Settings(){
   const { profile, session, refresh } = useSession();
@@ -256,6 +296,7 @@ export default function Settings(){
       </form>
     </CardContent></Card>
 
+    <DeviceLockCard />
     <Card><CardHeader><CardTitle>{t("profile.yourData")}</CardTitle></CardHeader><CardContent className="space-y-3">
       <p className="text-sm text-muted-foreground">
         {t("set.storageA")} <code>receipts</code> {t("set.storageB")} <code>{"{user_id}/{request_id}/{filename}"}</code>.

@@ -84,10 +84,17 @@ export default function BudgetDetail(){
     onError: (e: Error) => toast({ title: t("bd.cloneFailed"), description: e.message, variant: "destructive" }),
   });
 
-  const exportCsv = ()=>{    if(!ledger) return;
+  const exportCsv = async ()=>{    if(!ledger) return;
     const rows = [["date","type","debit","credit","description"], ...ledger.map(l=>[l.created_at, l.reference_type, String(l.debit), String(l.credit), (l.description??"").replace(/,/g," ")])];
     const csv = rows.map(r=>r.join(",")).join("\n");
-    const blob = new Blob([csv],{type:"text/csv"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`reconciliation-${id}.csv`; a.click(); URL.revokeObjectURL(url);
+    const filename = `reconciliation-${id}.csv`;
+    try {
+      const { shareTextFile } = await import("@/lib/share");
+      if (await shareTextFile(filename, csv)) return;
+    } catch {
+      // fall through to anchor download
+    }
+    const blob = new Blob([csv],{type:"text/csv"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url);
   };
 
   if(!budget) return <div className="p-4 text-sm text-muted-foreground">{t("common.loading")}</div>;

@@ -65,11 +65,12 @@ Deno.serve(async (req) => {
     const { data: profile } = await admin.from("profiles").select("role").eq("id", caller.user.id).single();
     if (profile?.role !== "owner") return new Response("forbidden", { status: 403 });
 
-    const { user_id, title, body, data } = (await req.json()) as {
+    const { user_id, title, body, data, data_only } = (await req.json()) as {
       user_id: string;
       title: string;
       body: string;
       data?: Record<string, string>;
+      data_only?: boolean;
     };
     if (!user_id || !title || !body) return new Response("user_id, title, body required", { status: 400 });
 
@@ -86,12 +87,17 @@ Deno.serve(async (req) => {
 
     let sent = 0;
     for (const token of tokens) {
+      // data_only skips the notification block so the device renders its own
+      // rich notification (e.g. approval actions) instead of doubling up.
+      const message = data_only
+        ? { token, data: { title, body, ...(data ?? {}) } }
+        : { token, notification: { title, body }, data: data ?? {} };
       const res = await fetch(
         `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`,
         {
           method: "POST",
           headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ message: { token, notification: { title, body }, data: data ?? {} } }),
+          body: JSON.stringify({ message }),
         }
       );
       if (res.ok) {

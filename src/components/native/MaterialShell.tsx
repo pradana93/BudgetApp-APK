@@ -12,8 +12,12 @@ import { useLang } from "@/i18n/LanguageContext";
 import { titleFor } from "@/components/Layout";
 import { tapLight } from "@/lib/haptics";
 import { registerDrawerCloser } from "@/lib/nativeUi";
+import { parseDeepLink, runDeepLink } from "@/lib/deeplinks";
+import { shouldLock, unlockApp } from "@/lib/applock";
 import { UserAvatar } from "@/components/UserAvatar";
 import { initialsOf } from "@/lib/avatar";
+import { useToast } from "@/components/ui/toast";
+import { Fingerprint } from "lucide-react";
 import type { StringKey } from "@/i18n/translations";
 
 type Dest = { to: string; key: StringKey; icon: LucideIcon };
@@ -32,10 +36,13 @@ const PRIMARY: Dest[] = [
 export function MaterialShell({ children }: { children: React.ReactNode }) {
   const { profile, signOut } = useSession();
   const { t } = useLang();
+  const { toast } = useToast();
   const loc = useLocation();
   const nav = useNavigate();
   const [drawer, setDrawer] = React.useState(false);
   const [closing, setClosing] = React.useState(false);
+  const [locked, setLocked] = React.useState(false);
+  const [unlocking, setUnlocking] = React.useState(false);
   const stateRef = React.useRef({ drawer: false, closing: false });
   stateRef.current = { drawer, closing };
   const closeTimer = React.useRef<number | null>(null);
@@ -71,6 +78,59 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
       }),
     []
   );
+
+  // Deep links (launcher shortcuts, widget, notification actions).
+  React.useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const { App } = await import("@capacitor/app");
+        // NOTE: no removeAllListeners here — NativeEffects owns the wipe.
+        void App.addListener("appUrlOpen", async ({ url }) => {
+          if (!alive) return;
+          const action = parseDeepLink(url);
+          if (!action) return;
+          const res = await runDeepLink(action, (to) => nav(to));
+          if (res.message) toast({ title: res.message });
+          if (!res.ok && res.message) toast({ title: res.message, variant: "destructive" });
+        });
+      } catch {
+        // Deep links unavailable — normal links still work.
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [nav, toast]);
+
+  // Biometric gate on launch + resume (fail-open by design).
+  React.useEffect(() => {
+    let alive = true;
+    const gate = async () => {
+      const check = await shouldLock();
+      if (alive && check.state === "locked") setLocked(true);
+    };
+    void gate();
+    let sub: { remove: () => void } | null = null;
+    (async () => {
+      try {
+        const { App } = await import("@capacitor/app");
+        sub = (await App.addListener("appStateChange", ({ isActive }) => {
+          if (isActive) void gate();
+        })) as unknown as { remove: () => void };
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      alive = false;
+      try {
+        sub?.remove();
+      } catch {
+        // ignore
+      }
+    };
+  }, []);
 
   const { data: unread } = useQuery({
     queryKey: ["notifications-unread"],
@@ -118,6 +178,58 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
     { to: "/notifications", key: "nav.notifications", icon: Bell },
     { to: "/settings", key: "nav.settings", icon: Settings },
   ];
+
+  const [lockFails, setLockFails] = React.useState(0);
+  const tryUnlock = async () => {
+    setUnlocking(true);
+    try {
+      const ok = await unlockApp();
+      if (ok) {
+        setLocked(false);
+        setLockFails(0);
+      } else {
+        setLockFails((n) => n + 1);
+      }
+    } finally {
+      setUnlocking(false);
+    }
+  };
+
+  if (locked) {
+    return (
+      <div className="native-app min-h-screen bg-foreground text-background flex flex-col items-center justify-center gap-4 p-8 text-center">
+        <span className="rounded-2xl bg-background/10 p-4">
+          <Fingerprint className="h-10 w-10" />
+        </span>
+        <h1 className="font-display text-2xl font-semibold">BudgetApp locked</h1>
+        <p className="text-sm opacity-70">Confirm it&apos;s you to open your budgets.</p>
+        <button
+          type="button"
+          onClick={() => void tryUnlock()}
+          disabled={unlocking}
+          className="m3-press rounded-full bg-background px-6 h-12 text-sm font-semibold text-foreground disabled:opacity-60"
+        >
+          {unlocking ? "…" : "Unlock"}
+        </button>
+        {lockFails >= 3 && (
+          <button
+            type="button"
+            onClick={() => {
+              try {
+                localStorage.setItem("budgetapp-applock", "0");
+              } catch {
+                // ignore
+              }
+              setLocked(false);
+            }}
+            className="text-xs opacity-60 underline"
+          >
+            Turn off app lock
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="native-app min-h-screen bg-background text-foreground flex flex-col">

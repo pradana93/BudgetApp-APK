@@ -189,15 +189,56 @@ patchFile(
   "predictive back"
 );
 
-// 9. app shortcuts (long-press launcher): Dashboard + New request
+// 9. app shortcuts (long-press launcher): Dashboard + New request + Scan
 {
   const RES = path.join(ANDROID, "app", "src", "main", "res");
   const xmlDir = path.join(RES, "xml");
-  const shortcuts = `<?xml version="1.0" encoding="utf-8"?>\n<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">\n    <shortcut android:shortcutId="dashboard" android:enabled="true" android:icon="@drawable/sc_dash" android:shortcutShortLabel="@string/app_name">\n        <intent android:action="android.intent.action.VIEW" android:targetPackage="com.pradana93.budgetapp" android:targetClass="com.pradana93.budgetapp.MainActivity" android:data="budgetapp://dashboard" />\n    </shortcut>\n    <shortcut android:shortcutId="new-request" android:enabled="true" android:icon="@drawable/sc_new" android:shortcutShortLabel="@string/title_activity_main">\n        <intent android:action="android.intent.action.VIEW" android:targetPackage="com.pradana93.budgetapp" android:targetClass="com.pradana93.budgetapp.MainActivity" android:data="budgetapp://new-request" />\n    </shortcut>\n</shortcuts>\n`;
+  const shortcuts = `<?xml version="1.0" encoding="utf-8"?>\n<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">\n    <shortcut android:shortcutId="dashboard" android:enabled="true" android:icon="@drawable/sc_dash" android:shortcutShortLabel="@string/app_name">\n        <intent android:action="android.intent.action.VIEW" android:targetPackage="com.pradana93.budgetapp" android:targetClass="com.pradana93.budgetapp.MainActivity" android:data="budgetapp://dashboard" />\n    </shortcut>\n    <shortcut android:shortcutId="new-request" android:enabled="true" android:icon="@drawable/sc_new" android:shortcutShortLabel="@string/shortcut_new">\n        <intent android:action="android.intent.action.VIEW" android:targetPackage="com.pradana93.budgetapp" android:targetClass="com.pradana93.budgetapp.MainActivity" android:data="budgetapp://new-request" />\n    </shortcut>\n    <shortcut android:shortcutId="scan-receipt" android:enabled="true" android:icon="@drawable/sc_scan" android:shortcutShortLabel="@string/shortcut_scan">\n        <intent android:action="android.intent.action.VIEW" android:targetPackage="com.pradana93.budgetapp" android:targetClass="com.pradana93.budgetapp.MainActivity" android:data="budgetapp://new-request" />\n    </shortcut>\n</shortcuts>\n`;
   if (fs.existsSync(xmlDir)) {
     fs.writeFileSync(path.join(xmlDir, "shortcuts.xml"), shortcuts);
     console.log("shortcuts.xml written");
   }
+  for (const sc of ["sc_dash", "sc_new", "sc_scan"]) {
+    const src = path.join(ROOT, "assets", "shortcuts", `${sc}.png`);
+    const dest = path.join(RES, "drawable", `${sc}.png`);
+    if (fs.existsSync(src) && fs.existsSync(path.dirname(dest))) fs.copyFileSync(src, dest);
+  }
+  // notif silhouettes per density + monochrome launcher foreground
+  for (const d of ["mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"]) {
+    const src = path.join(ROOT, "assets", "notif", `ic_stat_notify_${d}.png`);
+    const destDir = path.join(RES, `drawable-${d}`);
+    if (fs.existsSync(src) && fs.existsSync(destDir)) {
+      fs.copyFileSync(src, path.join(destDir, "ic_stat_notify.png"));
+    }
+  }
+  const monoSrc = path.join(ROOT, "assets", "icon", "ic_launcher_monochrome.png");
+  if (fs.existsSync(monoSrc)) {
+    fs.copyFileSync(monoSrc, path.join(RES, "drawable", "ic_launcher_monochrome.png"));
+  }
+  const anydpi = path.join(RES, "mipmap-anydpi-v26");
+  const adaptiveMono = `<?xml version="1.0" encoding="utf-8"?>\n<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n    <background android:drawable="@color/ic_launcher_background" />\n    <foreground android:drawable="@drawable/ic_launcher_foreground" />\n    <monochrome android:drawable="@drawable/ic_launcher_monochrome" />\n</adaptive-icon>\n`;
+  if (fs.existsSync(anydpi)) {
+    fs.writeFileSync(path.join(anydpi, "ic_launcher.xml"), adaptiveMono);
+    fs.writeFileSync(path.join(anydpi, "ic_launcher_round.xml"), adaptiveMono);
+  }
+  // strings for shortcuts + widget
+  const stringsXml = path.join(RES, "values", "strings.xml");
+  patchFile(
+    stringsXml,
+    (s) => {
+      let out = s;
+      const add = (name, value) => {
+        if (!out.includes(`name="${name}"`)) {
+          out = out.replace("</resources>", `    <string name="${name}">${value}</string>\n</resources>`);
+        }
+      };
+      add("shortcut_new", "New request");
+      add("shortcut_scan", "Scan receipt");
+      add("widget_desc", "BudgetApp available balance and pending requests");
+      return out;
+    },
+    "strings additions"
+  );
   patchFile(
     MANIFEST,
     (s) => {
@@ -227,6 +268,106 @@ patchFile(
       return out;
     },
     "navigation bar theme"
+  );
+}
+
+// 11. bundled native module (approval service + widget + plugin bridge)
+{
+  const SRC = path.join(ROOT, "plugins", "native-extras", "android", "src", "main");
+  const DEST = path.join(ANDROID, "app", "src", "main");
+  const copyTree = (from, to) => {
+    if (!fs.existsSync(from)) return 0;
+    let n = 0;
+    for (const e of fs.readdirSync(from, { withFileTypes: true })) {
+      const f = path.join(from, e.name);
+      const t = path.join(to, e.name);
+      if (e.isDirectory()) {
+        fs.mkdirSync(t, { recursive: true });
+        n += copyTree(f, t);
+      } else {
+        fs.copyFileSync(f, t);
+        n++;
+      }
+    }
+    return n;
+  };
+  // java sources under a fixed package path
+  const javaDest = path.join(DEST, "java", "com", "pradana93", "nativeextras");
+  fs.mkdirSync(javaDest, { recursive: true });
+  const javaSrc = path.join(SRC, "java", "com", "pradana93", "nativeextras");
+  let n = copyTree(javaSrc, javaDest);
+  // res overlay (layout + xml + drawables from the module)
+  n += copyTree(path.join(SRC, "res"), path.join(DEST, "res"));
+  console.log(`native-extras copied (${n} files)`);
+
+  // settings.gradle include
+  const settingsGradle = path.join(ANDROID, "settings.gradle");
+  patchFile(
+    settingsGradle,
+    (s) => {
+      if (s.includes("native-extras")) return s;
+      return `${s.trimEnd()}\ninclude ':native-extras'\nproject(':native-extras').projectDir = new File(settingsDir, '../plugins/native-extras/android')\n`;
+    },
+    "settings.gradle include"
+  );
+  // app dependency — needs a build.gradle inside the module dir
+  const modDir = path.join(ROOT, "plugins", "native-extras", "android");
+  if (!fs.existsSync(path.join(modDir, "build.gradle"))) {
+    fs.writeFileSync(
+      path.join(modDir, "build.gradle"),
+      `apply plugin: 'com.android.library'\n\nandroid {\n    namespace "com.pradana93.nativeextras"\n    compileSdk 34\n    defaultConfig {\n        minSdkVersion 24\n    }\n}\n\ndependencies {\n    implementation project(':capacitor-android')\n    implementation 'com.google.firebase:firebase-messaging:23.3.1'\n}\n`
+    );
+  }
+  patchFile(
+    APP_GRADLE,
+    (s) => {
+      if (s.includes("project(':native-extras')")) return s;
+      return s.replace(/dependencies\s*\{/, `dependencies {\n    implementation project(':native-extras')`);
+    },
+    "app native-extras dep"
+  );
+  // MainActivity plugin registration (Capacitor 6 template has an empty activity class)
+  const mainActivity = path.join(ANDROID, "app", "src", "main", "java", "com", "pradana93", "budgetapp", "MainActivity.java");
+  patchFile(
+    mainActivity,
+    (s) => {
+      if (s.includes("NativeExtrasPlugin")) return s;
+      if (/public class MainActivity extends BridgeActivity \{\s*\}/.test(s)) {
+        return s
+          .replace(
+            "import com.getcapacitor.BridgeActivity;",
+            "import com.getcapacitor.BridgeActivity;\nimport android.os.Bundle;\nimport com.pradana93.nativeextras.NativeExtrasPlugin;"
+          )
+          .replace(
+            "public class MainActivity extends BridgeActivity {}",
+            "public class MainActivity extends BridgeActivity {\n    @Override\n    public void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        registerPlugin(NativeExtrasPlugin.class);\n    }\n}"
+          );
+      }
+      console.log("WARN: MainActivity template changed — register NativeExtrasPlugin manually");
+      return s;
+    },
+    "MainActivity registerPlugin"
+  );
+  // manifest: deep-link scheme + approval service + widget receiver
+  patchFile(
+    MANIFEST,
+    (s) => {
+      let out = s;
+      if (!out.includes("android:scheme=\"budgetapp\"")) {
+        out = out.replace(
+          "</activity>",
+          '            <intent-filter>\n                <action android:name="android.intent.action.VIEW" />\n                <category android:name="android.intent.category.DEFAULT" />\n                <category android:name="android.intent.category.BROWSABLE" />\n                <data android:scheme="budgetapp" />\n            </intent-filter>\n        </activity>'
+        );
+      }
+      if (!out.includes("ApprovalMessagingService")) {
+        out = out.replace(
+          "</application>",
+          '        <service android:name="com.pradana93.nativeextras.ApprovalMessagingService" android:exported="false">\n            <intent-filter>\n                <action android:name="com.google.firebase.MESSAGING_EVENT" />\n            </intent-filter>\n        </service>\n        <receiver android:name="com.pradana93.nativeextras.BudgetWidgetProvider" android:exported="false">\n            <intent-filter>\n                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />\n            </intent-filter>\n            <meta-data android:name="android.appwidget.provider" android:resource="@xml/budget_widget_info" />\n        </receiver>\n    </application>'
+        );
+      }
+      return out;
+    },
+    "manifest native wiring"
   );
 }
 
