@@ -203,14 +203,10 @@ patchFile(
     const dest = path.join(RES, "drawable", `${sc}.png`);
     if (fs.existsSync(src) && fs.existsSync(path.dirname(dest))) fs.copyFileSync(src, dest);
   }
-  // notif silhouettes per density + monochrome launcher foreground
+  // notif silhouettes live in the library module (its R class references them)
   const modRes = path.join(ROOT, "plugins", "native-extras", "android", "src", "main", "res");
   for (const d of ["mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"]) {
     const src = path.join(ROOT, "assets", "notif", `ic_stat_notify_${d}.png`);
-    const destDir = path.join(RES, `drawable-${d}`);
-    if (fs.existsSync(src) && fs.existsSync(destDir)) {
-      fs.copyFileSync(src, path.join(destDir, "ic_stat_notify.png"));
-    }
     // library module needs its own copy for R.drawable access
     const modDir = path.join(modRes, `drawable-${d}`);
     if (fs.existsSync(src)) {
@@ -279,33 +275,10 @@ patchFile(
 }
 
 // 11. bundled native module (approval service + widget + plugin bridge)
+// NOTE: module sources stay under plugins/native-extras (library module).
+// Nothing is copied into :app — classes and resources merge automatically.
+// (Copying them would duplicate classes and break compilation.)
 {
-  const SRC = path.join(ROOT, "plugins", "native-extras", "android", "src", "main");
-  const DEST = path.join(ANDROID, "app", "src", "main");
-  const copyTree = (from, to) => {
-    if (!fs.existsSync(from)) return 0;
-    let n = 0;
-    for (const e of fs.readdirSync(from, { withFileTypes: true })) {
-      const f = path.join(from, e.name);
-      const t = path.join(to, e.name);
-      if (e.isDirectory()) {
-        fs.mkdirSync(t, { recursive: true });
-        n += copyTree(f, t);
-      } else {
-        fs.copyFileSync(f, t);
-        n++;
-      }
-    }
-    return n;
-  };
-  // java sources under a fixed package path
-  const javaDest = path.join(DEST, "java", "com", "pradana93", "nativeextras");
-  fs.mkdirSync(javaDest, { recursive: true });
-  const javaSrc = path.join(SRC, "java", "com", "pradana93", "nativeextras");
-  let n = copyTree(javaSrc, javaDest);
-  // res overlay (layout + xml + drawables from the module)
-  n += copyTree(path.join(SRC, "res"), path.join(DEST, "res"));
-  console.log(`native-extras copied (${n} files)`);
 
   // settings.gradle include
   const settingsGradle = path.join(ANDROID, "settings.gradle");
