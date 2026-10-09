@@ -204,11 +204,18 @@ patchFile(
     if (fs.existsSync(src) && fs.existsSync(path.dirname(dest))) fs.copyFileSync(src, dest);
   }
   // notif silhouettes per density + monochrome launcher foreground
+  const modRes = path.join(ROOT, "plugins", "native-extras", "android", "src", "main", "res");
   for (const d of ["mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"]) {
     const src = path.join(ROOT, "assets", "notif", `ic_stat_notify_${d}.png`);
     const destDir = path.join(RES, `drawable-${d}`);
     if (fs.existsSync(src) && fs.existsSync(destDir)) {
       fs.copyFileSync(src, path.join(destDir, "ic_stat_notify.png"));
+    }
+    // library module needs its own copy for R.drawable access
+    const modDir = path.join(modRes, `drawable-${d}`);
+    if (fs.existsSync(src)) {
+      fs.mkdirSync(modDir, { recursive: true });
+      fs.copyFileSync(src, path.join(modDir, "ic_stat_notify.png"));
     }
   }
   const monoSrc = path.join(ROOT, "assets", "icon", "ic_launcher_monochrome.png");

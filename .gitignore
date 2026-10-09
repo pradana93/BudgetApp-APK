@@ -51,6 +51,9 @@ coverage/
 /android/
 /ios/
 
+# Generated per-density copies inside the bundled native module (from assets/)
+plugins/native-extras/android/src/main/res/drawable-*/
+
 # Local APK/AAB outputs
 *.apk
 *.aab
