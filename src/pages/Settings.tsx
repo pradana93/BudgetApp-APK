@@ -15,15 +15,73 @@ import { xpOf, levelOf, type ReqLite } from "@/lib/gamify";
 import { formatDate } from "@/lib/datetime";
 import { Check, Trophy } from "lucide-react";
 import { isNative } from "@/lib/native";
-import { isAppLockEnabled, setAppLockEnabled } from "@/lib/applock";
+import { getLockMode, setLockMode, setPin, type LockMode } from "@/lib/applock";
 
-/** Native-only biometric gate toggle. Renders nothing on web. */
+/** Native-only lock settings: biometric / PIN-4 / PIN-6 + setup. Renders nothing on web. */
 function DeviceLockCard() {
-  const [on, setOn] = React.useState(false);
+  const [mode, setModeState] = React.useState<LockMode>("off");
+  const [step, setStep] = React.useState<"idle" | "enter" | "confirm">("idle");
+  const [first, setFirst] = React.useState("");
+  const [entry, setEntry] = React.useState("");
+  const [error, setError] = React.useState("");
+  const [saved, setSaved] = React.useState(false);
   React.useEffect(() => {
-    setOn(isAppLockEnabled());
+    setModeState(getLockMode());
   }, []);
   if (!isNative()) return null;
+
+  const wantLen = mode === "pin6" ? 6 : 4;
+  const pick = (m: LockMode) => {
+    setLockMode(m);
+    setModeState(m);
+    setStep(m === "pin4" || m === "pin6" ? "enter" : "idle");
+    setFirst("");
+    setEntry("");
+    setError("");
+    setSaved(false);
+  };
+  const press = async (k: string) => {
+    setError("");
+    let next = entry;
+    if (k === "back") next = entry.slice(0, -1);
+    else if (/^[0-9]$/.test(k)) next = (entry + k).slice(0, wantLen);
+    else return;
+    setEntry(next);
+    if (next.length === wantLen) {
+      if (step === "enter") {
+        setFirst(next);
+        setEntry("");
+        setStep("confirm");
+      } else {
+        if (next !== first) {
+          setError("PINs don't match — start over.");
+          setFirst("");
+          setEntry("");
+          setStep("enter");
+        } else {
+          const ok = await setPin(next);
+          if (ok) {
+            setSaved(true);
+            setStep("idle");
+            setEntry("");
+            setFirst("");
+            window.setTimeout(() => setSaved(false), 2500);
+          } else {
+            setError("Couldn't save PIN — try again.");
+            setEntry("");
+          }
+        }
+      }
+    }
+  };
+
+  const options: Array<{ id: LockMode; label: string; desc: string }> = [
+    { id: "off", label: "Off", desc: "No gate" },
+    { id: "biometric", label: "Fingerprint", desc: "System prompt" },
+    { id: "pin4", label: "4-digit PIN", desc: "Quick pad" },
+    { id: "pin6", label: "6-digit PIN", desc: "Stronger pad" },
+  ];
+
   return (
     <Card>
       <CardHeader>
@@ -31,27 +89,81 @@ function DeviceLockCard() {
           <Fingerprint className="h-4 w-4" /> App lock
         </CardTitle>
         <CardDescription>
-          Require biometrics to open BudgetApp on this device.
+          Gate BudgetApp on this device. PINs are hashed on-device; nothing leaves your phone.
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={on}
-          onClick={() => {
-            const v = !on;
-            setAppLockEnabled(v);
-            setOn(v);
-          }}
-          className={`relative h-8 w-14 rounded-full transition-colors ${on ? "bg-primary" : "bg-muted"}`}
-        >
-          <span
-            className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-all ${on ? "left-7" : "left-1"}`}
-          />
-        </button>
+      <CardContent className="space-y-3">
+        <div className="grid grid-cols-2 gap-2">
+          {options.map((o) => (
+            <button
+              key={o.id}
+              type="button"
+              onClick={() => pick(o.id)}
+              aria-pressed={mode === o.id}
+              className={`rounded-xl border p-3 text-left transition-colors ${
+                mode === o.id ? "border-primary bg-primary/10" : "border-border hover:bg-accent"
+              }`}
+            >
+              <div className="text-sm font-semibold">{o.label}</div>
+              <div className="text-xs text-muted-foreground">{o.desc}</div>
+            </button>
+          ))}
+        </div>
+        {(mode === "pin4" || mode === "pin6") && step !== "idle" && (
+          <div className="rounded-xl border border-border/60 p-4 text-center">
+            <div className="text-sm font-medium">
+              {step === "enter" ? `Enter a ${wantLen}-digit PIN` : "Confirm your PIN"}
+            </div>
+            <div className="mt-3 flex justify-center gap-2.5">
+              {Array.from({ length: wantLen }).map((_, i) => (
+                <span
+                  key={i}
+                  className={`h-3.5 w-3.5 rounded-full ${i < entry.length ? "bg-primary" : "bg-muted"}`}
+                />
+              ))}
+            </div>
+            {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
+            <div className="mx-auto mt-3 grid max-w-[240px] grid-cols-3 gap-2">
+              {["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "back"].map((k, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  disabled={k === ""}
+                  onClick={() => void press(k)}
+                  className="h-12 rounded-full bg-muted text-lg font-semibold disabled:opacity-0 active:scale-95 transition-transform"
+                >
+                  {k === "back" ? "⌫" : k}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {saved && <p className="text-xs text-emerald-600">PIN saved — lock engages when you leave the app.</p>}
       </CardContent>
     </Card>
+  );
+}
+
+/** Native APK version (App plugin) + web commit fingerprint. */
+function BuildInfo() {
+  const [appVer, setAppVer] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    if (!isNative()) return;
+    (async () => {
+      try {
+        const { App } = await import("@capacitor/app");
+        const info = await App.getInfo();
+        setAppVer(`${info.version} (${info.build})`);
+      } catch {
+        // ignore
+      }
+    })();
+  }, []);
+  return (
+    <div className="text-xs text-muted-foreground">
+      {appVer ? `BudgetApp Android ${appVer}` : null}
+      {appVer ? " • " : ""}Build {typeof __GIT_SHA__ !== "undefined" ? __GIT_SHA__.slice(0, 7) : "local"}
+    </div>
   );
 }
 
@@ -328,6 +440,6 @@ export default function Settings(){
     </CardContent></Card>
 
     <Button variant="destructive" onClick={()=>supabase.auth.signOut()}>{t("set.signOut")}</Button>
-    <div className="text-xs text-muted-foreground">Build {typeof __GIT_SHA__ !== "undefined" ? __GIT_SHA__.slice(0, 7) : "local"}</div>
+    <BuildInfo />
   </div>;
 }

@@ -13,7 +13,7 @@ import { titleFor } from "@/components/Layout";
 import { tapLight } from "@/lib/haptics";
 import { registerDrawerCloser } from "@/lib/nativeUi";
 import { parseDeepLink, runDeepLink } from "@/lib/deeplinks";
-import { shouldLock, unlockApp, recordUnlock, recentlyUnlocked, noteInactive, brieflyAway } from "@/lib/applock";
+import { shouldLock, unlockApp, recordUnlock, unlockedSinceBackground, noteInactive, brieflyAway, verifyPin } from "@/lib/applock";
 import { UserAvatar } from "@/components/UserAvatar";
 import { initialsOf } from "@/lib/avatar";
 import { useToast } from "@/components/ui/toast";
@@ -103,15 +103,18 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
     };
   }, [nav, toast]);
 
-  // Biometric gate on launch + resume (fail-open by design).
-  // Cooldowns prevent the re-lock loop: the system prompt briefly
-  // backgrounds the app, which must not count as leaving it.
+  // Lock gate on launch + resume (fail-open by design).
+  // Loop-proof: an unlock that lands after the last backgrounding means
+  // the user just authenticated — never re-lock for that resume.
+  // Brief blips (prompt, share sheet) are ignored; real leaves lock.
   React.useEffect(() => {
     let alive = true;
     const gate = async () => {
-      if (recentlyUnlocked()) return;
       const check = await shouldLock();
-      if (alive && check.state === "locked") setLocked(true);
+      if (alive && check.state === "locked") {
+        setLockMode(check.mode);
+        setLocked(true);
+      }
     };
     void gate();
     let sub: { remove: () => void } | null = null;
@@ -123,7 +126,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
             noteInactive();
             return;
           }
-          if (recentlyUnlocked() || brieflyAway()) return;
+          if (unlockedSinceBackground() || brieflyAway()) return;
           void gate();
         })) as unknown as { remove: () => void };
       } catch {
@@ -190,6 +193,9 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
   ];
 
   const [lockFails, setLockFails] = React.useState(0);
+  const [lockMode, setLockMode] = React.useState<"biometric" | "pin4" | "pin6">("biometric");
+  const [pinEntry, setPinEntry] = React.useState("");
+  const [pinError, setPinError] = React.useState("");
   const tryUnlock = async () => {
     setUnlocking(true);
     try {
@@ -205,8 +211,31 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
       setUnlocking(false);
     }
   };
+  const pressPinDigit = (d: string) => {
+    setPinError("");
+    const len = lockMode === "pin6" ? 6 : 4;
+    const next = (pinEntry + d).slice(0, len);
+    setPinEntry(next);
+    if (next.length === len) {
+      void (async () => {
+        const ok = await verifyPin(next);
+        if (ok) {
+          recordUnlock();
+          setLocked(false);
+          setLockFails(0);
+          setPinEntry("");
+        } else {
+          setLockFails((n) => n + 1);
+          setPinError("Wrong PIN — try again.");
+          window.setTimeout(() => setPinEntry(""), 350);
+        }
+      })();
+    }
+  };
 
   if (locked) {
+    const pinLen = lockMode === "pin6" ? 6 : 4;
+    const showPin = lockMode === "pin4" || lockMode === "pin6";
     return (
       <div className="native-app min-h-screen bg-foreground text-background flex flex-col items-center justify-center gap-4 p-8 text-center">
         <span className="rounded-2xl bg-background/10 p-4">
@@ -214,20 +243,53 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
         </span>
         <h1 className="font-display text-2xl font-semibold">BudgetApp locked</h1>
         <p className="text-sm opacity-70">Confirm it&apos;s you to open your budgets.</p>
-        <button
-          type="button"
-          onClick={() => void tryUnlock()}
-          disabled={unlocking}
-          className="m3-press rounded-full bg-background px-6 h-12 text-sm font-semibold text-foreground disabled:opacity-60"
-        >
-          {unlocking ? "…" : "Unlock"}
-        </button>
+        {showPin ? (
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex gap-2.5" aria-label="PIN entry">
+              {Array.from({ length: pinLen }).map((_, i) => (
+                <span
+                  key={i}
+                  className={`h-3.5 w-3.5 rounded-full transition-colors ${
+                    i < pinEntry.length ? "bg-background" : "bg-background/25"
+                  }`}
+                />
+              ))}
+            </div>
+            {pinError && <p className="text-xs text-red-300">{pinError}</p>}
+            <div className="grid grid-cols-3 gap-2.5">
+              {["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"].map((k, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  disabled={k === ""}
+                  onClick={() => {
+                    if (k === "⌫") setPinEntry((p) => p.slice(0, -1));
+                    else if (k !== "") pressPinDigit(k);
+                  }}
+                  className="m3-press h-16 w-16 rounded-full bg-background/10 text-xl font-semibold disabled:opacity-0"
+                >
+                  {k}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => void tryUnlock()}
+            disabled={unlocking}
+            className="m3-press rounded-full bg-background px-6 h-12 text-sm font-semibold text-foreground disabled:opacity-60"
+          >
+            {unlocking ? "…" : "Unlock"}
+          </button>
+        )}
         {lockFails >= 3 && (
           <button
             type="button"
             onClick={() => {
               try {
                 localStorage.setItem("budgetapp-applock", "0");
+                localStorage.setItem("budgetapp-applock-mode", "off");
               } catch {
                 // ignore
               }
