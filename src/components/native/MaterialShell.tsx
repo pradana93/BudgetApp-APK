@@ -177,6 +177,47 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
 
   const displayName = profile?.display_name || profile?.email || t("nav.userFallback");
   const hideFab = /\/new$/.test(loc.pathname);
+
+  // Solid hairline once content slides under the bars (saves GPU blur work).
+  const [scrolled, setScrolled] = React.useState(false);
+  React.useEffect(() => {
+    let last = false;
+    const onScroll = () => {
+      const y = window.scrollY > 10;
+      if (y !== last) {
+        last = y;
+        setScrolled(y);
+      }
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // One gliding pill (FLIP-measured) instead of five crossfading ones.
+  const barRowRef = React.useRef<HTMLDivElement>(null);
+  const [glider, setGlider] = React.useState({ x: 0, y: 0, w: 0, h: 0, on: false });
+  React.useLayoutEffect(() => {
+    const row = barRowRef.current;
+    if (!row) return;
+    const active = row.querySelector('[data-pillon="1"]') as HTMLElement | null;
+    if (!active) {
+      setGlider((g) => (g.on ? { ...g, on: false } : g));
+      return;
+    }
+    const next = {
+      x: active.offsetLeft,
+      y: active.offsetTop,
+      w: active.offsetWidth,
+      h: active.offsetHeight,
+      on: true,
+    };
+    setGlider((g) =>
+      g.x === next.x && g.y === next.y && g.w === next.w && g.h === next.h && g.on
+        ? g
+        : next
+    );
+  }, [loc.pathname]);
   const drawerItems: Dest[] = [
     ...PRIMARY,
     { to: "/calendar", key: "nav.calendar", icon: CalendarDays },
@@ -307,7 +348,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="native-app min-h-screen bg-background text-foreground flex flex-col">
       {/* M3 small top app bar */}
-      <header className="sticky top-0 z-30 bg-background pt-[env(safe-area-inset-top)]">
+      <header className={`sticky top-0 z-30 bg-background pt-[env(safe-area-inset-top)] transition-shadow duration-200 ${scrolled ? "shadow-[0_1px_0_hsl(var(--border))]" : ""}`}>
         <div className="flex items-center gap-1 px-2 h-16">
           <button
             type="button"
@@ -351,7 +392,11 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 pb-40">{children}</main>
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 pb-40">
+        <div key={loc.pathname} className="m3-page-in">
+          {children}
+        </div>
+      </main>
 
       {/* M3 FAB — quick reimbursement request */}
       {!hideFab && (
@@ -368,7 +413,19 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
 
       {/* M3 navigation bar */}
       <nav aria-label="Primary" className="fixed bottom-0 inset-x-0 z-40 bg-background">
-        <div className="grid grid-cols-5 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+        <div ref={barRowRef} className="relative grid grid-cols-5 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+          {glider.on && (
+            <span
+              aria-hidden
+              className="pointer-events-none absolute rounded-full bg-primary/15 transition-all duration-300"
+              style={{
+                transform: `translate(${glider.x}px, ${glider.y}px)`,
+                width: glider.w,
+                height: glider.h,
+                transitionTimingFunction: "var(--ease-enter)",
+              }}
+            />
+          )}
           {bar.map((tb) => {
             const active = tb.to === "/" ? loc.pathname === "/" : loc.pathname.startsWith(tb.to);
             const Icon = tb.icon;
@@ -380,8 +437,9 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
                 className="m3-press flex flex-col items-center gap-1 min-w-0"
               >
                 <span
-                  className={`relative rounded-full px-5 py-1.5 transition-all duration-200 ${
-                    active ? "bg-primary/15 text-foreground" : "text-muted-foreground"
+                  data-pillon={active ? "1" : "0"}
+                  className={`relative rounded-full px-5 py-1.5 transition-colors duration-200 ${
+                    active ? "text-foreground" : "text-muted-foreground"
                   }`}
                 >
                   <Icon className={`h-6 w-6 transition-transform duration-200 ${active ? "scale-110" : ""}`} strokeWidth={active ? 2.25 : 2} />

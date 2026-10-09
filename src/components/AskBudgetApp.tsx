@@ -118,7 +118,7 @@ export default function AskBudgetApp({ ctx }: { ctx: AskCtx }) {
               </div>
             </div>
           ))}
-          {loading && <div className="flex justify-start"><div className="rounded-2xl rounded-bl-sm border bg-white px-3.5 py-2.5 text-sm"><span className="inline-flex gap-1"><span className="animate-bounce">•</span><span className="animate-bounce [animation-delay:120ms]">•</span><span className="animate-bounce [animation-delay:240ms]">•</span></span> {t("ask.thinking")}</div></div>}
+          {loading && <div className="flex justify-start"><div className="rounded-2xl rounded-bl-sm border bg-white px-3.5 py-2.5 text-sm"><span className="inline-flex gap-1"><span className="m3-breathe">•</span><span className="m3-breathe [animation-delay:120ms]">•</span><span className="m3-breathe [animation-delay:240ms]">•</span></span> {t("ask.thinking")}</div></div>}
         </div>
 
         <form onSubmit={onSubmit} className="flex gap-2">

@@ -420,7 +420,7 @@ export default function Admin() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card><CardHeader><CardTitle>{t("admin.spendCat")}</CardTitle></CardHeader><CardContent className="h-[260px]">
           {byCategory.length === 0 ? <ChartEmpty>{t("admin.noSpend")}</ChartEmpty> :
-          <ResponsiveContainer width="100%" height="100%"><BarChart data={byCategory} margin={{ top: 16, right: 4, left: -22, bottom: 0 }}><XAxis dataKey="name" {...slimAxis} tick={{ ...smallTick }} interval={0} /><YAxis hide /><Tooltip content={<MoneyTip format={(v) => formatMoney(v)} />} cursor={{ fill: ink.track, opacity: 0.45 }} /><Bar dataKey="total" {...pineBar}><LabelList dataKey="total" position="top" fill={ink.muted} fontSize={11} formatter={(v: unknown) => compactMoney(Number(v))} /></Bar></BarChart></ResponsiveContainer>}
+          <ResponsiveContainer width="100%" height="100%"><BarChart data={byCategory} margin={{ top: 16, right: 4, left: -22, bottom: 0 }}><XAxis dataKey="name" {...slimAxis} tick={{ ...smallTick }} interval={0} /><YAxis hide /><Tooltip content={<MoneyTip format={(v) => formatMoney(v)} />} cursor={{ fill: ink.track, opacity: 0.45 }} /><Bar dataKey="total" {...pineBar} animationDuration={500} animationEasing="ease-out"><LabelList dataKey="total" position="top" fill={ink.muted} fontSize={11} formatter={(v: unknown) => compactMoney(Number(v))} /></Bar></BarChart></ResponsiveContainer>}
         </CardContent></Card>
         <Card className="overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between gap-2">

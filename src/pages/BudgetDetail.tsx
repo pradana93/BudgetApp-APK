@@ -121,7 +121,7 @@ export default function BudgetDetail(){
           {insights.anomalies.map((a, i) => <div key={i}>• {a}</div>)}
         </div>}
         {series.length > 0 && <div className="h-[220px]">
-          <ResponsiveContainer width="100%" height="100%"><AreaChart data={series} margin={{ top: 4, right: 4, left: -18, bottom: 0 }}><XAxis dataKey="date" {...slimAxis} tick={{ ...smallTick }} minTickGap={32} /><YAxis hide /><Tooltip content={<MoneyTip format={(v) => formatMoney(Number(v), budget.currency)} />} cursor={{ stroke: ink.grid }} /><Area type="monotone" dataKey="cumulative" name="Net spend" stroke={ink.primary} strokeWidth={2.5} fill={ink.primary} fillOpacity={0.12} dot={false} /></AreaChart></ResponsiveContainer>
+          <ResponsiveContainer width="100%" height="100%"><AreaChart data={series} margin={{ top: 4, right: 4, left: -18, bottom: 0 }}><XAxis dataKey="date" {...slimAxis} tick={{ ...smallTick }} minTickGap={32} /><YAxis hide /><Tooltip content={<MoneyTip format={(v) => formatMoney(Number(v), budget.currency)} />} cursor={{ stroke: ink.grid }} /><Area type="monotone" dataKey="cumulative" name="Net spend" stroke={ink.primary} strokeWidth={2.5} fill={ink.primary} fillOpacity={0.12} dot={false} animationDuration={600} animationEasing="ease-out" /></AreaChart></ResponsiveContainer>
         </div>}
       </CardContent>
     </Card>
