@@ -14,6 +14,7 @@ import { reconciliationScore } from "@/lib/matcher";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { approvalRisk } from "@/lib/advisor";
 import { useToast } from "@/components/ui/toast";
+import { notifyRequesterBoth, merchantOf } from "@/lib/notify";
 import { useRealtime } from "@/hooks/useRealtime";
 import { normalizeCategory, useCategories } from "@/hooks/useCategories";
 import { useLang } from "@/i18n/LanguageContext";
@@ -22,7 +23,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList } 
 import { ink, slimAxis, smallTick, pineBar, MoneyTip, ChartEmpty, compactMoney } from "@/components/charts";
 
 type Budget = { id: string; name: string; total_amount: number; allocated_amount: number; available_amount: number; currency: string; status: string };
-type Req = { id: string; budget_id: string; amount: number; category: string; merchant: string | null; status: string; created_at: string; receipt_url: string | null; due_date: string | null };
+type Req = { id: string; budget_id: string; requester_id: string; amount: number; category: string; merchant: string | null; status: string; created_at: string; receipt_url: string | null; due_date: string | null };
 type Ledger = { id: string; budget_id: string; debit: number; credit: number; reference_type: string; description: string | null; created_at: string };
 type Profile = { id: string; email: string; display_name: string | null; role: string; created_at: string };
 
@@ -70,7 +71,7 @@ export default function Admin() {
       const { error } = await supabase.rpc("approve_request", { p_request_id: id });
       if (error) throw error;
     },
-    onSuccess: () => { invalidate(); toast({ title: t("admin.approvedMsg") }); },
+    onSuccess: (_d, id) => { invalidate(); toast({ title: t("admin.approvedMsg") }); const r = (requests ?? []).find((x) => x.id === id); if (r && r.requester_id !== myId) { void notifyRequesterBoth(r.requester_id, { type: "request_approved", title: t("nt.approvedT"), body: t("nt.approvedB", { merchant: merchantOf(r), amount: formatMoney(Number(r.amount)) }), link: `/requests/${r.id}`, request_id: r.id }); } },
     onError: (e: Error) => toast({ title: t("admin.failApprove"), description: e.message, variant: "destructive" }),
   });
 
@@ -79,7 +80,7 @@ export default function Admin() {
       const { error } = await supabase.rpc("reject_request", { p_request_id: id, p_reason: reason });
       if (error) throw error;
     },
-    onSuccess: () => { invalidate(); setReasons({}); toast({ title: t("admin.rejectedMsg") }); },
+    onSuccess: (_d, v) => { invalidate(); setReasons({}); toast({ title: t("admin.rejectedMsg") }); const r = (requests ?? []).find((x) => x.id === (v as { id: string }).id); if (r && r.requester_id !== myId) { void notifyRequesterBoth(r.requester_id, { type: "request_rejected", title: t("nt.rejectedT"), body: t("nt.rejectedB", { merchant: merchantOf(r), amount: formatMoney(Number(r.amount)) }), link: `/requests/${r.id}`, request_id: r.id }); } },
     onError: (e: Error) => toast({ title: t("admin.failReject"), description: e.message, variant: "destructive" }),
   });
 
@@ -216,7 +217,7 @@ export default function Admin() {
       const { error } = await supabase.rpc("reconcile_request", { p_request_id: id, p_note: "" });
       if (error) throw error;
     },
-    onSuccess: () => { invalidate(); toast({ title: t("admin.reconciledOne") }); },
+    onSuccess: (_d, id) => { invalidate(); toast({ title: t("admin.reconciledOne") }); const r = (requests ?? []).find((x) => x.id === (id as string)); if (r && r.requester_id !== myId) { void notifyRequesterBoth(r.requester_id, { type: "request_reconciled", title: t("nt.reconciledT"), body: t("nt.reconciledB", { merchant: merchantOf(r), amount: formatMoney(Number(r.amount)) }), link: `/requests/${r.id}`, request_id: r.id }); } },
     onError: (e: Error) => toast({ title: t("admin.failRecon"), description: e.message, variant: "destructive" }),
   });
 
@@ -288,24 +289,36 @@ export default function Admin() {
     if (targets.length === 0 || bulk.running) return;
     setBulk({ running: true, done: 0, total: targets.length });
     let ok = 0;
+    const done: typeof targets = [];
     for (const r of targets) {
       const { error } = await supabase.rpc("reconcile_request", { p_request_id: r.id, p_note: "Bulk auto-reconcile" });
-      if (!error) ok++;
+      if (!error) { ok++; done.push(r); }
       setBulk((b) => ({ ...b, done: b.done + 1 }));
+    }
+    for (const r of done) {
+      if (r.requester_id === myId) continue;
+      void notifyRequesterBoth(r.requester_id, { type: "request_reconciled", title: t("nt.reconciledT"), body: t("nt.reconciledB", { merchant: merchantOf(r), amount: formatMoney(Number(r.amount)) }), link: `/requests/${r.id}`, request_id: r.id });
     }
     invalidate();
     setBulk({ running: false, done: 0, total: 0 });
     toast({ title: t("admin.bulkDone", { done: ok, failed: targets.length - ok }) });
   };
 
-  const exportCsv = () => {
+  const exportCsv = async () => {
     if (!ledger) return;
-    const rows = [["date", "budget", "type", "debit", "credit", "description"],
-      ...ledger.map((l) => [l.created_at, budgetName(l.budget_id), l.reference_type, String(l.debit), String(l.credit), (l.description ?? "").replace(/,/g, " ")])];
+    const rows = [["date","budget","type","debit","credit","description"],
+      ...ledger.map((l) => [l.created_at, budgetName(l.budget_id), l.reference_type, String(l.debit), String(l.credit), (l.description ?? "").replace(/,/g," ")])];
+    const filename = "admin-ledger.csv";
+    try {
+      const { shareTextFile } = await import("@/lib/share");
+      if (await shareTextFile(filename, rows.map((r) => r.join(",")).join("\n"))) return;
+    } catch {
+      // fall through to anchor download
+    }
     const blob = new Blob([rows.map((r) => r.join(",")).join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = "admin-ledger.csv"; a.click();
+    a.href = url; a.download = filename; a.click();
     URL.revokeObjectURL(url);
   };
 
@@ -340,7 +353,7 @@ export default function Admin() {
             <TableRow key={r.id}>
               <TableCell><Link to={`/requests/${r.id}`} className="text-primary underline">{r.merchant ?? r.category}</Link><div className="text-xs text-muted-foreground">{r.category} • {formatDate(r.created_at, lang)}</div></TableCell>
               <TableCell data-label={t("admin.qBudget")}>{budgetName(r.budget_id)}</TableCell>
-              <TableCell data-label={t("admin.qAmount")}>{formatMoney(Number(r.amount))}</TableCell>
+              <TableCell data-label={t("admin.qAmount")} className="font-display tnum">{formatMoney(Number(r.amount))}</TableCell>
               <TableCell data-label={t("risk.title")}><Badge variant={riskMeta[riskOf(r).level].variant} title={riskOf(r).reasons.join(" • ")}>{riskMeta[riskOf(r).level].label}</Badge></TableCell>
               <TableCell data-label={t("admin.qReason")}><Input placeholder={t("admin.reasonPh")} value={reasons[r.id] ?? ""} onChange={(e) => setReasons({ ...reasons, [r.id]: e.target.value })} className="min-w-[160px]" /></TableCell>
               <TableCell data-label={t("admin.qActions")}><div className="flex gap-2">
@@ -514,8 +527,8 @@ export default function Admin() {
           <TableBody>{budgets?.map((b) => (
             <TableRow key={b.id}>
               <TableCell><Link to={`/budgets/${b.id}`} className="text-primary underline">{b.name}</Link></TableCell>
-              <TableCell data-label={t("admin.bTotal")}>{formatMoney(Number(b.total_amount), b.currency)}</TableCell>
-              <TableCell data-label={t("admin.bAvail")}>{formatMoney(Number(b.available_amount), b.currency)}</TableCell>
+              <TableCell data-label={t("admin.bTotal")} className="font-display tnum">{formatMoney(Number(b.total_amount), b.currency)}</TableCell>
+              <TableCell data-label={t("admin.bAvail")} className="font-display tnum">{formatMoney(Number(b.available_amount), b.currency)}</TableCell>
               <TableCell data-label={t("admin.bStatus")}><Badge variant={b.status === "active" ? "approved" : "secondary"}>{b.status}</Badge></TableCell>
               <TableCell data-label={t("admin.topupCol")}><div className="flex gap-2">
                 <Input placeholder={t("admin.amountPh")} value={topups[b.id] ?? ""} onChange={(e) => setTopups({ ...topups, [b.id]: e.target.value })} className="max-w-[140px]" />
@@ -532,7 +545,7 @@ export default function Admin() {
           <Table><TableHeader><TableRow><TableHead>{t("admin.lDate")}</TableHead><TableHead>{t("admin.lBudget")}</TableHead><TableHead>{t("admin.lType")}</TableHead><TableHead>{t("admin.lDebit")}</TableHead><TableHead>{t("admin.lCredit")}</TableHead></TableRow></TableHeader>
           <TableBody>{ledger?.map((l) => (
             <TableRow key={l.id}><TableCell>{formatDateTime(l.created_at, lang)}</TableCell><TableCell data-label={t("admin.lBudget")}>{budgetName(l.budget_id)}</TableCell><TableCell data-label={t("admin.lType")}>{l.reference_type}</TableCell>
-            <TableCell data-label={t("admin.lDebit")}>{l.debit > 0 ? formatMoney(Number(l.debit)) : "-"}</TableCell><TableCell data-label={t("admin.lCredit")}>{l.credit > 0 ? formatMoney(Number(l.credit)) : "-"}</TableCell></TableRow>))}
+            <TableCell data-label={t("admin.lDebit")} className="font-display tnum">{l.debit > 0 ? formatMoney(Number(l.debit)) : "-"}</TableCell><TableCell data-label={t("admin.lCredit")} className="font-display tnum">{l.credit > 0 ? formatMoney(Number(l.credit)) : "-"}</TableCell></TableRow>))}
           </TableBody></Table>
           {(ledger?.length ?? 0) >= limit && <Button variant="outline" className="mt-3" onClick={()=>setLimit((l)=>l + 100)}>{t("admin.loadMore")}</Button>}
         </CardContent>

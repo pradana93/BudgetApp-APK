@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
     if (!caller.user) return new Response("unauthorized", { status: 401 });
 
     const { data: profile } = await admin.from("profiles").select("role").eq("id", caller.user.id).single();
-    if (profile?.role !== "owner") return new Response("forbidden", { status: 403 });
+    const isOwner = profile?.role === "owner";
 
     const { user_id, title, body, data, data_only } = (await req.json()) as {
       user_id: string;
@@ -73,6 +73,20 @@ Deno.serve(async (req) => {
       data_only?: boolean;
     };
     if (!user_id || !title || !body) return new Response("user_id, title, body required", { status: 400 });
+
+    if (!isOwner) {
+      // Members may only ping about their OWN request, and only its budget owner.
+      const rid = data?.request_id;
+      if (!rid) return new Response("forbidden", { status: 403 });
+      const { data: req } = await admin
+        .from("reimbursement_requests")
+        .select("id,requester_id,budget_id")
+        .eq("id", rid)
+        .single();
+      if (!req || req.requester_id !== caller.user.id) return new Response("forbidden", { status: 403 });
+      const { data: bud } = await admin.from("budgets").select("owner_id").eq("id", req.budget_id).single();
+      if (!bud || bud.owner_id !== user_id) return new Response("forbidden", { status: 403 });
+    }
 
     const tokenQuery = admin.from("push_tokens").select("token");
     const { data: rows } = user_id === "all" ? await tokenQuery : await tokenQuery.eq("user_id", user_id);

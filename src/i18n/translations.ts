@@ -600,6 +600,15 @@ const en = {
   "rd.sending": "Sending…",
   "rd.noComments": "No comments yet.",
 
+  "nt.approvedT": "Request approved",
+  "nt.approvedB": "{merchant} • {amount} was approved.",
+  "nt.rejectedT": "Request rejected",
+  "nt.rejectedB": "{merchant} • {amount} was rejected.",
+  "nt.reconciledT": "Request reconciled",
+  "nt.reconciledB": "{merchant} • {amount} was reconciled.",
+  "nt.commentT": "New comment",
+  "nt.commentB": "{author} commented on {merchant}.",
+
   "dash.goals": "Savings goals",
   "goals.new": "New goal",
   "goals.name": "Goal name",
@@ -1266,6 +1275,15 @@ const id: Record<StringKey, string> = {
   "rd.send": "Kirim",
   "rd.sending": "Mengirim…",
   "rd.noComments": "Belum ada komentar.",
+
+  "nt.approvedT": "Pengajuan disetujui",
+  "nt.approvedB": "{merchant} • {amount} disetujui.",
+  "nt.rejectedT": "Pengajuan ditolak",
+  "nt.rejectedB": "{merchant} • {amount} ditolak.",
+  "nt.reconciledT": "Pengajuan direkonsiliasi",
+  "nt.reconciledB": "{merchant} • {amount} direkonsiliasi.",
+  "nt.commentT": "Komentar baru",
+  "nt.commentB": "{author} mengomentari {merchant}.",
 
   "dash.goals": "Target menabung",
   "goals.new": "Target baru",

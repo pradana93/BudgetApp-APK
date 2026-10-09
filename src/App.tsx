@@ -25,6 +25,7 @@ import Rewards from "@/pages/Rewards";
 import Calendar from "@/pages/Calendar";
 import Space from "@/pages/Space";
 import Changelogs from "@/pages/Changelogs";
+import Triage from "@/pages/Triage";
 
 const qc = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } } });
 
@@ -64,6 +65,7 @@ export default function App(){
             <Route path="/rewards" element={<ProtectedRoute><Shell><Rewards /></Shell></ProtectedRoute>} />
             <Route path="/calendar" element={<ProtectedRoute><Shell><Calendar /></Shell></ProtectedRoute>} />
             <Route path="/space" element={<ProtectedRoute><Shell><Space /></Shell></ProtectedRoute>} />
+            <Route path="/triage" element={<ProtectedRoute ownerOnly><Shell><Triage /></Shell></ProtectedRoute>} />
             <Route path="/changelogs" element={<ProtectedRoute><Shell><Changelogs /></Shell></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

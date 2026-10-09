@@ -17,6 +17,8 @@ import { useToast } from "@/components/ui/toast";
 import { useLang } from "@/i18n/LanguageContext";
 import { useCategories } from "@/hooks/useCategories";
 import { ApprovalRiskCard } from "@/components/ApprovalRiskCard";
+import { notifyRequesterBoth, merchantOf } from "@/lib/notify";
+import { isNative } from "@/lib/native";
 
 export default function RequestDetail(){
   const { id } = useParams();
@@ -44,7 +46,7 @@ export default function RequestDetail(){
   const { data: budget } = useQuery({
     queryKey: ["budget-for-risk", data?.budget_id],
     queryFn: async () => {
-      const { data: b, error } = await supabase.from("budgets").select("total_amount,allocated_amount,available_amount,currency").eq("id", data!.budget_id).single();
+      const { data: b, error } = await supabase.from("budgets").select("total_amount,allocated_amount,available_amount,currency,owner_id").eq("id", data!.budget_id).single();
       if (error) throw error;
       return b;
     },
@@ -88,17 +90,17 @@ export default function RequestDetail(){
   const approve = useMutation({ mutationFn: async()=>{
     const { error } = await supabase.rpc("approve_request",{ p_request_id: id! });
     if(error) throw error;
-  }, onSuccess:()=>{ qc.invalidateQueries({queryKey:["requests"]}); setShowConfetti(true); setTimeout(()=>setShowConfetti(false), 1800); toast({title:t("rd.approved"), action:{ label: t("rd.viewBudget"), onClick: ()=>nav(`/budgets/${data?.budget_id}`) }}); }, onError:(e:Error)=> toast({title:t("rd.approveFailed"), description:e.message, variant:"destructive"}) });
+  }, onSuccess:()=>{ qc.invalidateQueries({queryKey:["requests"]}); if(!isNative()){ setShowConfetti(true); setTimeout(()=>setShowConfetti(false), 1800); } toast({title:t("rd.approved"), action:{ label: t("rd.viewBudget"), onClick: ()=>nav(`/budgets/${data?.budget_id}`) }}); if(data && data.requester_id !== profile?.id){ void notifyRequesterBoth(data.requester_id, { type: "request_approved", title: t("nt.approvedT"), body: t("nt.approvedB", { merchant: merchantOf(data), amount: formatMoney(Number(data.amount)) }), link: `/requests/${id}`, request_id: id! }); } }, onError:(e:Error)=> toast({title:t("rd.approveFailed"), description:e.message, variant:"destructive"}) });
 
   const reject = useMutation({ mutationFn: async()=>{
     const { error } = await supabase.rpc("reject_request",{ p_request_id:id!, p_reason: rejection });
     if(error) throw error;
-  }, onSuccess:()=>{ qc.invalidateQueries({queryKey:["requests"]}); toast({title:t("rd.rejected")}); }, onError:(e:Error)=> toast({title:t("rd.rejectFailed"), description:e.message, variant:"destructive"}) });
+  }, onSuccess:()=>{ qc.invalidateQueries({queryKey:["requests"]}); toast({title:t("rd.rejected")}); if(data && data.requester_id !== profile?.id){ void notifyRequesterBoth(data.requester_id, { type: "request_rejected", title: t("nt.rejectedT"), body: t("nt.rejectedB", { merchant: merchantOf(data), amount: formatMoney(Number(data.amount)) }), link: `/requests/${id}`, request_id: id! }); } }, onError:(e:Error)=> toast({title:t("rd.rejectFailed"), description:e.message, variant:"destructive"}) });
 
   const reconcile = useMutation({ mutationFn: async()=>{
     const { error } = await supabase.rpc("reconcile_request",{ p_request_id:id!, p_note: note });
     if(error) throw error;
-  }, onSuccess:()=>{ qc.invalidateQueries({queryKey:["requests"]}); toast({title:t("rd.reconciled")}); }, onError:(e:Error)=> toast({title:t("rd.reconcileFailed"), description:e.message, variant:"destructive"}) });
+  }, onSuccess:()=>{ qc.invalidateQueries({queryKey:["requests"]}); toast({title:t("rd.reconciled")}); if(data && data.requester_id !== profile?.id){ void notifyRequesterBoth(data.requester_id, { type: "request_reconciled", title: t("nt.reconciledT"), body: t("nt.reconciledB", { merchant: merchantOf(data), amount: formatMoney(Number(data.amount)) }), link: `/requests/${id}`, request_id: id! }); } }, onError:(e:Error)=> toast({title:t("rd.reconcileFailed"), description:e.message, variant:"destructive"}) });
 
   const startEdit = ()=>{
     if(!data) return;
@@ -149,7 +151,17 @@ export default function RequestDetail(){
       const { error } = await supabase.from("request_comments").insert({ request_id: id!, author_id: profile.id, body: body.slice(0, 1000) });
       if (error) throw error;
     },
-    onSuccess: () => { setCommentBody(""); qc.invalidateQueries({ queryKey: ["comments", id] }); },
+    onSuccess: () => {
+      setCommentBody("");
+      qc.invalidateQueries({ queryKey: ["comments", id] });
+      if (data && profile) {
+        const author = profile.display_name || String(profile.email || "").split("@")[0] || "Someone";
+        const target = profile.id === data.requester_id ? (budget as { owner_id?: string } | null)?.owner_id : data.requester_id;
+        if (target && target !== profile.id) {
+          void notifyRequesterBoth(target, { type: "request_comment", title: t("nt.commentT"), body: t("nt.commentB", { author, merchant: merchantOf(data) }), link: `/requests/${id}`, request_id: id! });
+        }
+      }
+    },
     onError: (e: Error) => { if (e.message !== "empty") toast({ title: t("new.failed"), description: e.message, variant: "destructive" }); },
   });
 

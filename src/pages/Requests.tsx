@@ -53,7 +53,7 @@ export default function Requests(){
       : (data?.length ?? 0) === 0 ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center animate-fade-up">
           <span className="rounded-2xl bg-primary p-3 text-primary-foreground shadow-lg"><Receipt className="h-6 w-6" /></span>
-          <div className="font-medium">{t("req.none")}</div>
+          <div className="font-display text-xl font-semibold">{t("req.none")}</div>
           <Link to="/requests/new"><Button>{t("req.new")}</Button></Link>
         </div>
       ) : (<>
@@ -71,7 +71,7 @@ export default function Requests(){
         )}
       </div>
       <Table className="min-w-[640px]"><TableHeader><TableRow><TableHead>{t("req.merchant")}</TableHead><TableHead>{t("req.category")}</TableHead><TableHead>{t("req.amount")}</TableHead><TableHead>{t("req.status")}</TableHead><TableHead>{t("req.date")}</TableHead><TableHead>{t("req.due")}</TableHead></TableRow></TableHeader>
-      <TableBody>{filtered?.slice(0, visible).map(r=> <TableRow key={r.id}><TableCell><Link to={`/requests/${r.id}`} className="text-primary underline">{r.merchant ?? "—"}</Link></TableCell><TableCell data-label={t("req.category")}>{r.category}</TableCell><TableCell data-label={t("req.amount")}>{formatMoney(Number(r.amount))}</TableCell><TableCell data-label={t("req.status")}><Badge variant={r.status as never}>{r.status}</Badge></TableCell><TableCell data-label={t("req.date")}>{formatDate(r.created_at, lang)}</TableCell><TableCell data-label={t("req.due")} className={isOverdue(r.due_date, r.status) ? "text-destructive font-medium" : undefined}>{r.due_date ? formatDate(r.due_date, lang) : "—"}{isOverdue(r.due_date, r.status) ? ` (${t("req.overdue")})` : ""}</TableCell></TableRow>)}
+      <TableBody>{filtered?.slice(0, visible).map(r=> <TableRow key={r.id}><TableCell><Link to={`/requests/${r.id}`} className="text-primary underline">{r.merchant ?? "—"}</Link></TableCell><TableCell data-label={t("req.category")}>{r.category}</TableCell><TableCell data-label={t("req.amount")} className="font-display tnum">{formatMoney(Number(r.amount))}</TableCell><TableCell data-label={t("req.status")}><Badge variant={r.status as never}>{r.status}</Badge></TableCell><TableCell data-label={t("req.date")}>{formatDate(r.created_at, lang)}</TableCell><TableCell data-label={t("req.due")} className={isOverdue(r.due_date, r.status) ? "text-destructive font-medium" : undefined}>{r.due_date ? formatDate(r.due_date, lang) : "—"}{isOverdue(r.due_date, r.status) ? ` (${t("req.overdue")})` : ""}</TableCell></TableRow>)}
       {filtered?.length===0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">{t("req.noMatch")}</TableCell></TableRow>}
       </TableBody></Table>
       {(filtered?.length ?? 0) > visible && <Button variant="outline" className="mt-3" onClick={()=>setVisible((v)=>v + 20)}>{t("req.showMore", { remaining: (filtered?.length ?? 0) - visible })}</Button>}

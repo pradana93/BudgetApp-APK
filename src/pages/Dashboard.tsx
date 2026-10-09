@@ -20,6 +20,7 @@ import { Wallet, TrendingUp, Clock, ArrowDownLeft, ArrowUpRight, Receipt, Trophy
 import AskBudgetApp from "@/components/AskBudgetApp";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { useWidgetSnapshot } from "@/lib/widget";
+import { isNative } from "@/lib/native";
 
 export default function Dashboard(){
   useRealtime();
@@ -276,6 +277,7 @@ export default function Dashboard(){
       <Card className="card-lift"><CardHeader><CardTitle className="text-sm font-medium flex items-center gap-2"><span className="rounded-lg bg-accent text-accent-foreground p-1.5"><Clock className="h-4 w-4" /></span>{t("dash.pendingRequests")}</CardTitle></CardHeader><CardContent><div className="stat-value">{pendingCount}</div></CardContent></Card>
       </>}
     </div>
+    {!isNative() && (
     <Card className="overflow-hidden">
       <div className="bg-accent text-accent-foreground p-4 flex flex-wrap items-center gap-3">
         <Trophy className="h-6 w-6 shrink-0" />
@@ -291,6 +293,7 @@ export default function Dashboard(){
         <Link to="/rewards"><Button variant="secondary" size="sm">{t("reward.viewAll")}</Button></Link>
       </div>
     </Card>
+    )}
     <AskBudgetApp ctx={askCtx} />
     <div className="grid gap-4 md:grid-cols-2">
       <Card><CardHeader><CardTitle>{t("dash.spendByBudget")}</CardTitle></CardHeader><CardContent className="h-[260px]">

@@ -15,6 +15,7 @@ import { useRealtime } from "@/hooks/useRealtime";
 import { useLang } from "@/i18n/LanguageContext";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { Wallet } from "lucide-react";
+import { HealthRing } from "@/components/HealthRing";
 
 export default function Budgets(){
   useRealtime();
@@ -83,12 +84,12 @@ export default function Budgets(){
       : (data?.length ?? 0) === 0 ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center animate-fade-up">
           <span className="rounded-2xl bg-primary p-3 text-primary-foreground shadow-lg"><Wallet className="h-6 w-6" /></span>
-          <div className="font-medium">{t("budgets.noBudgets")}</div>
+          <div className="font-display text-xl font-semibold">{t("budgets.noBudgets")}</div>
       {isOwner && <Button onClick={()=>nav("/budgets/new")}>{t("budgets.new")}</Button>}
         </div>
       ) : (
       <Table className="min-w-[720px]"><TableHeader><TableRow><TableHead>{t("budgets.name")}</TableHead><TableHead>{t("budgets.total")}</TableHead><TableHead>{t("budgets.allocated")}</TableHead><TableHead>{t("budgets.available")}</TableHead><TableHead>{t("budgets.usage")}</TableHead><TableHead>{t("budgets.status")}</TableHead>{isOwner && <TableHead>{t("budgets.action")}</TableHead>}</TableRow></TableHeader>
-      <TableBody>{filteredBudgets?.map(b=> <TableRow key={b.id}><TableCell><Link to={`/budgets/${b.id}`} className="text-primary underline">{b.name}</Link></TableCell><TableCell data-label={t("budgets.total")}>{formatMoney(Number(b.total_amount), b.currency)}</TableCell><TableCell data-label={t("budgets.allocated")}>{formatMoney(Number(b.allocated_amount), b.currency)}</TableCell><TableCell data-label={t("budgets.available")}>{formatMoney(Number(b.available_amount), b.currency)}</TableCell><TableCell data-label={t("budgets.usage")}><div className="h-2 w-28 rounded bg-muted overflow-hidden" title={t("budgets.usedPct", { pct: usagePct(b).toFixed(1) })}><div className="h-2 rounded bg-primary" style={{ width: `${usagePct(b)}%` }} /></div></TableCell><TableCell data-label={t("budgets.status")}><span className="flex flex-wrap gap-1"><Badge variant={b.status==="active"?"approved":"secondary"}>{b.status}</Badge><Badge variant={healthMeta[healthOf(b)].variant}>{healthMeta[healthOf(b)].label}</Badge></span></TableCell>{isOwner && <TableCell data-label={t("budgets.action")}>{b.status === "active"
+      <TableBody>{filteredBudgets?.map(b=> <TableRow key={b.id}><TableCell><Link to={`/budgets/${b.id}`} className="text-primary underline">{b.name}</Link></TableCell><TableCell data-label={t("budgets.total")} className="font-display tnum">{formatMoney(Number(b.total_amount), b.currency)}</TableCell><TableCell data-label={t("budgets.allocated")} className="font-display tnum">{formatMoney(Number(b.allocated_amount), b.currency)}</TableCell><TableCell data-label={t("budgets.available")} className="font-display tnum">{formatMoney(Number(b.available_amount), b.currency)}</TableCell><TableCell data-label={t("budgets.usage")}><span className="inline-flex items-center gap-2"><HealthRing pct={usagePct(b)} size={36} /><span className="tnum text-sm font-semibold">{usagePct(b).toFixed(0)}%</span></span></TableCell><TableCell data-label={t("budgets.status")}><span className="flex flex-wrap gap-1"><Badge variant={b.status==="active"?"approved":"secondary"}>{b.status}</Badge><Badge variant={healthMeta[healthOf(b)].variant}>{healthMeta[healthOf(b)].label}</Badge></span></TableCell>{isOwner && <TableCell data-label={t("budgets.action")}>{b.status === "active"
         ? <Button size="sm" variant="outline" onClick={()=>statusMut.mutate({ id: b.id, status: "closed" })} disabled={statusMut.isPending}>{t("budgets.close")}</Button>
         : <Button size="sm" variant="outline" onClick={()=>statusMut.mutate({ id: b.id, status: "active" })} disabled={statusMut.isPending}>{t("budgets.reopen")}</Button>}</TableCell>}</TableRow>)}
       {filteredBudgets?.length===0 && <TableRow><TableCell colSpan={isOwner ? 7 : 6} className="text-center text-muted-foreground">{t("req.noMatch")}</TableCell></TableRow>}
