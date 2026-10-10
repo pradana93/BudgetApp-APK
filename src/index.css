@@ -115,6 +115,14 @@ body {
 @keyframes m3-sheen {
   to { transform: translateX(100%); }
 }
+@keyframes m3-launch-slide {
+  from { transform: translateX(-130%); }
+  to { transform: translateX(330%); }
+}
+.m3-launch-bar {
+  animation: m3-launch-slide 1.1s var(--ease-enter) infinite;
+  will-change: transform;
+}
 @keyframes m3-page-in {
   from { opacity: 0; transform: translateY(12px) scale(0.985); }
   to { opacity: 1; transform: none; }
