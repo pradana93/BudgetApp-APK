@@ -11,14 +11,33 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = React.useState<Profile | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [nonce, setNonce] = React.useState(0);
+  const [ready, setReady] = React.useState(false);
 
   React.useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
-    return () => subscription.unsubscribe();
+    let alive = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!alive) return;
+      setSession(data.session);
+      setReady(true);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
+      if (!alive) return;
+      setSession(s);
+      setReady(true);
+    });
+    // Offline safety: never trap the app on the loader.
+    const t = window.setTimeout(() => {
+      if (alive) setReady(true);
+    }, 6000);
+    return () => {
+      alive = false;
+      window.clearTimeout(t);
+      subscription.unsubscribe();
+    };
   }, []);
 
   React.useEffect(() => {
+    if (!ready) return; // never clear loading before the session settles
     if (!session?.user) { setProfile(null); setLoading(false); return; }
     (async () => {
       try {
@@ -31,7 +50,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
     })();
-  }, [session, nonce]);
+  }, [session, nonce, ready]);
 
   const signOut = async () => { await supabase.auth.signOut(); };
   const refresh = () => setNonce((n) => n + 1);

@@ -438,7 +438,7 @@ export default function Space() {
         </div>
         <div className="mb-3 overflow-hidden">
           <div className="text-[10px] text-muted-foreground mb-1">Daily Spending</div>
-          <div className="grid grid-cols-7 gap-0.5">
+          <div className="grid grid-cols-7 gap-0.5 mx-auto w-full max-w-[300px]">
             {Array.from({ length: daysInMonth }, (_, i) => {
               const day = String(i + 1).padStart(2, "0");
               const val = heatmap.get(day) ?? 0;
@@ -449,18 +449,18 @@ export default function Space() {
           </div>
         </div>
         <div className="rounded-2xl bg-foreground text-background p-4 space-y-2.5">
-          <div className="flex items-end justify-between gap-2">
-            <span className="text-[11px] uppercase tracking-[0.14em] opacity-70 pb-1">Net · {accounts?.length ?? 0} ledgers</span>
-            <span className="font-display tnum text-[32px] leading-none font-semibold">{formatMoney(sums.bal.toNumber())}</span>
+          <div className="space-y-1">
+            <span className="text-[11px] uppercase tracking-[0.14em] opacity-70">Net · {accounts?.length ?? 0} ledgers</span>
+            <div className="font-display tnum font-semibold leading-none break-words text-[clamp(1.7rem,8vw,2rem)]">{formatMoney(sums.bal.toNumber())}</div>
           </div>
           <div className="h-px bg-background/15" />
           <div className="flex items-center justify-between text-sm">
             <span className="opacity-70">Spent · {monthTotals.expN} tx</span>
-            <span className="tnum font-semibold text-red-300">{formatMoney(monthTotals.exp.toNumber())}</span>
+            <span className="tnum font-semibold text-red-300 shrink-0">{formatMoney(monthTotals.exp.toNumber())}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="opacity-70">Earned · {monthTotals.incN} tx</span>
-            <span className="tnum font-semibold text-emerald-300">{formatMoney(monthTotals.inc.toNumber())}</span>
+            <span className="tnum font-semibold text-emerald-300 shrink-0">{formatMoney(monthTotals.inc.toNumber())}</span>
           </div>
         </div>
       </CardContent>
