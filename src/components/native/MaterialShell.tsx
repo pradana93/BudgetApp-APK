@@ -497,6 +497,8 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
           </aside>
         </div>
       )}
+      {/* Portal target for native overlays: clean stacking above everything. */}
+      <div id="native-overlay-root" style={{ display: "contents" }} />
     </div>
   );
 }

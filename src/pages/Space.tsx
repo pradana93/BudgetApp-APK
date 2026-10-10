@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { SwipeRow } from "@/components/SwipeRow";
 import { Download, Tag, Repeat, BarChart3, X, Bookmark, MoreVertical } from "lucide-react";
 import { isNative } from "@/lib/native";
+import { NativePortal } from "@/lib/portal";
 import { TxTypeTabs, TxFields, TxFooter } from "@/components/SpaceTxForm";
 import { PullToRefresh } from "@/components/PullToRefresh";
 
@@ -614,6 +615,7 @@ export default function Space() {
     </Dialog>
     )}
     {isNative() && showAdd && (
+      <NativePortal>
       <div className="fixed inset-0 z-50 bg-background flex flex-col" role="dialog" aria-modal="true" aria-label={editing ? "Edit Transaction" : "New Transaction"}>
         <header className="shrink-0 border-b border-border/60 bg-background pt-[env(safe-area-inset-top)]">
           <div className="flex items-center gap-1 px-2 h-16">
@@ -634,6 +636,7 @@ export default function Space() {
           </div>
         </div>
       </div>
+      </NativePortal>
     )}
     <Dialog open={showMenu} onOpenChange={setShowMenu}>
       <DialogHeader><DialogTitle>Space actions</DialogTitle></DialogHeader>

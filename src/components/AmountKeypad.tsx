@@ -1,6 +1,7 @@
 import { Delete, X } from "lucide-react";
 import { evaluateExpression, hasCalcOps, groupDigits } from "@/lib/calc";
 import { tapLight } from "@/lib/haptics";
+import { NativePortal } from "@/lib/portal";
 import { cn } from "@/lib/utils";
 
 /**
@@ -82,6 +83,7 @@ function KeypadBody({
   const backspace = () => onDigits(digits.slice(0, -1));
 
   return (
+    <NativePortal>
     <div
       className="fixed inset-0 z-[70] bg-black/60 flex items-end sm:items-center justify-center sm:p-4"
       onClick={closeAndCollapse}
@@ -146,6 +148,7 @@ function KeypadBody({
         </button>
       </div>
     </div>
+    </NativePortal>
   );
 }
 
