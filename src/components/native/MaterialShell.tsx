@@ -175,6 +175,17 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
     nav(to);
   };
 
+  // FAB opens the right composer per screen: Space gets its transaction
+  // editor, everywhere else files a reimbursement request.
+  const fabPress = () => {
+    void tapLight();
+    if (loc.pathname.startsWith("/space")) {
+      window.dispatchEvent(new CustomEvent("space:new-tx"));
+      return;
+    }
+    nav("/requests/new");
+  };
+
   const displayName = profile?.display_name || profile?.email || t("nav.userFallback");
   const hideFab = /\/new$/.test(loc.pathname);
 
@@ -384,7 +395,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
         <button
           type="button"
           aria-label={t("req.new")}
-          onClick={() => go("/requests/new")}
+          onClick={fabPress}
           className="m3-press m3-fab-in fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom))] right-4 z-40 h-14 rounded-2xl bg-primary px-4 flex items-center gap-2 text-primary-foreground shadow-lg"
         >
           <Plus className="h-6 w-6" />

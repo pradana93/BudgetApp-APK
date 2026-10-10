@@ -19,7 +19,9 @@ import { dateLocale } from "@/lib/datetime";
 import { Search, ChevronLeft, ChevronRight, Plus, Trash2, Wallet, ArrowLeftRight, Utensils, Film, Car, Receipt, ShoppingCart, PiggyBank, DollarSign, CreditCard, Landmark, ArrowUpCircle, ArrowDownCircle, CalendarClock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SwipeRow } from "@/components/SwipeRow";
-import { Download, Tag, Repeat, BarChart3, X, Bookmark } from "lucide-react";
+import { Download, Tag, Repeat, BarChart3, X, Bookmark, MoreVertical } from "lucide-react";
+import { isNative } from "@/lib/native";
+import { TxTypeTabs, TxFields, TxFooter } from "@/components/SpaceTxForm";
 import { PullToRefresh } from "@/components/PullToRefresh";
 
 type Entry = { id: string; title: string; body: string; amount: number | null; category_id: string | null; direction: "income" | "expense" | "transfer"; entry_date: string; created_at: string; account_id: string | null; transfer_to_account_id: string | null };
@@ -72,6 +74,7 @@ export default function Space() {
   const [selectedTagIds, setSelectedTagIds] = React.useState<string[]>([]);
   const [showRecurring, setShowRecurring] = React.useState(false);
   const [showTemplates, setShowTemplates] = React.useState(false);
+  const [showMenu, setShowMenu] = React.useState(false);
   const [recForm, setRecForm] = React.useState({ title: "", amount: "", category_id: "", direction: "expense" as "expense" | "income", account_id: "", frequency: "monthly", next_date: new Date().toISOString().slice(0,10) });
   const [templates, setTemplates] = React.useState<Template[]>(() => { try { return JSON.parse(localStorage.getItem("space-templates") ?? "[]"); } catch { return []; } });
 
@@ -270,6 +273,13 @@ export default function Space() {
 
   const shift = (d: number) => setYm((v) => { const dt = new Date(v.y, v.m + d, 1); return { y: dt.getFullYear(), m: dt.getMonth() }; });
   const openAdd = (type: "expense"|"income"|"transfer" = "expense") => { setTxType(type); setForm({ title: "", body: "", amount: "", category_id: cats?.[0]?.id ?? "", account_id: accounts?.[0]?.id ?? "", to_account_id: accounts?.[1]?.id ?? "", entry_date: new Date().toISOString().slice(0,10) }); setEditing(null); setFormErr(null); setSelectedTagIds([]); setShowAdd(true); };
+  const openAddRef = React.useRef(openAdd);
+  openAddRef.current = openAdd;
+  React.useEffect(() => {
+    const h = () => openAddRef.current("expense");
+    window.addEventListener("space:new-tx", h);
+    return () => window.removeEventListener("space:new-tx", h);
+  }, []);
   const openEdit = (e: Entry) => { setEditing(e); setTxType(e.direction as "expense"|"income"|"transfer"); setForm({ title: e.title, body: e.body, amount: e.amount != null ? String(e.amount) : "", category_id: e.category_id ?? "", account_id: e.account_id ?? "", to_account_id: e.transfer_to_account_id ?? "", entry_date: e.entry_date.slice(0,10) }); setFormErr(null); setSelectedTagIds((noteTags ?? []).filter(nt => nt.note_id === e.id).map(nt => nt.tag_id)); setShowAdd(true); };
 
   const saveTx = useMutation({
@@ -400,6 +410,12 @@ export default function Space() {
     {/* Page Header — matches Budgets/Requests pattern */}
     <div className="flex flex-wrap justify-between items-center gap-2 overflow-hidden">
       <h1 className="text-2xl font-bold">Personal Ledger</h1>
+      {isNative() ? (
+        <div className="flex gap-2">
+          <Button onClick={() => openAdd("expense")} className="h-10"><Plus className="h-4 w-4 mr-1" />Transaction</Button>
+          <Button variant="outline" size="icon" className="h-10 w-10 shrink-0" onClick={() => setShowMenu(true)} aria-label="More actions"><MoreVertical className="h-4 w-4" /></Button>
+        </div>
+      ) : (
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={exportCsv} className="hidden sm:inline-flex"><Download className="h-4 w-4 mr-1" />Export</Button><Button variant="outline" size="sm" onClick={exportCsv} className="sm:hidden h-8 w-8 p-0"><Download className="h-4 w-4" /></Button>
         <Button variant="outline" size="sm" onClick={() => setShowTemplates(true)} className="hidden sm:inline-flex"><Bookmark className="h-4 w-4 mr-1" />Templates</Button><Button variant="outline" size="sm" onClick={() => setShowTemplates(true)} className="sm:hidden h-8 w-8 p-0"><Bookmark className="h-4 w-4" /></Button>
@@ -407,6 +423,7 @@ export default function Space() {
         <Button variant="outline" size="sm" onClick={() => setShowAcc(true)} className="hidden sm:inline-flex"><Plus className="h-4 w-4 mr-1" />Ledger</Button><Button variant="outline" size="sm" onClick={() => setShowAcc(true)} className="sm:hidden h-8 w-8 p-0"><Wallet className="h-4 w-4" /></Button>
         <Button size="sm" onClick={() => openAdd("expense")} className="hidden sm:inline-flex"><Plus className="h-4 w-4 mr-1" />Transaction</Button><Button size="sm" onClick={() => openAdd("expense")} className="sm:hidden h-8 w-8 p-0"><Plus className="h-4 w-4" /></Button>
       </div>
+      )}
     </div>
 
     {/* Stats Summary — inside Card like Dashboard */}
@@ -582,54 +599,57 @@ export default function Space() {
     </Card>
 
     {/* Add/Edit Dialog */}
+    {!isNative() && (
     <Dialog open={showAdd} onOpenChange={setShowAdd}>
       <DialogHeader>
         <DialogTitle>{editing ? "Edit Transaction" : "New Transaction"}</DialogTitle>
       </DialogHeader>
-      <DialogContent className="space-y-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex rounded-full bg-muted p-1">
-          {(["expense","income","transfer"] as const).map((k) => (
-            <button key={k} onClick={()=>{setTxType(k); setFormErr(null);}} className={cn("flex-1 rounded-full py-2 text-xs font-medium capitalize flex items-center justify-center gap-1.5 transition-all", txType===k ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground")}>
-              {k==="expense" ? <ArrowDownCircle className="h-4 w-4" /> : k==="income" ? <ArrowUpCircle className="h-4 w-4" /> : <ArrowLeftRight className="h-4 w-4" />}{k}
-            </button>
-          ))}
-        </div>
-        <div className="space-y-3">
-          <div><Label>Title</Label><Input value={form.title} onChange={(e)=>setForm({...form,title:e.target.value})} placeholder="e.g. Groceries, Salary" className="mt-1.5" /></div>
-          <div><Label>Amount (IDR)</Label><Input value={form.amount} onChange={(e)=>setForm({...form,amount:e.target.value})} inputMode="decimal" placeholder="50000" className="mt-1.5 text-lg font-semibold tabular" /></div>
-          <div className="grid grid-cols-2 gap-2 sm:gap-3">
-            <div><Label>Category</Label><Select value={form.category_id} onChange={(e)=>setForm({...form,category_id:e.target.value})} className="mt-1.5"><option value="">None</option>{cats?.map((c)=><option key={c.id} value={c.id}>{c.name}</option>)}</Select></div>
-            <div><Label>Date</Label><Input type="date" value={form.entry_date} onChange={(e)=>setForm({...form,entry_date:e.target.value})} className="mt-1.5" /></div>
-          </div>
-          {txType === "transfer" ? (
-            <div className="grid grid-cols-2 gap-2 sm:gap-3">
-              <div><Label>From</Label><Select value={form.account_id} onChange={(e)=>setForm({...form,account_id:e.target.value})} className="mt-1.5"><option value="">Select</option>{accounts?.map((a)=><option key={a.id} value={a.id}>{a.name} — {formatMoney((balances.get(a.id) ?? new Decimal(0)).toNumber())}</option>)}</Select></div>
-              <div><Label>To</Label><Select value={form.to_account_id} onChange={(e)=>setForm({...form,to_account_id:e.target.value})} className="mt-1.5"><option value="">Select</option>{accounts?.map((a)=><option key={a.id} value={a.id}>{a.name}</option>)}</Select></div>
-            </div>
-          ) : (
-            <div><Label>Ledger</Label><Select value={form.account_id} onChange={(e)=>setForm({...form,account_id:e.target.value})} className="mt-1.5"><option value="">Select ledger</option>{accounts?.map((a)=><option key={a.id} value={a.id}>{a.name} — {formatMoney((balances.get(a.id) ?? new Decimal(0)).toNumber())}</option>)}</Select></div>
-          )}
-          <div><Label>Note</Label><Textarea value={form.body} onChange={(e)=>setForm({...form,body:e.target.value})} placeholder="Optional note" rows={2} className="mt-1.5" /></div>
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <Label>Tags</Label>
-              <button type="button" onClick={()=>setShowTagMgr(true)} className="text-[10px] text-primary hover:underline">Manage</button>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {(tags ?? []).map(t => {
-                const sel = selectedTagIds.includes(t.id);
-                return <button key={t.id} type="button" onClick={()=>setSelectedTagIds(sel ? selectedTagIds.filter(id=>id!==t.id) : [...selectedTagIds, t.id])} className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] transition-all", sel ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground hover:border-primary/50")}><span className={cn("h-1.5 w-1.5 rounded-full", sel ? "bg-white" : "bg-muted-foreground/50")} />{t.name}</button>;
-              })}
-              {(tags ?? []).length === 0 && <span className="text-[10px] text-muted-foreground">No tags — create in Manage</span>}
-            </div>
-          </div>
-        </div>
+      <DialogContent className="space-y-4">
+        <TxTypeTabs value={txType} onPick={(k)=>{setTxType(k); setFormErr(null);}} />
+        <TxFields form={form} setForm={setForm} txType={txType} cats={cats} accounts={accounts} balances={balances} tags={tags} selectedTagIds={selectedTagIds} toggleTag={(id)=>setSelectedTagIds((prev)=>prev.includes(id) ? prev.filter((x)=>x!==id) : [...prev, id])} onManageTags={()=>setShowTagMgr(true)} />
         {formErr && <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">{formErr}</div>}
       </DialogContent>
       <DialogFooter className="[&>*]:flex-1 sm:[&>*]:flex-none">
-        <Button variant="outline" onClick={()=>setShowAdd(false)} className="h-12">Cancel</Button>
-        <Button onClick={()=>saveTx.mutate()} disabled={saveTx.isPending} className="h-12 text-base">{editing ? "Save" : "Add"} {txType}</Button>
+        <TxFooter editing={!!editing} txType={txType} saving={saveTx.isPending} onCancel={()=>setShowAdd(false)} onSave={()=>saveTx.mutate()} />
       </DialogFooter>
+    </Dialog>
+    )}
+    {isNative() && showAdd && (
+      <div className="fixed inset-0 z-50 bg-background flex flex-col" role="dialog" aria-modal="true" aria-label={editing ? "Edit Transaction" : "New Transaction"}>
+        <header className="shrink-0 border-b border-border/60 bg-background pt-[env(safe-area-inset-top)]">
+          <div className="flex items-center gap-1 px-2 h-16">
+            <button type="button" aria-label="Close" onClick={()=>setShowAdd(false)} className="m3-press rounded-full p-3"><X className="h-5 w-5" /></button>
+            <h1 className="text-[22px] leading-7 truncate px-1">{editing ? "Edit Transaction" : "New Transaction"}</h1>
+          </div>
+        </header>
+        <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4">
+          <div className="space-y-4 max-w-2xl mx-auto">
+            <TxTypeTabs value={txType} onPick={(k)=>{setTxType(k); setFormErr(null);}} />
+            <TxFields form={form} setForm={setForm} txType={txType} cats={cats} accounts={accounts} balances={balances} tags={tags} selectedTagIds={selectedTagIds} toggleTag={(id)=>setSelectedTagIds((prev)=>prev.includes(id) ? prev.filter((x)=>x!==id) : [...prev, id])} onManageTags={()=>setShowTagMgr(true)} />
+            {formErr && <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">{formErr}</div>}
+          </div>
+        </div>
+        <div className="shrink-0 border-t border-border/60 bg-background p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+          <div className="flex gap-2 max-w-2xl mx-auto">
+            <TxFooter editing={!!editing} txType={txType} saving={saveTx.isPending} onCancel={()=>setShowAdd(false)} onSave={()=>saveTx.mutate()} />
+          </div>
+        </div>
+      </div>
+    )}
+    <Dialog open={showMenu} onOpenChange={setShowMenu}>
+      <DialogHeader><DialogTitle>Space actions</DialogTitle></DialogHeader>
+      <DialogContent className="space-y-1">
+        {[
+          { icon: Download, label: "Export CSV", fn: () => { setShowMenu(false); exportCsv(); } },
+          { icon: Bookmark, label: "Templates", fn: () => { setShowMenu(false); setShowTemplates(true); } },
+          { icon: Repeat, label: "Recurring", fn: () => { setShowMenu(false); setShowRecurring(true); } },
+          { icon: Wallet, label: "New ledger", fn: () => { setShowMenu(false); setShowAcc(true); } },
+        ].map((a) => (
+          <button key={a.label} type="button" onClick={a.fn} className="m3-press w-full flex items-center gap-3 px-4 h-14 rounded-2xl hover:bg-accent text-sm font-medium">
+            <a.icon className="h-5 w-5 text-primary" />{a.label}
+          </button>
+        ))}
+      </DialogContent>
     </Dialog>
 
     {/* New Account Dialog */}
