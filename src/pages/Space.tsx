@@ -16,7 +16,7 @@ import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent } f
 import { Badge } from "@/components/ui/badge";
 import { formatMoney, isValidMoney } from "@/lib/money";
 import { dateLocale } from "@/lib/datetime";
-import { Search, ChevronLeft, ChevronRight, Plus, Trash2, Wallet, ArrowLeftRight, Utensils, Film, Car, Receipt, ShoppingCart, PiggyBank, DollarSign, CreditCard, Landmark, Sparkles, TrendingUp, TrendingDown, ArrowUpCircle, ArrowDownCircle, CalendarClock } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Plus, Trash2, Wallet, ArrowLeftRight, Utensils, Film, Car, Receipt, ShoppingCart, PiggyBank, DollarSign, CreditCard, Landmark, ArrowUpCircle, ArrowDownCircle, CalendarClock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SwipeRow } from "@/components/SwipeRow";
 import { Download, Tag, Repeat, BarChart3, X, Bookmark } from "lucide-react";
