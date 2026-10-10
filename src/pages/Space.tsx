@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { formatMoney, isValidMoney } from "@/lib/money";
 import { dateLocale } from "@/lib/datetime";
@@ -396,7 +396,7 @@ export default function Space() {
     await new Promise((r) => setTimeout(r, 300));
   }, [qc, profile]);
 
-  return <PullToRefresh onRefresh={refresh}><div className="space-y-3 overflow-x-hidden">
+  return <PullToRefresh onRefresh={refresh}><div className="space-y-3 overflow-x-clip">
     {/* Page Header — matches Budgets/Requests pattern */}
     <div className="flex flex-wrap justify-between items-center gap-2 overflow-hidden">
       <h1 className="text-2xl font-bold">Personal Ledger</h1>
@@ -625,11 +625,11 @@ export default function Space() {
           </div>
         </div>
         {formErr && <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">{formErr}</div>}
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={()=>setShowAdd(false)}>Cancel</Button>
-          <Button onClick={()=>saveTx.mutate()} disabled={saveTx.isPending}>{editing ? "Save" : "Add"} {txType}</Button>
-        </div>
       </DialogContent>
+      <DialogFooter className="[&>*]:flex-1 sm:[&>*]:flex-none">
+        <Button variant="outline" onClick={()=>setShowAdd(false)} className="h-12">Cancel</Button>
+        <Button onClick={()=>saveTx.mutate()} disabled={saveTx.isPending} className="h-12 text-base">{editing ? "Save" : "Add"} {txType}</Button>
+      </DialogFooter>
     </Dialog>
 
     {/* New Account Dialog */}
@@ -647,11 +647,11 @@ export default function Space() {
           </div>
           <div><Label>Initial Balance (IDR)</Label><Input value={newAcc.initial_balance} onChange={(e)=>setNewAcc({...newAcc,initial_balance:e.target.value})} inputMode="decimal" placeholder="0" className="mt-1.5" /></div>
         </div>
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={()=>setShowAcc(false)}>Cancel</Button>
-          <Button onClick={()=>createAcc.mutate()} disabled={createAcc.isPending}>Create</Button>
-        </div>
       </DialogContent>
+      <DialogFooter className="[&>*]:flex-1 sm:[&>*]:flex-none">
+        <Button variant="outline" onClick={()=>setShowAcc(false)} className="h-12">Cancel</Button>
+        <Button onClick={()=>createAcc.mutate()} disabled={createAcc.isPending} className="h-12 text-base">Create</Button>
+      </DialogFooter>
     </Dialog>
 
     {/* Delete Confirmation Dialog */}
@@ -722,7 +722,7 @@ export default function Space() {
             <Input type="date" value={recForm.next_date} onChange={(e)=>setRecForm({...recForm,next_date:e.target.value})} />
           </div>
         </div>
-        <Button onClick={()=>saveRecurring.mutate()} disabled={saveRecurring.isPending || !recForm.title.trim() || !recForm.amount} className="w-full">Create Recurring</Button>
+        <Button onClick={()=>saveRecurring.mutate()} disabled={saveRecurring.isPending || !recForm.title.trim() || !recForm.amount} className="w-full h-12 text-base">Create Recurring</Button>
         {(recurring ?? []).length > 0 && <div className="border-t pt-2 space-y-1.5 max-h-[200px] overflow-y-auto">
           {(recurring ?? []).map(r => (
             <div key={r.id} className="flex items-center justify-between py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
@@ -739,7 +739,7 @@ export default function Space() {
       <DialogHeader><DialogTitle>Transaction Templates</DialogTitle><DialogDescription>Quick-fill from saved templates</DialogDescription></DialogHeader>
       <DialogContent>
         {templates.length === 0 ? (
-          <div className="text-sm text-muted-foreground text-center py-4">No templates yet. Hover over a transaction and click the bookmark icon to save it as a template.</div>
+          <div className="text-sm text-muted-foreground text-center py-4">No templates yet. Open a transaction and tap the bookmark icon to save it as a template.</div>
         ) : (
           <div className="space-y-1.5 max-h-[300px] overflow-y-auto">
             {templates.map((t, i) => (

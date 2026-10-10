@@ -16,5 +16,5 @@ export function Dialog({ open, onOpenChange, children }: { open: boolean; onOpen
 export function DialogHeader({ className, ...p }: React.HTMLAttributes<HTMLDivElement>){ return <div className={cn("flex flex-col space-y-1.5 p-6 pb-4 pt-5 shrink-0 border-b border-border/60", className)} {...p} />; }
 export function DialogTitle({ className, ...p }: React.HTMLAttributes<HTMLHeadingElement>){ return <h3 className={cn("text-[22px] leading-7 font-semibold tracking-tight", className)} {...p} />; }
 export function DialogDescription({ className, ...p }: React.HTMLAttributes<HTMLParagraphElement>){ return <p className={cn("text-sm text-muted-foreground", className)} {...p} />; }
-export function DialogContent({ className, ...p }: React.HTMLAttributes<HTMLDivElement>){ return <div className={cn("p-6 pt-4 overflow-y-auto min-h-0", className)} {...p} />; }
+export function DialogContent({ className, ...p }: React.HTMLAttributes<HTMLDivElement>){ return <div className={cn("p-6 pt-4 overflow-y-auto overscroll-contain min-h-0 flex-1", className)} {...p} />; }
 export function DialogFooter({ className, ...p }: React.HTMLAttributes<HTMLDivElement>){ return <div className={cn("flex justify-end gap-2 p-4 sm:px-6 shrink-0 border-t border-border/60 bg-background", className)} {...p} />; }
