@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Delete, X } from "lucide-react";
 import { evaluateExpression, hasCalcOps, groupDigits } from "@/lib/calc";
 import { tapLight } from "@/lib/haptics";
