@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { SheetSelect } from "@/components/pickers";
 import { formatMoney, isValidMoney } from "@/lib/money";
-import { formatDate, isOverdue, timeAgo } from "@/lib/datetime";
+import { formatDate, dateLocale, isOverdue, timeAgo } from "@/lib/datetime";
+import { DateField } from "@/components/pickers";
 import { approvalRisk, findDuplicates } from "@/lib/advisor";
 import { useSession } from "@/hooks/useSession";
 import { useToast } from "@/components/ui/toast";
@@ -205,10 +206,10 @@ export default function RequestDetail(){
 
     {canEdit && editing && <Card><CardHeader><CardTitle>{t("rd.editTitle")}</CardTitle></CardHeader><CardContent className="space-y-3">
       <div><Label>{t("new.amount")}</Label><Input value={editForm.amount} onChange={e=>setEditForm({...editForm,amount:e.target.value})} /></div>
-      <div><Label>{t("new.category")}</Label><Select value={editForm.category} onChange={e=>setEditForm({...editForm,category:e.target.value})}>{categories.map(c=><option key={c} value={c}>{c}</option>)}</Select></div>
+      <div><SheetSelect label={t("new.category")} value={editForm.category} onPick={(v)=>setEditForm({...editForm,category:v})} placeholder="" options={categories.map(c=>({ value: c, label: c }))} /></div>
       <div><Label>{t("new.merchant")}</Label><Input value={editForm.merchant} onChange={e=>setEditForm({...editForm,merchant:e.target.value})} /></div>
       <div><Label>{t("new.description")}</Label><Textarea value={editForm.description} onChange={e=>setEditForm({...editForm,description:e.target.value})} /></div>
-      <div><Label>{t("new.dueDate")}</Label><Input type="date" value={editForm.due_date} onChange={e=>setEditForm({...editForm,due_date:e.target.value})} /></div>
+      <div><DateField label={t("new.dueDate")} value={editForm.due_date} onChange={(iso)=>setEditForm({...editForm,due_date:iso})} locale={dateLocale(lang)} /></div>
       {editErr && <div className="text-sm text-destructive">{editErr}</div>}
       <div className="flex gap-2"><Button onClick={()=>saveEdit.mutate()} disabled={saveEdit.isPending}>{saveEdit.isPending?t("rd.saving"):t("rd.save")}</Button><Button variant="outline" onClick={()=>setEditing(false)}>{t("common.cancel")}</Button></div>
     </CardContent></Card>}

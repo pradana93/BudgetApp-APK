@@ -15,12 +15,13 @@ import { useCategories, normalizeCategory } from "@/hooks/useCategories";
 import { suggestCategory } from "@/lib/matcher";
 import { findDuplicates } from "@/lib/advisor";
 import { formatMoney, isValidMoney } from "@/lib/money";
-import { formatDate } from "@/lib/datetime";
+import { formatDate, dateLocale } from "@/lib/datetime";
 import { Sparkles, Check } from "lucide-react";
 import { getRequestSchema } from "@/schemas/budget";
 import { z } from "zod";
 import { AmountKeypad } from "@/components/AmountKeypad";
 import { groupDigits } from "@/lib/calc";
+import { DateField } from "@/components/pickers";
 
 const DRAFT_KEY = "budgetapp-draft-request";
 const STEPS = ["new.stepBudget", "new.stepDetails", "new.stepReview"] as const;
@@ -379,14 +380,14 @@ export default function NewRequest(){
             <div className="mt-1 text-right text-xs text-muted-foreground tabular">{form.description.length}/1000</div>
           </div>
           <div>
-            <Label>{t("new.dueDate")}</Label>
+            <div className="text-sm font-medium mb-1.5">{t("new.dueDate")}</div>
             <div className="flex flex-wrap gap-2 mb-2">
               <Button type="button" size="sm" variant="outline" onClick={()=>setDue(0)}>{t("new.dueToday")}</Button>
               <Button type="button" size="sm" variant="outline" onClick={()=>setDue(3)}>{t("new.due3")}</Button>
               <Button type="button" size="sm" variant="outline" onClick={()=>setDue(7)}>{t("new.due7")}</Button>
               <Button type="button" size="sm" variant="outline" onClick={()=>setDue("month")}>{t("new.dueMonth")}</Button>
             </div>
-            <Input type="date" value={form.due_date} onChange={e=>setForm({...form,due_date:e.target.value})} />
+            <DateField value={form.due_date} onChange={(iso)=>setForm({...form,due_date:iso})} locale={dateLocale(lang)} />
           </div>
           {stepErr && <div className="text-sm text-destructive">{stepErr}</div>}
           <div className="flex justify-between"><Button variant="outline" onClick={()=>setStep(0)}>{t("new.back")}</Button><Button onClick={next}>{t("new.next")}</Button></div>

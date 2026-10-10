@@ -11,7 +11,8 @@ import { useToast } from "@/components/ui/toast";
 import { useLang } from "@/i18n/LanguageContext";
 import { getBudgetSchema } from "@/schemas/budget";
 import { formatMoney, isValidMoney } from "@/lib/money";
-import { formatDate } from "@/lib/datetime";
+import { formatDate, dateLocale } from "@/lib/datetime";
+import { DateField } from "@/components/pickers";
 import { ArrowLeft, Wallet, Check } from "lucide-react";
 
 const iso = (d: Date) =>
@@ -204,8 +205,8 @@ export default function NewBudget() {
                 <Button type="button" size="sm" variant="outline" onClick={() => setPreset("quarter")}>{t("budgets.presetQuarter")}</Button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div><Label>{t("budgets.fStart")}</Label><Input type="date" value={form.period_start} onChange={(e) => setForm({ ...form, period_start: e.target.value })} className="mt-1.5" /></div>
-                <div><Label>{t("budgets.fEnd")}</Label><Input type="date" value={form.period_end} onChange={(e) => setForm({ ...form, period_end: e.target.value })} className="mt-1.5" />
+                <div><DateField label={t("budgets.fStart")} value={form.period_start} onChange={(iso)=>setForm({...form,period_start:iso})} locale={dateLocale(lang)} /></div>
+                <div><DateField label={t("budgets.fEnd")} value={form.period_end} onChange={(iso)=>setForm({...form,period_end:iso})} locale={dateLocale(lang)} />
                   {fieldErrs.period_end?.[0] && <div className="text-sm text-destructive mt-1">{fieldErrs.period_end[0]}</div>}</div>
               </div>
             </CardContent>

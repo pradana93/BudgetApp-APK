@@ -9,7 +9,6 @@ import { useToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +21,7 @@ import { Download, Tag, Repeat, BarChart3, X, Bookmark, MoreVertical } from "luc
 import { isNative } from "@/lib/native";
 import { NativePortal } from "@/lib/portal";
 import { TxTypeTabs, TxFields, TxFooter } from "@/components/SpaceTxForm";
+import { SheetSelect, DateField } from "@/components/pickers";
 import { PullToRefresh } from "@/components/PullToRefresh";
 
 type Entry = { id: string; title: string; body: string; amount: number | null; category_id: string | null; direction: "income" | "expense" | "transfer"; entry_date: string; created_at: string; account_id: string | null; transfer_to_account_id: string | null };
@@ -509,8 +509,8 @@ export default function Space() {
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input placeholder="Search" value={q} onChange={(e)=>setQ(e.target.value)} className="pl-7 h-8 text-xs w-full sm:max-w-[160px]" />
           </div>
-          <Select value={catFilter} onChange={(e) => setCatFilter(e.target.value)} className="h-8 text-xs min-w-0 flex-1 sm:flex-none"><option value="all">All Cats</option><option value="none">None</option>{cats?.map((c)=><option key={c.id} value={c.id}>{c.name}</option>)}</Select>
-          <Select value={tagFilter} onChange={(e) => setTagFilter(e.target.value)} className="h-8 text-xs min-w-0 flex-1 sm:flex-none"><option value="all">All Tags</option>{(tags ?? []).map((t)=><option key={t.id} value={t.id}>{t.name}</option>)}</Select>
+          <div className="min-w-0 flex-1 sm:flex-none sm:w-[170px]"><SheetSelect value={catFilter} onPick={setCatFilter} placeholder="All Cats" options={[{ value: "all", label: "All Cats" }, { value: "none", label: "None" }, ...(cats ?? []).map((c) => ({ value: c.id, label: c.name }))]} /></div>
+          <div className="min-w-0 flex-1 sm:flex-none sm:w-[150px]"><SheetSelect value={tagFilter} onPick={setTagFilter} placeholder="All Tags" options={[{ value: "all", label: "All Tags" }, ...(tags ?? []).map((t) => ({ value: t.id, label: t.name }))]} /></div>
           <div className="flex items-center rounded-full border bg-card p-0.5">
             <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full" onClick={() => shift(-1)}><ChevronLeft className="h-3.5 w-3.5" /></Button>
             <span className="min-w-[90px] text-center text-[11px] font-semibold capitalize">{monthLabel}</span>
@@ -606,7 +606,7 @@ export default function Space() {
       </DialogHeader>
       <DialogContent className="space-y-4">
         <TxTypeTabs value={txType} onPick={(k)=>{setTxType(k); setFormErr(null);}} />
-        <TxFields form={form} setForm={setForm} txType={txType} cats={cats} accounts={accounts} balances={balances} tags={tags} selectedTagIds={selectedTagIds} toggleTag={(id)=>setSelectedTagIds((prev)=>prev.includes(id) ? prev.filter((x)=>x!==id) : [...prev, id])} onManageTags={()=>setShowTagMgr(true)} />
+        <TxFields form={form} setForm={setForm} txType={txType} cats={cats} accounts={accounts} balances={balances} tags={tags} selectedTagIds={selectedTagIds} toggleTag={(id)=>setSelectedTagIds((prev)=>prev.includes(id) ? prev.filter((x)=>x!==id) : [...prev, id])} onManageTags={()=>setShowTagMgr(true)} locale={dateLocale(lang)} />
         {formErr && <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">{formErr}</div>}
       </DialogContent>
       <DialogFooter className="[&>*]:flex-1 sm:[&>*]:flex-none">
@@ -626,7 +626,7 @@ export default function Space() {
         <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4">
           <div className="space-y-4 max-w-2xl mx-auto">
             <TxTypeTabs value={txType} onPick={(k)=>{setTxType(k); setFormErr(null);}} />
-            <TxFields form={form} setForm={setForm} txType={txType} cats={cats} accounts={accounts} balances={balances} tags={tags} selectedTagIds={selectedTagIds} toggleTag={(id)=>setSelectedTagIds((prev)=>prev.includes(id) ? prev.filter((x)=>x!==id) : [...prev, id])} onManageTags={()=>setShowTagMgr(true)} />
+            <TxFields form={form} setForm={setForm} txType={txType} cats={cats} accounts={accounts} balances={balances} tags={tags} selectedTagIds={selectedTagIds} toggleTag={(id)=>setSelectedTagIds((prev)=>prev.includes(id) ? prev.filter((x)=>x!==id) : [...prev, id])} onManageTags={()=>setShowTagMgr(true)} locale={dateLocale(lang)} />
             {formErr && <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">{formErr}</div>}
           </div>
         </div>
@@ -664,8 +664,8 @@ export default function Space() {
         <div className="space-y-3">
           <div><Label>Name</Label><Input value={newAcc.name} onChange={(e)=>setNewAcc({...newAcc,name:e.target.value})} placeholder="BCA / Cash / Savings" className="mt-1.5" /></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><Label>Icon</Label><Select value={newAcc.icon} onChange={(e)=>setNewAcc({...newAcc,icon:e.target.value})} className="mt-1.5"><option value="wallet">Wallet</option><option value="bca">BCA</option><option value="cash">Cash</option><option value="bank">Bank</option><option value="investment">Invest</option></Select></div>
-            <div><Label>Color</Label><Select value={newAcc.color} onChange={(e)=>setNewAcc({...newAcc,color:e.target.value})} className="mt-1.5"><option value="blue">Blue</option><option value="violet">Violet</option><option value="emerald">Green</option><option value="amber">Amber</option><option value="rose">Rose</option><option value="slate">Slate</option></Select></div>
+            <SheetSelect label="Icon" value={newAcc.icon} onPick={(v)=>setNewAcc({...newAcc,icon:v})} placeholder="Wallet" options={[{value:"wallet",label:"Wallet"},{value:"bca",label:"BCA"},{value:"cash",label:"Cash"},{value:"bank",label:"Bank"},{value:"investment",label:"Invest"}]} />
+            <SheetSelect label="Color" value={newAcc.color} onPick={(v)=>setNewAcc({...newAcc,color:v})} placeholder="Blue" options={[{value:"blue",label:"Blue"},{value:"violet",label:"Violet"},{value:"emerald",label:"Green"},{value:"amber",label:"Amber"},{value:"rose",label:"Rose"},{value:"slate",label:"Slate"}]} />
           </div>
           <div><Label>Initial Balance (IDR)</Label><Input value={newAcc.initial_balance} onChange={(e)=>setNewAcc({...newAcc,initial_balance:e.target.value})} inputMode="decimal" placeholder="0" className="mt-1.5" /></div>
         </div>
@@ -713,7 +713,7 @@ export default function Space() {
       <DialogContent className="space-y-3">
         <div className="flex gap-2">
           <Input value={newTagName} onChange={(e)=>setNewTagName(e.target.value)} placeholder="Tag name" className="flex-1" maxLength={30} />
-          <Select value={newTagColor} onChange={(e)=>setNewTagColor(e.target.value)} className="w-24">{TAG_COLORS.map(c => <option key={c} value={c}>{c}</option>)}</Select>
+          <div className="w-28 shrink-0"><SheetSelect label="Color" value={newTagColor} onPick={setNewTagColor} placeholder="Color" options={TAG_COLORS.map(c => ({ value: c, label: c }))} /></div>
           <Button size="sm" onClick={()=>saveTag.mutate()} disabled={saveTag.isPending || !newTagName.trim()}>Add</Button>
         </div>
         <div className="flex flex-wrap gap-1.5 max-h-[200px] overflow-y-auto">
@@ -736,13 +736,11 @@ export default function Space() {
           <Input value={recForm.title} onChange={(e)=>setRecForm({...recForm,title:e.target.value})} placeholder="e.g. Rent, Salary" />
           <Input value={recForm.amount} onChange={(e)=>setRecForm({...recForm,amount:e.target.value})} inputMode="decimal" placeholder="Amount" className="font-semibold tabular" />
           <div className="grid grid-cols-2 gap-2">
-            <Select value={recForm.direction} onChange={(e)=>setRecForm({...recForm,direction:e.target.value as "expense"|"income"})}><option value="expense">Expense</option><option value="income">Income</option></Select>
-            <Select value={recForm.frequency} onChange={(e)=>setRecForm({...recForm,frequency:e.target.value})}>{FREQUENCIES.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}</Select>
+            <SheetSelect label="Type" value={recForm.direction} onPick={(v)=>setRecForm({...recForm,direction:v as "expense"|"income"})} placeholder="Expense" options={[{value:"expense",label:"Expense"},{value:"income",label:"Income"}]} />
+            <SheetSelect label="Every" value={recForm.frequency} onPick={(v)=>setRecForm({...recForm,frequency:v})} placeholder="Monthly" options={FREQUENCIES.map(f => ({ value: f.value, label: f.label }))} />
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <Select value={recForm.account_id} onChange={(e)=>setRecForm({...recForm,account_id:e.target.value})}><option value="">Account</option>{accounts?.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</Select>
-            <Input type="date" value={recForm.next_date} onChange={(e)=>setRecForm({...recForm,next_date:e.target.value})} />
-          </div>
+          <SheetSelect label="Account" value={recForm.account_id} onPick={(v)=>setRecForm({...recForm,account_id:v})} placeholder="Account" options={(accounts ?? []).map(a => ({ value: a.id, label: a.name }))} />
+            <DateField label="Next date" value={recForm.next_date} onChange={(iso)=>setRecForm({...recForm,next_date:iso})} locale={dateLocale(lang)} />
         </div>
         <Button onClick={()=>saveRecurring.mutate()} disabled={saveRecurring.isPending || !recForm.title.trim() || !recForm.amount} className="w-full h-12 text-base">Create Recurring</Button>
         {(recurring ?? []).length > 0 && <div className="border-t pt-2 space-y-1.5 max-h-[200px] overflow-y-auto">

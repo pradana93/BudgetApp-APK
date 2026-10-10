@@ -3,12 +3,12 @@ import { ArrowDownCircle, ArrowUpCircle, ArrowLeftRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { AmountKeypad } from "@/components/AmountKeypad";
 import { groupDigits } from "@/lib/calc";
+import { SheetSelect, DateField } from "@/components/pickers";
 
 export interface TxFormState {
   title: string;
@@ -80,6 +80,7 @@ export function TxFields(props: {
   selectedTagIds: string[];
   toggleTag: (id: string) => void;
   onManageTags: () => void;
+  locale: string;
 }) {
   const {
     form,
@@ -92,6 +93,7 @@ export function TxFields(props: {
     selectedTagIds,
     toggleTag,
     onManageTags,
+    locale,
   } = props;
   return (
     <div className="space-y-4">
@@ -112,80 +114,49 @@ export function TxFields(props: {
         />
       </div>
       <div className="grid grid-cols-2 gap-2 sm:gap-3">
-        <div>
-          <Label>Category</Label>
-          <Select
-            value={form.category_id}
-            onChange={(e) => setForm({ ...form, category_id: e.target.value })}
-            className="mt-1.5"
-          >
-            <option value="">None</option>
-            {cats?.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </Select>
-        </div>
-        <div>
-          <Label>Date</Label>
-          <Input
-            type="date"
-            value={form.entry_date}
-            onChange={(e) => setForm({ ...form, entry_date: e.target.value })}
-            className="mt-1.5"
-          />
-        </div>
+        <SheetSelect
+          label="Category"
+          value={form.category_id}
+          onPick={(v) => setForm({ ...form, category_id: v })}
+          placeholder="None"
+          options={[{ value: "", label: "None" }, ...(cats ?? []).map((c) => ({ value: c.id, label: c.name }))]}
+        />
+        <DateField
+          label="Date"
+          value={form.entry_date}
+          onChange={(iso) => setForm({ ...form, entry_date: iso })}
+          locale={locale}
+        />
       </div>
       {txType === "transfer" ? (
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
-          <div>
-            <Label>From</Label>
-            <Select
-              value={form.account_id}
-              onChange={(e) => setForm({ ...form, account_id: e.target.value })}
-              className="mt-1.5"
-            >
-              <option value="">Select</option>
-              {accounts?.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div>
-            <Label>To</Label>
-            <Select
-              value={form.to_account_id}
-              onChange={(e) => setForm({ ...form, to_account_id: e.target.value })}
-              className="mt-1.5"
-            >
-              <option value="">Select</option>
-              {accounts?.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </Select>
-          </div>
+          <SheetSelect
+            label="From"
+            value={form.account_id}
+            onPick={(v) => setForm({ ...form, account_id: v })}
+            placeholder="Select"
+            options={(accounts ?? []).map((a) => ({ value: a.id, label: a.name }))}
+          />
+          <SheetSelect
+            label="To"
+            value={form.to_account_id}
+            onPick={(v) => setForm({ ...form, to_account_id: v })}
+            placeholder="Select"
+            options={(accounts ?? []).map((a) => ({ value: a.id, label: a.name }))}
+          />
         </div>
       ) : (
-        <div>
-          <Label>Ledger</Label>
-          <Select
-            value={form.account_id}
-            onChange={(e) => setForm({ ...form, account_id: e.target.value })}
-            className="mt-1.5"
-          >
-            <option value="">Select ledger</option>
-            {accounts?.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name} — {formatMoney((balances.get(a.id)?.toNumber() ?? 0))}
-              </option>
-            ))}
-          </Select>
-        </div>
+        <SheetSelect
+          label="Ledger"
+          value={form.account_id}
+          onPick={(v) => setForm({ ...form, account_id: v })}
+          placeholder="Select ledger"
+          options={(accounts ?? []).map((a) => ({
+            value: a.id,
+            label: a.name,
+            hint: formatMoney(balances.get(a.id)?.toNumber() ?? 0),
+          }))}
+        />
       )}
       <div>
         <Label>Note</Label>
