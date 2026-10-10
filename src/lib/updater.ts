@@ -61,11 +61,34 @@ export async function checkForAppUpdate(): Promise<AppUpdate | null> {
   }
 }
 
+export type UpdateStage = "downloading" | "installing" | "browser";
+
 /**
- * Native-only: hand the APK URL to the system browser/download manager.
- * The user taps the downloaded file to install (one-time "unknown apps" allow).
+ * One-tap update: downloads inside the app, then opens the package
+ * installer straight away. The OS still shows its own Install
+ * confirmation (unskippable for sideloads) — but there is no browser
+ * detour and no file hunting. Falls back to the browser on any failure.
  */
-export async function downloadUpdateApk(apkUrl: string): Promise<void> {
+export async function downloadUpdateApk(
+  apkUrl: string,
+  onStage?: (s: UpdateStage) => void
+): Promise<void> {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const proxy = Capacitor.registerPlugin<{
+        updateApk(o: { url: string; filename: string }): Promise<unknown>;
+      }>("NativeExtras");
+      onStage?.("downloading");
+      const name =
+        apkUrl.split("/").pop()?.split("?")[0] || "budget-app-update.apk";
+      await proxy.updateApk({ url: apkUrl, filename: name });
+      onStage?.("installing");
+      return;
+    } catch {
+      // fall through to browser
+    }
+  }
+  onStage?.("browser");
   const { Browser } = await import("@capacitor/browser");
   await Browser.open({ url: apkUrl });
 }
