@@ -427,26 +427,24 @@ export default function Space() {
               const day = String(i + 1).padStart(2, "0");
               const val = heatmap.get(day) ?? 0;
               const intensity = maxHeat > 0 ? val / maxHeat : 0;
-              const bg = val === 0 ? "bg-muted/30" : intensity < 0.33 ? "bg-rose-200 dark:bg-rose-900" : intensity < 0.66 ? "bg-rose-400 dark:bg-rose-700" : "bg-rose-600 dark:bg-rose-500";
+              const bg = val === 0 ? "bg-muted/30" : intensity < 0.33 ? "bg-primary/20" : intensity < 0.66 ? "bg-primary/50" : "bg-primary";
               return <div key={i} className={cn("aspect-square rounded-[3px]", bg)} title={`${day}: ${formatMoney(val)}`} />;
             })}
           </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-2">
-          <div className="rounded-xl bg-rose-50 dark:bg-rose-950/30 p-2 sm:p-2.5 border border-rose-100 dark:border-rose-900/30 overflow-hidden min-w-0">
-            <div className="text-[10px] sm:text-xs text-rose-600 dark:text-rose-400 font-medium flex items-center gap-1"><TrendingDown className="h-3 w-3" />Spent</div>
-            <div className="text-xs sm:text-sm font-bold tabular text-rose-700 dark:text-rose-300 mt-0.5 leading-tight truncate">{formatMoney(monthTotals.exp.toNumber())}</div>
-            <div className="text-[10px] text-rose-500/60 mt-0.5">{monthTotals.expN} tx</div>
+        <div className="rounded-2xl bg-foreground text-background p-4 space-y-2.5">
+          <div className="flex items-end justify-between gap-2">
+            <span className="text-[11px] uppercase tracking-[0.14em] opacity-70 pb-1">Net · {accounts?.length ?? 0} ledgers</span>
+            <span className="font-display tnum text-[32px] leading-none font-semibold">{formatMoney(sums.bal.toNumber())}</span>
           </div>
-          <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/30 p-2 sm:p-2.5 border border-emerald-100 dark:border-emerald-900/30 overflow-hidden min-w-0">
-            <div className="text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1"><TrendingUp className="h-3 w-3" />Earned</div>
-            <div className="text-xs sm:text-sm font-bold tabular text-emerald-700 dark:text-emerald-300 mt-0.5 leading-tight truncate">{formatMoney(monthTotals.inc.toNumber())}</div>
-            <div className="text-[10px] text-emerald-500/60 mt-0.5">{monthTotals.incN} tx</div>
+          <div className="h-px bg-background/15" />
+          <div className="flex items-center justify-between text-sm">
+            <span className="opacity-70">Spent · {monthTotals.expN} tx</span>
+            <span className="tnum font-semibold text-red-300">{formatMoney(monthTotals.exp.toNumber())}</span>
           </div>
-          <div className="rounded-xl bg-violet-50 dark:bg-violet-950/30 p-2 sm:p-2.5 border border-violet-100 dark:border-violet-900/30 overflow-hidden min-w-0">
-            <div className="text-[10px] sm:text-xs text-violet-600 dark:text-violet-400 font-medium flex items-center gap-1"><Sparkles className="h-3 w-3" />Balance</div>
-            <div className="text-xs sm:text-sm font-bold tabular text-violet-700 dark:text-violet-300 mt-0.5 leading-tight truncate">{formatMoney(sums.bal.toNumber())}</div>
-            <div className="text-[10px] text-violet-500/60 mt-0.5">{accounts?.length ?? 0} ledgers</div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="opacity-70">Earned · {monthTotals.incN} tx</span>
+            <span className="tnum font-semibold text-emerald-300">{formatMoney(monthTotals.inc.toNumber())}</span>
           </div>
         </div>
       </CardContent>
@@ -547,7 +545,7 @@ export default function Space() {
                       const isTransfer = e.direction === "transfer";
                       const Icon = isTransfer ? ArrowLeftRight : catIcon(cat?.name ?? e.title);
                       const iconGrad = isTransfer ? "bg-sky-800" : e.direction === "income" ? "bg-emerald-800" : cat ? GRAD[cat.color] ?? GRAD.slate : "bg-rose-700";
-                      const amtColor = isTransfer ? "text-blue-600" : e.direction === "income" ? "text-emerald-600" : "text-rose-600";
+                      const amtColor = isTransfer ? "text-muted-foreground" : e.direction === "income" ? "text-emerald-600" : "text-rose-600";
                       return (
                         <SwipeRow key={e.id} actions={[{ label: "Edit", onClick: () => openEdit(e) }, { label: "Delete", kind: "destructive", onClick: () => setConfirmDelete(e.id) }]}>
                         <div className="flex items-center gap-2 py-1.5 px-1 rounded-lg hover:bg-muted/30 active:bg-muted/50 transition-colors group cursor-pointer overflow-hidden" onClick={() => openEdit(e)}>
@@ -555,7 +553,7 @@ export default function Space() {
                           <div className="flex-1 min-w-0 overflow-hidden">
                             <div className="flex items-center gap-1.5">
                               <span className="font-medium text-[13px] truncate">{e.title}</span>
-                              {isTransfer && <Badge variant="secondary" className="text-[9px] h-4 px-1 shrink-0">transfer</Badge>}{tagsForNote(e.id).map(t => <Badge key={t.id} variant="outline" className="text-[8px] h-3.5 px-1 shrink-0 border-rose-300 text-rose-600">{t.name}</Badge>)}
+                              {isTransfer && <Badge variant="secondary" className="text-[9px] h-4 px-1 shrink-0">transfer</Badge>}{tagsForNote(e.id).map(t => <Badge key={t.id} variant="outline" className="text-[8px] h-3.5 px-1 shrink-0">{t.name}</Badge>)}
                             </div>
                             <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                               {isTransfer ? (
@@ -566,7 +564,7 @@ export default function Space() {
                             </div>
                           </div>
                           <div className="text-right shrink-0">
-                            <div className={cn("font-semibold text-[13px] tabular", amtColor)}>{e.direction === "expense" ? "−" : e.direction === "income" ? "+" : ""}{formatMoney(Number(e.amount ?? 0))}</div>
+                            <div className={cn("font-display tnum text-[15px] font-semibold", amtColor)}>{e.direction === "expense" ? "−" : e.direction === "income" ? "+" : ""}{formatMoney(Number(e.amount ?? 0))}</div>
                             <div className="text-[11px] text-muted-foreground mt-0.5">{new Date(e.entry_date).toLocaleDateString(dateLocale(lang), { day:"2-digit", month:"short" })}</div>
                           </div>
                           <div className="hidden sm:flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-all"><button onClick={(ev) => { ev.stopPropagation(); saveTemplate(e); }} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground/30 hover:text-amber-600 hover:bg-amber-50"><Bookmark className="h-3.5 w-3.5" /></button><button onClick={(ev) => { ev.stopPropagation(); setConfirmDelete(e.id); }} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10"><Trash2 className="h-3.5 w-3.5" /></button></div>
@@ -620,7 +618,7 @@ export default function Space() {
             <div className="flex flex-wrap gap-1.5">
               {(tags ?? []).map(t => {
                 const sel = selectedTagIds.includes(t.id);
-                return <button key={t.id} type="button" onClick={()=>setSelectedTagIds(sel ? selectedTagIds.filter(id=>id!==t.id) : [...selectedTagIds, t.id])} className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] transition-all", sel ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground hover:border-primary/50")}><span className={cn("h-1.5 w-1.5 rounded-full", sel ? "bg-white" : `bg-${t.color}-500`)} />{t.name}</button>;
+                return <button key={t.id} type="button" onClick={()=>setSelectedTagIds(sel ? selectedTagIds.filter(id=>id!==t.id) : [...selectedTagIds, t.id])} className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] transition-all", sel ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground hover:border-primary/50")}><span className={cn("h-1.5 w-1.5 rounded-full", sel ? "bg-white" : "bg-muted-foreground/50")} />{t.name}</button>;
               })}
               {(tags ?? []).length === 0 && <span className="text-[10px] text-muted-foreground">No tags — create in Manage</span>}
             </div>

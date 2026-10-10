@@ -194,30 +194,11 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // One gliding pill (FLIP-measured) instead of five crossfading ones.
-  const barRowRef = React.useRef<HTMLDivElement>(null);
-  const [glider, setGlider] = React.useState({ x: 0, y: 0, w: 0, h: 0, on: false });
-  React.useLayoutEffect(() => {
-    const row = barRowRef.current;
-    if (!row) return;
-    const active = row.querySelector('[data-pillon="1"]') as HTMLElement | null;
-    if (!active) {
-      setGlider((g) => (g.on ? { ...g, on: false } : g));
-      return;
-    }
-    const next = {
-      x: active.offsetLeft,
-      y: active.offsetTop,
-      w: active.offsetWidth,
-      h: active.offsetHeight,
-      on: true,
-    };
-    setGlider((g) =>
-      g.x === next.x && g.y === next.y && g.w === next.w && g.h === next.h && g.on
-        ? g
-        : next
-    );
-  }, [loc.pathname]);
+  // One gliding pill positioned by index — all pills share identical
+  // geometry, so measurement is unnecessary (and unbreakable).
+  const activeIndex = bar.findIndex((tb) =>
+    tb.to === "/" ? loc.pathname === "/" : loc.pathname.startsWith(tb.to)
+  );
   const drawerItems: Dest[] = [
     ...PRIMARY,
     { to: "/calendar", key: "nav.calendar", icon: CalendarDays },
@@ -413,15 +394,13 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
 
       {/* M3 navigation bar */}
       <nav aria-label="Primary" className="fixed bottom-0 inset-x-0 z-40 bg-background">
-        <div ref={barRowRef} className="relative grid grid-cols-5 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-          {glider.on && (
+        <div className="relative grid grid-cols-5 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+          {activeIndex >= 0 && (
             <span
               aria-hidden
-              className="pointer-events-none absolute rounded-full bg-primary/15 transition-all duration-300"
+              className="pointer-events-none absolute top-2 h-9 w-16 rounded-full bg-primary/15 transition-all duration-300"
               style={{
-                transform: `translate(${glider.x}px, ${glider.y}px)`,
-                width: glider.w,
-                height: glider.h,
+                left: `calc(${activeIndex * 20}% + 10% - 32px)`,
                 transitionTimingFunction: "var(--ease-enter)",
               }}
             />
@@ -437,7 +416,6 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
                 className="m3-press flex flex-col items-center gap-1 min-w-0"
               >
                 <span
-                  data-pillon={active ? "1" : "0"}
                   className={`relative rounded-full px-5 py-1.5 transition-colors duration-200 ${
                     active ? "text-foreground" : "text-muted-foreground"
                   }`}
