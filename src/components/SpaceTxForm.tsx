@@ -7,6 +7,8 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import { AmountKeypad } from "@/components/AmountKeypad";
+import { groupDigits } from "@/lib/calc";
 
 export interface TxFormState {
   title: string;
@@ -95,12 +97,9 @@ export function TxFields(props: {
     <div className="space-y-4">
       <div>
         <Label>Amount (IDR)</Label>
-        <Input
+        <AmountField
           value={form.amount}
-          onChange={(e) => setForm({ ...form, amount: e.target.value })}
-          inputMode="decimal"
-          placeholder="50000"
-          className="mt-1.5 h-16 font-display tnum text-3xl font-semibold"
+          onChange={(amount) => setForm({ ...form, amount })}
         />
       </div>
       <div>
@@ -235,6 +234,33 @@ export function TxFields(props: {
         </div>
       </div>
     </div>
+  );
+}
+
+/** Amount entry through the in-app keypad — never the system keyboard. */
+function AmountField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = React.useState(false);
+  const shown = value === "" ? "0" : /^[0-9]+$/.test(value) ? groupDigits(value) : value;
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-1.5 flex h-16 w-full items-center justify-between rounded-xl border border-input bg-background px-4 active:scale-[0.99] transition-transform"
+      >
+        <span className="font-display tnum text-3xl font-semibold truncate">
+          {shown}
+        </span>
+        <span className="text-xs font-medium text-muted-foreground shrink-0 ml-2">IDR • tap</span>
+      </button>
+      <AmountKeypad
+        open={open}
+        digits={/^[0-9+\-]*$/.test(value) ? value : ""}
+        onDigits={onChange}
+        onClose={() => setOpen(false)}
+        title="Amount"
+      />
+    </>
   );
 }
 
