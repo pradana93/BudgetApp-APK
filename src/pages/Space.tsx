@@ -676,11 +676,11 @@ export default function Space() {
     <Card>
       <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-1.5"><BarChart3 className="h-4 w-4" />Monthly Report</CardTitle></CardHeader>
       <CardContent className="text-sm space-y-2">
-        <div className="flex justify-between"><span className="text-muted-foreground">Total spent</span><span className="font-semibold">{formatMoney(monthReport.total)}</span></div>
-        <div className="flex justify-between"><span className="text-muted-foreground">Transactions</span><span className="font-semibold">{monthReport.txCount}</span></div>
-        <div className="flex justify-between"><span className="text-muted-foreground">Daily average</span><span className="font-semibold">{formatMoney(monthReport.avgPerDay)}</span></div>
+        <div className="flex justify-between items-baseline"><span className="text-muted-foreground">Total spent</span><span className="font-display tnum text-lg font-semibold">{formatMoney(monthReport.total)}</span></div>
+        <div className="flex justify-between items-baseline"><span className="text-muted-foreground">Transactions</span><span className="font-display tnum text-lg font-semibold">{monthReport.txCount}</span></div>
+        <div className="flex justify-between items-baseline"><span className="text-muted-foreground">Daily average</span><span className="font-display tnum text-lg font-semibold">{formatMoney(monthReport.avgPerDay)}</span></div>
         {monthReport.topCats.length > 0 && <div className="pt-2 border-t"><div className="text-xs text-muted-foreground mb-1">Top categories</div>
-          {monthReport.topCats.map(([name, amt]) => <div key={name} className="flex justify-between text-xs py-0.5"><span>{name}</span><span className="font-medium">{formatMoney(amt)} ({monthReport.total > 0 ? Math.round(amt/monthReport.total*100) : 0}%)</span></div>)}
+          {monthReport.topCats.map(([name, amt]) => <div key={name} className="flex justify-between text-xs py-0.5"><span>{name}</span><span className="font-medium tnum">{formatMoney(amt)} ({monthReport.total > 0 ? Math.round(amt/monthReport.total*100) : 0}%)</span></div>)}
         </div>}
       </CardContent>
     </Card>
@@ -697,8 +697,8 @@ export default function Space() {
         <div className="flex flex-wrap gap-1.5 max-h-[200px] overflow-y-auto">
           {(tags ?? []).length === 0 && <span className="text-xs text-muted-foreground">No tags yet</span>}
           {(tags ?? []).map(t => (
-            <span key={t.id} className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs group">
-              <span className={cn("h-2 w-2 rounded-full", `bg-${t.color}-500`)} />{t.name}
+              <span key={t.id} className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs group">
+                <span className="h-2 w-2 rounded-full bg-primary" />{t.name}
               <button onClick={()=>delTag.mutate(t.id)} className="opacity-0 group-hover:opacity-100 text-destructive"><X className="h-3 w-3" /></button>
             </span>
           ))}

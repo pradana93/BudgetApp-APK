@@ -223,7 +223,27 @@ main h1 {
   .mobile-sheet {
     align-self: flex-end;
     margin: 0;
+    padding-bottom: env(safe-area-inset-bottom);
   }
+  /* Grabber pill: pure affordance, no layout cost */
+  .mobile-sheet::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 4px;
+    border-radius: 999px;
+    background: hsl(var(--muted-foreground) / 0.35);
+    z-index: 1;
+  }
+}
+
+/* Native form controls: thumb-sized, readable */
+.native-app select {
+  min-height: 44px;
+  font-size: 0.875rem;
 }
 
 /* ---- Native shell (Capacitor APK): kill web-isms, respect notches ---- */
