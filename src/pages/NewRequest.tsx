@@ -20,6 +20,8 @@ import { formatDate } from "@/lib/datetime";
 import { Sparkles, Check } from "lucide-react";
 import { getRequestSchema } from "@/schemas/budget";
 import { z } from "zod";
+import { AmountKeypad } from "@/components/AmountKeypad";
+import { groupDigits } from "@/lib/calc";
 
 const DRAFT_KEY = "budgetapp-draft-request";
 const STEPS = ["new.stepBudget", "new.stepDetails", "new.stepReview"] as const;
@@ -35,6 +37,7 @@ export default function NewRequest(){
   const [err,setErr]=React.useState<string|null>(null);
   const [stepErr,setStepErr]=React.useState<string|null>(null);
   const [draftLoaded,setDraftLoaded]=React.useState(false);
+  const [kpOpen,setKpOpen]=React.useState(false);
 
   const schema = React.useMemo(
     () => getRequestSchema({ budgetRequired: t("v.budgetRequired"), amountGt: t("v.amountGt"), categoryRequired: t("v.categoryRequired") }),
@@ -288,12 +291,42 @@ export default function NewRequest(){
         <div className="space-y-4">
           <div>
             <Label>{t("new.amount")}</Label>
-            <Input value={form.amount} onChange={e=>setForm({...form,amount:e.target.value})} placeholder={t("new.amountPh")} inputMode="decimal" />
-            {amountValid && <div className="mt-1 text-lg font-bold tabular text-gradient">{formatMoney(Number(form.amount))}</div>}
+            <button
+              type="button"
+              onClick={() => setKpOpen(true)}
+              className="mt-1.5 flex min-h-[64px] w-full items-center justify-between rounded-xl border border-input bg-background px-4 active:scale-[0.99] transition-transform"
+            >
+              <span className="font-display tnum text-3xl font-semibold truncate">
+                {form.amount === "" ? "0" : /^[0-9]+$/.test(form.amount) ? groupDigits(form.amount) : form.amount}
+              </span>
+              <span className="text-xs font-medium text-muted-foreground shrink-0 ml-2">IDR • tap</span>
+            </button>
+            {amountValid && <div className="mt-1 font-display tnum text-lg font-semibold text-primary">{formatMoney(Number(form.amount))}</div>}
+            <AmountKeypad
+              open={kpOpen}
+              digits={/^[0-9+\-]*$/.test(form.amount) ? form.amount : ""}
+              onDigits={(d) => setForm({ ...form, amount: d })}
+              onClose={() => setKpOpen(false)}
+              title={t("new.amount")}
+            />
           </div>
           <div>
             <Label>{t("new.category")}</Label>
-            <Select value={form.category} onChange={e=>{ setManualCat(true); setForm({...form,category:e.target.value}); }}>{categories.map((c)=><option key={c} value={c}>{c}</option>)}</Select>
+            <div className="mt-1.5 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
+              {categories.map((c) => {
+                const sel = form.category === c;
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => { setManualCat(true); setForm({ ...form, category: c }); }}
+                    className={`shrink-0 rounded-full border px-4 h-11 text-sm font-medium capitalize transition-all active:scale-95 ${sel ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-card text-muted-foreground"}`}
+                  >
+                    {c}
+                  </button>
+                );
+              })}
+            </div>
           </div>
           {suggestion && (
             <div className="rounded-md border border-primary/30 bg-primary/5 p-3 text-sm space-y-2">
@@ -323,8 +356,24 @@ export default function NewRequest(){
               <div className="text-muted-foreground">{t("dup.desc", { n: dupWarn.length })}</div>
             </div>
           )}
-          <div><Label>{t("new.merchant")}</Label><Input value={form.merchant} onChange={e=>setForm({...form,merchant:e.target.value})} placeholder={t("new.merchantPh")} maxLength={200} list="merchant-history" />
-            <datalist id="merchant-history">{merchantNames.map((m) => <option key={m} value={m} />)}</datalist></div>
+          <div>
+            <Label>{t("new.merchant")}</Label>
+            <Input value={form.merchant} onChange={e=>setForm({...form,merchant:e.target.value})} placeholder={t("new.merchantPh")} maxLength={200} />
+            {merchantNames.length > 0 && (
+              <div className="mt-2 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
+                {merchantNames.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setForm({ ...form, merchant: m })}
+                    className={`shrink-0 rounded-full border px-3.5 h-9 text-xs font-medium transition-all active:scale-95 max-w-[160px] truncate ${form.merchant === m ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground"}`}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div>
             <Label>{t("new.description")}</Label>
             <Textarea value={form.description} onChange={e=>setForm({...form,description:e.target.value})} placeholder={t("new.descPh")} maxLength={1000} />
@@ -350,7 +399,7 @@ export default function NewRequest(){
           <h3 className="font-semibold">{t("new.reviewTitle")}</h3>
           <dl className="rounded-lg border divide-y text-sm">
             <div className="flex justify-between gap-3 p-3"><dt className="text-muted-foreground">{t("new.budget")}</dt><dd className="font-medium text-right">{chosenBudget?.name ?? "—"}</dd></div>
-            <div className="flex justify-between gap-3 p-3"><dt className="text-muted-foreground">{t("new.amount")}</dt><dd className="font-bold tabular text-right">{amountValid ? formatMoney(Number(form.amount)) : form.amount || "—"}</dd></div>
+            <div className="flex justify-between gap-3 p-3"><dt className="text-muted-foreground">{t("new.amount")}</dt><dd className="font-display tnum font-semibold text-right">{amountValid ? formatMoney(Number(form.amount)) : form.amount || "—"}</dd></div>
             <div className="flex justify-between gap-3 p-3"><dt className="text-muted-foreground">{t("new.category")}</dt><dd className="font-medium">{form.category || "—"}</dd></div>
             <div className="flex justify-between gap-3 p-3"><dt className="text-muted-foreground">{t("new.merchant")}</dt><dd className="font-medium text-right">{form.merchant || "—"}</dd></div>
             {form.description && <div className="flex justify-between gap-3 p-3"><dt className="text-muted-foreground">{t("new.description")}</dt><dd className="text-right max-w-[60%]">{form.description}</dd></div>}
