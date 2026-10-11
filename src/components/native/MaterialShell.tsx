@@ -9,6 +9,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useLang } from "@/i18n/LanguageContext";
+import { LanguageToggle } from "@/i18n/LanguageContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { titleFor } from "@/components/Layout";
 import { tapLight } from "@/lib/haptics";
 import { registerDrawerCloser } from "@/lib/nativeUi";
@@ -630,6 +632,10 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
               })}
             </div>
             <div className="p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+              <div className="flex items-center justify-between px-1 pb-1">
+                <LanguageToggle />
+                <ThemeToggle />
+              </div>
               <button
                 type="button"
                 onClick={async () => { await signOut(); closeDrawer(false); nav("/login"); }}
