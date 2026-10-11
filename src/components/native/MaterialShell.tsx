@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useSession } from "@/hooks/useSession";
 import {
   LayoutDashboard, Wallet, Receipt, Bell, NotebookPen, ShieldCheck,
-  Settings, LogOut, Menu, Plus, CalendarDays, History, X, ListChecks,
+  Settings, LogOut, Menu, Plus, CalendarDays, History, X, ListChecks, MessageCircle,
   type LucideIcon,
 } from "lucide-react";
 import { useLang } from "@/i18n/LanguageContext";
@@ -221,6 +221,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
         ]
       : []),
     { to: "/changelogs", key: "nav.changelogs", icon: History },
+    { to: "/messages", key: "msg.title", icon: MessageCircle },
     { to: "/notifications", key: "nav.notifications", icon: Bell },
     { to: "/settings", key: "nav.settings", icon: Settings },
   ];

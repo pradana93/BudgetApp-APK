@@ -314,7 +314,7 @@ patchFile(
   if (!fs.existsSync(path.join(modDir, "build.gradle"))) {
     fs.writeFileSync(
       path.join(modDir, "build.gradle"),
-      `apply plugin: 'com.android.library'\n\nandroid {\n    namespace "com.pradana93.nativeextras"\n    compileSdk 34\n    defaultConfig {\n        minSdkVersion 22\n    }\n}\n\ndependencies {\n    implementation project(':capacitor-android')\n    implementation 'com.google.firebase:firebase-messaging:23.3.1'\n}\n`
+      `apply plugin: 'com.android.library'\n\nandroid {\n    namespace "com.pradana93.nativeextras"\n    compileSdk 34\n    defaultConfig {\n        minSdkVersion 22\n    }\n}\n\ndependencies {\n    implementation project(':capacitor-android')\n    implementation 'com.google.firebase:firebase-messaging:23.3.1'\n    implementation 'com.google.mlkit:text-recognition:16.0.1'\n}\n`
     );
   }
   patchFile(

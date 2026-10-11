@@ -609,6 +609,12 @@ const en = {
   "nt.commentT": "New comment",
   "nt.commentB": "{author} commented on {merchant}.",
 
+  "msg.title": "Messages",
+  "msg.empty": "No conversations yet",
+  "msg.emptySub": "Discussion on a request will appear here.",
+  "msg.you": "You",
+  "msg.them": "Them",
+
   "dash.goals": "Savings goals",
   "goals.new": "New goal",
   "goals.name": "Goal name",
@@ -1284,6 +1290,12 @@ const id: Record<StringKey, string> = {
   "nt.reconciledB": "{merchant} • {amount} direkonsiliasi.",
   "nt.commentT": "Komentar baru",
   "nt.commentB": "{author} mengomentari {merchant}.",
+
+  "msg.title": "Pesan",
+  "msg.empty": "Belum ada percakapan",
+  "msg.emptySub": "Diskusi pada pengajuan akan muncul di sini.",
+  "msg.you": "Anda",
+  "msg.them": "Mereka",
 
   "dash.goals": "Target menabung",
   "goals.new": "Target baru",

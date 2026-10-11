@@ -44,6 +44,7 @@ const TITLES: Record<string, StringKey> = {
   "/rewards": "nav.rewards",
   "/calendar": "nav.calendar",
   "/space": "nav.space",
+  "/messages": "msg.title",
   "/changelogs": "nav.changelogs",
 };
 

@@ -129,15 +129,33 @@ export default function NewRequest(){
   const [ocr, setOcr] = React.useState<{ merchant: string; amount: string } | null>(null);
   React.useEffect(() => {
     if (!file || !file.type.startsWith("image/")) { setOcr(null); return; }
-    const t = setTimeout(() => {
-      // flagship mock OCR — in prod call vision API; here we simulate + auto-fill
-      const mockMerchant = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ").slice(0, 20) || "Detected Merchant";
-      const mockAmount = form.amount.trim() ? form.amount.trim() : "150000";
-      setOcr({ merchant: mockMerchant, amount: mockAmount });
-      if (!form.merchant.trim()) setForm((f) => ({ ...f, merchant: mockMerchant }));
-      if (!form.amount.trim()) setForm((f) => ({ ...f, amount: mockAmount }));
-    }, 700);
-    return () => clearTimeout(t);
+    let alive = true;
+    (async () => {
+      try {
+        const { recognizeReceipt } = await import("@/lib/ocr");
+        const native = await recognizeReceipt(file).catch(() => null);
+        if (!alive) return;
+        if (native && (native.merchant || native.amount)) {
+          setOcr({ merchant: native.merchant || "Detected Merchant", amount: native.amount });
+          if (!form.merchant.trim() && native.merchant) setForm((f) => ({ ...f, merchant: native.merchant }));
+          if (!form.amount.trim() && native.amount) setForm((f) => ({ ...f, amount: native.amount }));
+          return;
+        }
+      } catch {
+        // fall through to mock
+      }
+      const t = setTimeout(() => {
+        if (!alive) return;
+        // fallback mock OCR — in prod call vision API; here we simulate + auto-fill
+        const mockMerchant = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ").slice(0, 20) || "Detected Merchant";
+        const mockAmount = form.amount.trim() ? form.amount.trim() : "150000";
+        setOcr({ merchant: mockMerchant, amount: mockAmount });
+        if (!form.merchant.trim()) setForm((f) => ({ ...f, merchant: mockMerchant }));
+        if (!form.amount.trim()) setForm((f) => ({ ...f, amount: mockAmount }));
+      }, 700);
+      void t;
+    })();
+    return () => { alive = false; };
   }, [file]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const merchantNames = React.useMemo(

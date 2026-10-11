@@ -27,6 +27,47 @@ public class NativeExtrasPlugin extends Plugin {
     }
 
     /**
+     * On-device receipt OCR (ML Kit, Latin script). Reads an image from a
+     * file URI and returns its text. Private: nothing leaves the phone.
+     */
+    @PluginMethod
+    public void recognizeText(PluginCall call) {
+        String path = call.getString("path", "");
+        if (path == null || path.isEmpty()) {
+            call.reject("missing path");
+            return;
+        }
+        new Thread(() -> {
+            try {
+                Context ctx = getContext();
+                android.net.Uri uri = android.net.Uri.parse(path);
+                com.google.mlkit.vision.common.InputImage image =
+                        com.google.mlkit.vision.common.InputImage.fromFilePath(ctx, uri);
+                com.google.mlkit.vision.text.TextRecognizer recognizer =
+                        com.google.mlkit.vision.text.TextRecognition.getClient(
+                                com.google.mlkit.vision.text.latin.TextRecognizerOptions.DEFAULT_OPTIONS);
+                recognizer.process(image)
+                        .addOnSuccessListener(visionText -> {
+                            JSObject ret = new JSObject();
+                            ret.put("text", visionText.getText());
+                            org.json.JSONArray lines = new org.json.JSONArray();
+                            for (com.google.mlkit.vision.text.Text.TextBlock b : visionText.getTextBlocks()) {
+                                for (com.google.mlkit.vision.text.Text.Line l : b.getLines()) {
+                                    lines.put(l.getText());
+                                }
+                            }
+                            ret.put("lines", lines);
+                            call.resolve(ret);
+                        })
+                        .addOnFailureListener(e -> call.reject(
+                                e.getMessage() != null ? e.getMessage() : "recognition failed"));
+            } catch (Exception e) {
+                call.reject(e.getMessage() != null ? e.getMessage() : "recognition failed");
+            }
+        }).start();
+    }
+
+    /**
      * One-tap update: downloads the APK to the app cache, then fires the
      * package installer. The OS still shows its own Install confirmation
      * (unskippable for sideloads) — but there is no browser detour.

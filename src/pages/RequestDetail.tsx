@@ -145,6 +145,26 @@ export default function RequestDetail(){
     return () => { supabase.removeChannel(ch); };
   }, [qc, id]);
 
+  // Viewing the thread marks it read (drives the Messages inbox dots).
+  const markedRef = React.useRef("");
+  React.useEffect(() => {
+    if (!profile || !comments || comments.length === 0) return;
+    const key = `${id}:${comments.length}:${comments[comments.length - 1].id}`;
+    if (markedRef.current === key) return;
+    markedRef.current = key;
+    (async () => {
+      try {
+        await supabase.from("comment_reads").upsert(
+          { user_id: profile.id, request_id: id!, last_read_at: new Date().toISOString() },
+          { onConflict: "user_id,request_id" }
+        );
+        qc.invalidateQueries({ queryKey: ["comment-reads"] });
+      } catch {
+        // best-effort
+      }
+    })();
+  }, [profile, comments, id, qc]);
+
   const sendComment = useMutation({
     mutationFn: async () => {
       const body = commentBody.trim();
