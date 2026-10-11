@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { AmountKeypad } from "@/components/AmountKeypad";
 import { groupDigits } from "@/lib/calc";
 import { SheetSelect, DateField } from "@/components/pickers";
+import { useLang } from "@/i18n/lang";
 
 export interface TxFormState {
   title: string;
@@ -42,6 +43,7 @@ export function TxTypeTabs({
   value: TxType;
   onPick: (t: TxType) => void;
 }) {
+  const { t } = useLang();
   return (
     <div className="flex rounded-full bg-muted p-1">
       {(["expense", "income", "transfer"] as const).map((k) => (
@@ -61,7 +63,7 @@ export function TxTypeTabs({
           ) : (
             <ArrowLeftRight className="h-4 w-4" />
           )}
-          {k}
+          {t(`sp.${k}`)}
         </button>
       ))}
     </div>
@@ -95,34 +97,35 @@ export function TxFields(props: {
     onManageTags,
     locale,
   } = props;
+  const { t } = useLang();
   return (
     <div className="space-y-4">
       <div>
-        <Label>Amount (IDR)</Label>
+        <Label>{t("sp.amount")}</Label>
         <AmountField
           value={form.amount}
           onChange={(amount) => setForm({ ...form, amount })}
         />
       </div>
       <div>
-        <Label>Title</Label>
+        <Label>{t("sp.titleF")}</Label>
         <Input
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
-          placeholder="e.g. Groceries, Salary"
+          placeholder={t("sp.titlePh")}
           className="mt-1.5"
         />
       </div>
       <div className="grid grid-cols-2 gap-2 sm:gap-3">
         <SheetSelect
-          label="Category"
+          label={t("sp.category")}
           value={form.category_id}
           onPick={(v) => setForm({ ...form, category_id: v })}
-          placeholder="None"
-          options={[{ value: "", label: "None" }, ...(cats ?? []).map((c) => ({ value: c.id, label: c.name }))]}
+          placeholder={t("sp.none")}
+          options={[{ value: "", label: t("sp.none") }, ...(cats ?? []).map((c) => ({ value: c.id, label: c.name }))]}
         />
         <DateField
-          label="Date"
+          label={t("sp.date")}
           value={form.entry_date}
           onChange={(iso) => setForm({ ...form, entry_date: iso })}
           locale={locale}
@@ -131,26 +134,26 @@ export function TxFields(props: {
       {txType === "transfer" ? (
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
           <SheetSelect
-            label="From"
+            label={t("sp.from")}
             value={form.account_id}
             onPick={(v) => setForm({ ...form, account_id: v })}
-            placeholder="Select"
+            placeholder={t("sp.select")}
             options={(accounts ?? []).map((a) => ({ value: a.id, label: a.name }))}
           />
           <SheetSelect
-            label="To"
+            label={t("sp.to")}
             value={form.to_account_id}
             onPick={(v) => setForm({ ...form, to_account_id: v })}
-            placeholder="Select"
+            placeholder={t("sp.select")}
             options={(accounts ?? []).map((a) => ({ value: a.id, label: a.name }))}
           />
         </div>
       ) : (
         <SheetSelect
-          label="Ledger"
+          label={t("sp.ledger")}
           value={form.account_id}
           onPick={(v) => setForm({ ...form, account_id: v })}
-          placeholder="Select ledger"
+          placeholder={t("sp.selectLedger")}
           options={(accounts ?? []).map((a) => ({
             value: a.id,
             label: a.name,
@@ -159,24 +162,24 @@ export function TxFields(props: {
         />
       )}
       <div>
-        <Label>Note</Label>
+        <Label>{t("sp.note")}</Label>
         <Textarea
           value={form.body}
           onChange={(e) => setForm({ ...form, body: e.target.value })}
-          placeholder="Optional note"
+          placeholder={t("sp.notePh")}
           rows={2}
           className="mt-1.5"
         />
       </div>
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <Label>Tags</Label>
+          <Label>{t("sp.tags")}</Label>
           <button
             type="button"
             onClick={onManageTags}
             className="text-[10px] text-primary hover:underline"
           >
-            Manage
+            {t("sp.manage")}
           </button>
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -200,7 +203,7 @@ export function TxFields(props: {
             );
           })}
           {(tags ?? []).length === 0 && (
-            <span className="text-[10px] text-muted-foreground">No tags — create in Manage</span>
+            <span className="text-[10px] text-muted-foreground">{t("sp.noTagsForm")}</span>
           )}
         </div>
       </div>
@@ -211,6 +214,7 @@ export function TxFields(props: {
 /** Amount entry through the in-app keypad — never the system keyboard. */
 function AmountField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = React.useState(false);
+  const { t } = useLang();
   const shown = value === "" ? "0" : /^[0-9]+$/.test(value) ? groupDigits(value) : value;
   return (
     <>
@@ -222,14 +226,14 @@ function AmountField({ value, onChange }: { value: string; onChange: (v: string)
         <span className="font-display tnum text-3xl font-semibold truncate">
           {shown}
         </span>
-        <span className="text-xs font-medium text-muted-foreground shrink-0 ml-2">IDR • tap</span>
+        <span className="text-xs font-medium text-muted-foreground shrink-0 ml-2">{t("sp.idrTap")}</span>
       </button>
       <AmountKeypad
         open={open}
         digits={/^[0-9+\-]*$/.test(value) ? value : ""}
         onDigits={onChange}
         onClose={() => setOpen(false)}
-        title="Amount"
+        title={t("sp.amount")}
       />
     </>
   );
@@ -248,13 +252,14 @@ export function TxFooter({
   onCancel: () => void;
   onSave: () => void;
 }) {
+  const { t } = useLang();
   return (
     <>
       <Button variant="outline" onClick={onCancel} className="h-12 flex-1 sm:flex-none">
-        Cancel
+        {t("sp.cancel")}
       </Button>
       <Button onClick={onSave} disabled={saving} className="h-12 flex-1 sm:flex-none text-base">
-        {editing ? "Save" : "Add"} {txType}
+        {editing ? t("sp.save") : t("sp.add")} {t(`sp.${txType}`)}
       </Button>
     </>
   );

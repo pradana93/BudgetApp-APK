@@ -51,9 +51,10 @@ const catIcon = (name?: string | null) => {
 
 export default function Space() {
   const { profile } = useSession();
-  const { lang } = useLang();
+  const { t, lang } = useLang();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const freqLabel = (v: string) => v === "weekly" ? t("sp.freqWeekly") : v === "biweekly" ? t("sp.freqBiweekly") : v === "yearly" ? t("sp.freqYearly") : t("sp.freqMonthly");
   const now0 = new Date();
   const [ym, setYm] = React.useState({ y: now0.getFullYear(), m: now0.getMonth() });
   const [q, setQ] = React.useState("");
@@ -285,55 +286,55 @@ export default function Space() {
   const saveTx = useMutation({
     mutationFn: async () => {
       if (!profile) throw new Error("no user");
-      if (!form.title.trim()) { setFormErr("Title is required"); throw new Error("_validation"); }
-      if (!isValidMoney(form.amount) || Number(form.amount) <= 0) { setFormErr("Amount must be greater than 0"); throw new Error("_validation"); }
-      if (txType !== "transfer" && !form.account_id) { setFormErr("Select a ledger account"); throw new Error("_validation"); }
-      if (txType === "transfer" && (!form.account_id || !form.to_account_id)) { setFormErr("Select both From and To accounts"); throw new Error("_validation"); }
-      if (txType === "transfer" && form.account_id === form.to_account_id) { setFormErr("From and To accounts must be different"); throw new Error("_validation"); }
+      if (!form.title.trim()) { setFormErr(t("sp.reqTitle")); throw new Error("_validation"); }
+      if (!isValidMoney(form.amount) || Number(form.amount) <= 0) { setFormErr(t("sp.reqAmount")); throw new Error("_validation"); }
+      if (txType !== "transfer" && !form.account_id) { setFormErr(t("sp.reqLedger")); throw new Error("_validation"); }
+      if (txType === "transfer" && (!form.account_id || !form.to_account_id)) { setFormErr(t("sp.reqBoth")); throw new Error("_validation"); }
+      if (txType === "transfer" && form.account_id === form.to_account_id) { setFormErr(t("sp.reqDiff")); throw new Error("_validation"); }
       setFormErr(null);
       const payload: Record<string, unknown> = { user_id: profile.id, title: form.title.trim().slice(0,120), body: form.body.slice(0,4000), amount: Number(form.amount), category_id: form.category_id || null, direction: txType, entry_date: form.entry_date, account_id: form.account_id || null, transfer_to_account_id: txType === "transfer" ? form.to_account_id : null };
       if (editing) { const { error } = await supabase.from("personal_notes").update(payload).eq("id", editing.id); if (error) throw error; return { id: editing.id }; }
       else { const { data, error } = await supabase.from("personal_notes").insert(payload).select("id").single(); if (error) throw error; return data; }
     },
-    onSuccess: (data) => { if (selectedTagIds.length > 0 && data) { saveNoteTags.mutate({ noteId: (data as { id: string }).id, tagIds: selectedTagIds }); } setShowAdd(false); setEditing(null); setFormErr(null); setSelectedTagIds([]); setSelectedTagIds([]); qc.invalidateQueries({ queryKey: ["personal-entries", profile?.id] }); try { navigator.vibrate?.(15); } catch { /* vibrate not supported */ } toast({ title: "Saved" }); },
-    onError: (e: Error) => { if (e.message !== "_validation") toast({ title: "Failed", description: e.message, variant: "destructive" }); },
+    onSuccess: (data) => { if (selectedTagIds.length > 0 && data) { saveNoteTags.mutate({ noteId: (data as { id: string }).id, tagIds: selectedTagIds }); } setShowAdd(false); setEditing(null); setFormErr(null); setSelectedTagIds([]); setSelectedTagIds([]); qc.invalidateQueries({ queryKey: ["personal-entries", profile?.id] }); try { navigator.vibrate?.(15); } catch { /* vibrate not supported */ } toast({ title: t("sp.saved") }); },
+    onError: (e: Error) => { if (e.message !== "_validation") toast({ title: t("sp.failed"), description: e.message, variant: "destructive" }); },
   });
   const delTx = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from("personal_notes").delete().eq("id", id); if (error) throw error; },
-    onSuccess: () => { setConfirmDelete(null); qc.invalidateQueries({ queryKey: ["personal-entries", profile?.id] }); try { navigator.vibrate?.([10, 30, 10]); } catch { /* vibrate not supported */ } toast({ title: "Deleted" }); },
-    onError: (e: Error) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
+    onSuccess: () => { setConfirmDelete(null); qc.invalidateQueries({ queryKey: ["personal-entries", profile?.id] }); try { navigator.vibrate?.([10, 30, 10]); } catch { /* vibrate not supported */ } toast({ title: t("sp.deleted") }); },
+    onError: (e: Error) => toast({ title: t("sp.failed"), description: e.message, variant: "destructive" }),
   });
   const createAcc = useMutation({
     mutationFn: async () => {
-      if (!profile || !newAcc.name.trim()) throw new Error("Name required");
+      if (!profile || !newAcc.name.trim()) throw new Error(t("sp.nameRequired"));
       const bal = newAcc.initial_balance.trim();
-      if (bal && !isValidMoney(bal)) throw new Error("Invalid balance");
+      if (bal && !isValidMoney(bal)) throw new Error(t("sp.invalidBalance"));
       const { error } = await supabase.from("personal_accounts").insert({ user_id: profile.id, name: newAcc.name.trim().slice(0,30), icon: newAcc.icon, color: newAcc.color, initial_balance: bal ? Number(bal) : 0 });
       if (error) throw error;
     },
-    onSuccess: () => { setNewAcc({ name: "", icon: "wallet", color: "blue", initial_balance: "" }); setShowAcc(false); qc.invalidateQueries({ queryKey: ["personal-accounts", profile?.id] }); toast({ title: "Account created" }); },
-    onError: (e: Error) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
+    onSuccess: () => { setNewAcc({ name: "", icon: "wallet", color: "blue", initial_balance: "" }); setShowAcc(false); qc.invalidateQueries({ queryKey: ["personal-accounts", profile?.id] }); toast({ title: t("sp.accCreated") }); },
+    onError: (e: Error) => toast({ title: t("sp.failed"), description: e.message, variant: "destructive" }),
   });
 
   const delAcc = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from("personal_accounts").delete().eq("id", id); if (error) throw error; },
-    onSuccess: () => { setConfirmDelete(null); qc.invalidateQueries({ queryKey: ["personal-accounts", profile?.id] }); qc.invalidateQueries({ queryKey: ["personal-entries", profile?.id] }); toast({ title: "Account deleted" }); },
-    onError: (e: Error) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
+    onSuccess: () => { setConfirmDelete(null); qc.invalidateQueries({ queryKey: ["personal-accounts", profile?.id] }); qc.invalidateQueries({ queryKey: ["personal-entries", profile?.id] }); toast({ title: t("sp.accDeleted") }); },
+    onError: (e: Error) => toast({ title: t("sp.failed"), description: e.message, variant: "destructive" }),
   });
 
   const saveTag = useMutation({
     mutationFn: async () => {
-      if (!profile || !newTagName.trim()) throw new Error("Name required");
+      if (!profile || !newTagName.trim()) throw new Error(t("sp.nameRequired"));
       const { error } = await supabase.from("personal_tags").insert({ user_id: profile.id, name: newTagName.trim().slice(0,30), color: newTagColor });
       if (error) throw error;
     },
-    onSuccess: () => { setNewTagName(""); setNewTagColor("blue"); qc.invalidateQueries({ queryKey: ["personal-tags", profile?.id] }); toast({ title: "Tag created" }); },
-    onError: (e: Error) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
+    onSuccess: () => { setNewTagName(""); setNewTagColor("blue"); qc.invalidateQueries({ queryKey: ["personal-tags", profile?.id] }); toast({ title: t("sp.tagCreated") }); },
+    onError: (e: Error) => toast({ title: t("sp.failed"), description: e.message, variant: "destructive" }),
   });
   const delTag = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from("personal_tags").delete().eq("id", id); if (error) throw error; },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["personal-tags", profile?.id] }); toast({ title: "Tag deleted" }); },
-    onError: (e: Error) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["personal-tags", profile?.id] }); toast({ title: t("sp.tagDeleted") }); },
+    onError: (e: Error) => toast({ title: t("sp.failed"), description: e.message, variant: "destructive" }),
   });
   const saveNoteTags = useMutation({
     mutationFn: async ({ noteId, tagIds }: { noteId: string; tagIds: string[] }) => {
@@ -345,12 +346,12 @@ export default function Space() {
       }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["personal-note-tags", profile?.id] }); },
-    onError: (e: Error) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: t("sp.failed"), description: e.message, variant: "destructive" }),
   });
   const saveRecurring = useMutation({
     mutationFn: async () => {
       if (!profile) throw new Error("no user");
-      if (!recForm.title.trim() || !isValidMoney(recForm.amount)) throw new Error("Title and amount required");
+      if (!recForm.title.trim() || !isValidMoney(recForm.amount)) throw new Error(t("sp.errRecReq"));
       const { error } = await supabase.from("personal_recurring").insert({
         user_id: profile.id, title: recForm.title.trim().slice(0,120), amount: Number(recForm.amount),
         category_id: recForm.category_id || null, direction: recForm.direction,
@@ -358,13 +359,13 @@ export default function Space() {
       });
       if (error) throw error;
     },
-    onSuccess: () => { setShowRecurring(false); setRecForm({ title: "", amount: "", category_id: "", direction: "expense", account_id: "", frequency: "monthly", next_date: new Date().toISOString().slice(0,10) }); qc.invalidateQueries({ queryKey: ["personal-recurring", profile?.id] }); toast({ title: "Recurring created" }); },
-    onError: (e: Error) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
+    onSuccess: () => { setShowRecurring(false); setRecForm({ title: "", amount: "", category_id: "", direction: "expense", account_id: "", frequency: "monthly", next_date: new Date().toISOString().slice(0,10) }); qc.invalidateQueries({ queryKey: ["personal-recurring", profile?.id] }); toast({ title: t("sp.recCreated") }); },
+    onError: (e: Error) => toast({ title: t("sp.failed"), description: e.message, variant: "destructive" }),
   });
   const delRecurring = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from("personal_recurring").delete().eq("id", id); if (error) throw error; },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["personal-recurring", profile?.id] }); toast({ title: "Recurring deleted" }); },
-    onError: (e: Error) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["personal-recurring", profile?.id] }); toast({ title: t("sp.recDeleted") }); },
+    onError: (e: Error) => toast({ title: t("sp.failed"), description: e.message, variant: "destructive" }),
   });
 
   const exportCsv = React.useCallback(() => {
@@ -380,7 +381,7 @@ export default function Space() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = `ledger-${curKey}.csv`; a.click();
     URL.revokeObjectURL(url);
-    toast({ title: "Exported CSV" });
+    toast({ title: t("sp.exportedCsv") });
   }, [filtered, cats, accounts, tagsForNote, curKey, toast]);
 
   const saveTemplate = React.useCallback((e: Entry) => {
@@ -388,7 +389,7 @@ export default function Space() {
     const next = [tpl, ...templates.filter(t => t.title !== tpl.title)].slice(0, 10);
     setTemplates(next);
     try { localStorage.setItem("space-templates", JSON.stringify(next)); } catch { /* */ }
-    toast({ title: "Template saved" });
+    toast({ title: t("sp.tplSaved") });
   }, [templates, toast]);
 
   const applyTemplate = React.useCallback((tpl: Template) => {
@@ -409,36 +410,36 @@ export default function Space() {
   return <PullToRefresh onRefresh={refresh}><div className="space-y-3 overflow-x-clip">
     {/* Page Header — matches Budgets/Requests pattern */}
     <div className="flex flex-wrap justify-between items-center gap-2 overflow-hidden">
-      <h1 className="text-2xl font-bold">Personal Ledger</h1>
+      <h1 className="text-2xl font-bold">{t("sp.title")}</h1>
       {isNative() ? (
         <div className="flex gap-2">
-          <Button onClick={() => openAdd("expense")} className="h-10"><Plus className="h-4 w-4 mr-1" />Transaction</Button>
-          <Button variant="outline" size="icon" className="h-10 w-10 shrink-0" onClick={() => setShowMenu(true)} aria-label="More actions"><MoreVertical className="h-4 w-4" /></Button>
+          <Button onClick={() => openAdd("expense")} className="h-10"><Plus className="h-4 w-4 mr-1" />{t("sp.transaction")}</Button>
+          <Button variant="outline" size="icon" className="h-10 w-10 shrink-0" onClick={() => setShowMenu(true)} aria-label={t("sp.moreActions")}><MoreVertical className="h-4 w-4" /></Button>
         </div>
       ) : (
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={exportCsv} className="hidden sm:inline-flex"><Download className="h-4 w-4 mr-1" />Export</Button><Button variant="outline" size="sm" onClick={exportCsv} className="sm:hidden h-8 w-8 p-0"><Download className="h-4 w-4" /></Button>
-        <Button variant="outline" size="sm" onClick={() => setShowTemplates(true)} className="hidden sm:inline-flex"><Bookmark className="h-4 w-4 mr-1" />Templates</Button><Button variant="outline" size="sm" onClick={() => setShowTemplates(true)} className="sm:hidden h-8 w-8 p-0"><Bookmark className="h-4 w-4" /></Button>
-        <Button variant="outline" size="sm" onClick={() => setShowRecurring(true)} className="hidden sm:inline-flex"><Repeat className="h-4 w-4 mr-1" />Recurring</Button><Button variant="outline" size="sm" onClick={() => setShowRecurring(true)} className="sm:hidden h-8 w-8 p-0"><Repeat className="h-4 w-4" /></Button>
-        <Button variant="outline" size="sm" onClick={() => setShowAcc(true)} className="hidden sm:inline-flex"><Plus className="h-4 w-4 mr-1" />Ledger</Button><Button variant="outline" size="sm" onClick={() => setShowAcc(true)} className="sm:hidden h-8 w-8 p-0"><Wallet className="h-4 w-4" /></Button>
-        <Button size="sm" onClick={() => openAdd("expense")} className="hidden sm:inline-flex"><Plus className="h-4 w-4 mr-1" />Transaction</Button><Button size="sm" onClick={() => openAdd("expense")} className="sm:hidden h-8 w-8 p-0"><Plus className="h-4 w-4" /></Button>
+        <Button variant="outline" size="sm" onClick={exportCsv} className="hidden sm:inline-flex"><Download className="h-4 w-4 mr-1" />{t("sp.export")}</Button><Button variant="outline" size="sm" onClick={exportCsv} className="sm:hidden h-8 w-8 p-0"><Download className="h-4 w-4" /></Button>
+        <Button variant="outline" size="sm" onClick={() => setShowTemplates(true)} className="hidden sm:inline-flex"><Bookmark className="h-4 w-4 mr-1" />{t("sp.templates")}</Button><Button variant="outline" size="sm" onClick={() => setShowTemplates(true)} className="sm:hidden h-8 w-8 p-0"><Bookmark className="h-4 w-4" /></Button>
+        <Button variant="outline" size="sm" onClick={() => setShowRecurring(true)} className="hidden sm:inline-flex"><Repeat className="h-4 w-4 mr-1" />{t("sp.recurring")}</Button><Button variant="outline" size="sm" onClick={() => setShowRecurring(true)} className="sm:hidden h-8 w-8 p-0"><Repeat className="h-4 w-4" /></Button>
+        <Button variant="outline" size="sm" onClick={() => setShowAcc(true)} className="hidden sm:inline-flex"><Plus className="h-4 w-4 mr-1" />{t("sp.ledger")}</Button><Button variant="outline" size="sm" onClick={() => setShowAcc(true)} className="sm:hidden h-8 w-8 p-0"><Wallet className="h-4 w-4" /></Button>
+        <Button size="sm" onClick={() => openAdd("expense")} className="hidden sm:inline-flex"><Plus className="h-4 w-4 mr-1" />{t("sp.transaction")}</Button><Button size="sm" onClick={() => openAdd("expense")} className="sm:hidden h-8 w-8 p-0"><Plus className="h-4 w-4" /></Button>
       </div>
       )}
     </div>
 
     {/* Stats Summary — inside Card like Dashboard */}
     <Card>
-      <CardHeader className="pb-3"><CardTitle className="text-sm">This Month</CardTitle></CardHeader>
+      <CardHeader className="pb-3"><CardTitle className="text-sm">{t("sp.thisMonth")}</CardTitle></CardHeader>
       <CardContent className="pt-2 overflow-hidden">
         <div className="flex items-center gap-2 mb-2 text-[10px] sm:text-[11px] overflow-hidden">
           {lastMonth.exp.greaterThan(0) ? (() => {
             const pct = monthTotals.exp.sub(lastMonth.exp).div(lastMonth.exp).mul(100);
             const up = pct.greaterThan(0);
-            return <span className={cn("font-medium", up ? "text-rose-600" : "text-emerald-600")}>{up ? "↑" : "↓"} {Math.abs(pct.toNumber()).toFixed(0)}% vs last month</span>;
-          })() : <span className="text-muted-foreground">No data for last month</span>}
+            return <span className={cn("font-medium", up ? "text-rose-600" : "text-emerald-600")}>{up ? "↑" : "↓"} {Math.abs(pct.toNumber()).toFixed(0)}% {t("sp.vsLastMonth")}</span>;
+          })() : <span className="text-muted-foreground">{t("sp.noLastMonth")}</span>}
         </div>
         <div className="mb-3 overflow-hidden">
-          <div className="text-[10px] text-muted-foreground mb-1">Daily Spending</div>
+          <div className="text-[10px] text-muted-foreground mb-1">{t("sp.daily")}</div>
           <div className="grid grid-cols-7 gap-0.5 mx-auto w-full max-w-[300px]">
             {Array.from({ length: daysInMonth }, (_, i) => {
               const day = String(i + 1).padStart(2, "0");
@@ -451,16 +452,16 @@ export default function Space() {
         </div>
         <div className="rounded-2xl bg-foreground text-background p-4 space-y-2.5">
           <div className="space-y-1">
-            <span className="text-[11px] uppercase tracking-[0.14em] opacity-70">Net · {accounts?.length ?? 0} ledgers</span>
+            <span className="text-[11px] uppercase tracking-[0.14em] opacity-70">{t("sp.netLedgers", { n: accounts?.length ?? 0 })}</span>
             <div className="font-display tnum font-semibold leading-none break-words text-[clamp(1.7rem,8vw,2rem)]">{formatMoney(sums.bal.toNumber())}</div>
           </div>
           <div className="h-px bg-background/15" />
           <div className="flex items-center justify-between text-sm">
-            <span className="opacity-70">Spent · {monthTotals.expN} tx</span>
+            <span className="opacity-70">{t("sp.spent")} · {t("sp.txCount", { n: monthTotals.expN })}</span>
             <span className="tnum font-semibold text-red-300 shrink-0">{formatMoney(monthTotals.exp.toNumber())}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="opacity-70">Earned · {monthTotals.incN} tx</span>
+            <span className="opacity-70">{t("sp.earned")} · {t("sp.txCount", { n: monthTotals.incN })}</span>
             <span className="tnum font-semibold text-emerald-300 shrink-0">{formatMoney(monthTotals.inc.toNumber())}</span>
           </div>
         </div>
@@ -469,13 +470,13 @@ export default function Space() {
 
     {/* Accounts — horizontal scroll inside Card */}
     <Card>
-      <CardHeader className="pb-3"><CardTitle className="text-sm flex items-center justify-between">Ledger Accounts <span className="text-xs font-normal text-muted-foreground">Tap to filter</span></CardTitle></CardHeader>
+      <CardHeader className="pb-3"><CardTitle className="text-sm flex items-center justify-between">{t("sp.accounts")} <span className="text-xs font-normal text-muted-foreground">{t("sp.tapFilter")}</span></CardTitle></CardHeader>
       <CardContent>
         <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory" style={{ scrollbarWidth: "none" }}>
           <button onClick={() => setAccFilter("all")} className={cn("snap-start shrink-0 rounded-lg px-2.5 sm:px-3 py-2 text-left min-w-[88px] sm:min-w-[100px] border transition-all", accFilter==="all" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:border-primary/30")}>
-            <div className="text-[10px] font-medium uppercase tracking-wide">All</div>
+            <div className="text-[10px] font-medium uppercase tracking-wide">{t("sp.all")}</div>
             <div className="font-bold text-sm tabular mt-0.5">{formatMoney(totalBalance.toNumber())}</div>
-            <div className="text-[11px] opacity-70 mt-0.5">{filtered.length} tx</div>
+            <div className="text-[11px] opacity-70 mt-0.5">{t("sp.txCount", { n: filtered.length })}</div>
           </button>
           {accounts?.map((a) => {
             const Icon = ICONS[a.icon] ?? Wallet;
@@ -494,7 +495,7 @@ export default function Space() {
           })}
           <button onClick={() => setShowAcc(true)} className="shrink-0 rounded-lg border border-dashed border-border px-3 py-2 min-w-[80px] flex flex-col items-center justify-center gap-1 hover:border-primary/40 hover:bg-accent/50 transition-colors">
             <span className="h-6 w-6 rounded bg-primary/10 text-primary flex items-center justify-center"><Plus className="h-3.5 w-3.5" /></span>
-            <span className="text-[10px] font-medium text-muted-foreground">Add</span>
+            <span className="text-[10px] font-medium text-muted-foreground">{t("sp.add")}</span>
           </button>
         </div>
       </CardContent>
@@ -503,24 +504,24 @@ export default function Space() {
     {/* Transactions — inside Card like Requests */}
     <Card>
       <CardHeader className="pb-2 overflow-hidden">
-        <CardTitle className="text-sm">Transactions</CardTitle>
+        <CardTitle className="text-sm">{t("sp.transactions")}</CardTitle>
         <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2">
           <div className="relative flex-shrink-0">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input placeholder="Search" value={q} onChange={(e)=>setQ(e.target.value)} className="pl-7 h-8 text-xs w-full sm:max-w-[160px]" />
+            <Input placeholder={t("sp.search")} value={q} onChange={(e)=>setQ(e.target.value)} className="pl-7 h-8 text-xs w-full sm:max-w-[160px]" />
           </div>
-          <div className="min-w-0 flex-1 sm:flex-none sm:w-[170px]"><SheetSelect value={catFilter} onPick={setCatFilter} placeholder="All Cats" options={[{ value: "all", label: "All Cats" }, { value: "none", label: "None" }, ...(cats ?? []).map((c) => ({ value: c.id, label: c.name }))]} /></div>
-          <div className="min-w-0 flex-1 sm:flex-none sm:w-[150px]"><SheetSelect value={tagFilter} onPick={setTagFilter} placeholder="All Tags" options={[{ value: "all", label: "All Tags" }, ...(tags ?? []).map((t) => ({ value: t.id, label: t.name }))]} /></div>
+          <div className="min-w-0 flex-1 sm:flex-none sm:w-[170px]"><SheetSelect value={catFilter} onPick={setCatFilter} placeholder={t("sp.allCats")} options={[{ value: "all", label: t("sp.allCats") }, { value: "none", label: t("sp.none") }, ...(cats ?? []).map((c) => ({ value: c.id, label: c.name }))]} /></div>
+          <div className="min-w-0 flex-1 sm:flex-none sm:w-[150px]"><SheetSelect value={tagFilter} onPick={setTagFilter} placeholder={t("sp.allTags")} options={[{ value: "all", label: t("sp.allTags") }, ...(tags ?? []).map((t) => ({ value: t.id, label: t.name }))]} /></div>
           <div className="flex items-center rounded-full border bg-card p-0.5">
             <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full" onClick={() => shift(-1)}><ChevronLeft className="h-3.5 w-3.5" /></Button>
             <span className="min-w-[90px] text-center text-[11px] font-semibold capitalize">{monthLabel}</span>
             <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full" onClick={() => shift(1)}><ChevronRight className="h-3.5 w-3.5" /></Button>
           </div>
           {ym.y !== now0.getFullYear() || ym.m !== now0.getMonth() ? (
-            <Button variant="outline" size="sm" className="h-8 rounded-full text-[11px] px-2.5 gap-1" onClick={() => setYm({ y: now0.getFullYear(), m: now0.getMonth() })}><CalendarClock className="h-3 w-3" />Now</Button>
+            <Button variant="outline" size="sm" className="h-8 rounded-full text-[11px] px-2.5 gap-1" onClick={() => setYm({ y: now0.getFullYear(), m: now0.getMonth() })}><CalendarClock className="h-3 w-3" />{t("sp.now")}</Button>
           ) : null}
           {(q || catFilter !== "all") && (
-            <Button variant="outline" size="sm" className="h-8 text-[11px]" onClick={() => { setQ(""); setCatFilter("all"); setTagFilter("all"); }}>Clear</Button>
+            <Button variant="outline" size="sm" className="h-8 text-[11px]" onClick={() => { setQ(""); setCatFilter("all"); setTagFilter("all"); }}>{t("sp.clear")}</Button>
           )}
         </div>
       </CardHeader>
@@ -530,12 +531,12 @@ export default function Space() {
         ) : grouped.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center animate-fade-up">
             <span className="rounded-2xl bg-primary p-3 text-primary-foreground shadow-lg"><Wallet className="h-6 w-6" /></span>
-            <div className="font-medium">No transactions this month</div>
-            <div className="text-sm text-muted-foreground">Track spending, income & transfers between ledgers</div>
+            <div className="font-display text-xl font-semibold">{t("sp.noTxMonth")}</div>
+            <div className="text-sm text-muted-foreground">{t("sp.noTxMonthSub")}</div>
             <div className="flex gap-2">
-              <Button onClick={() => openAdd("expense")} variant="outline" size="sm"><ArrowDownCircle className="h-4 w-4 mr-1" />Expense</Button>
-              <Button onClick={() => openAdd("income")} size="sm" className="bg-emerald-600 hover:bg-emerald-700"><ArrowUpCircle className="h-4 w-4 mr-1" />Income</Button>
-              <Button onClick={() => openAdd("transfer")} variant="secondary" size="sm"><ArrowLeftRight className="h-4 w-4 mr-1" />Transfer</Button>
+              <Button onClick={() => openAdd("expense")} variant="outline" size="sm"><ArrowDownCircle className="h-4 w-4 mr-1" />{t("sp.expense")}</Button>
+              <Button onClick={() => openAdd("income")} size="sm" className="bg-emerald-600 hover:bg-emerald-700"><ArrowUpCircle className="h-4 w-4 mr-1" />{t("sp.income")}</Button>
+              <Button onClick={() => openAdd("transfer")} variant="secondary" size="sm"><ArrowLeftRight className="h-4 w-4 mr-1" />{t("sp.transfer")}</Button>
             </div>
           </div>
         ) : (
@@ -564,13 +565,13 @@ export default function Space() {
                       const iconGrad = isTransfer ? "bg-sky-800" : e.direction === "income" ? "bg-emerald-800" : cat ? GRAD[cat.color] ?? GRAD.slate : "bg-rose-700";
                       const amtColor = isTransfer ? "text-muted-foreground" : e.direction === "income" ? "text-emerald-600" : "text-rose-600";
                       return (
-                        <SwipeRow key={e.id} actions={[{ label: "Edit", onClick: () => openEdit(e) }, { label: "Delete", kind: "destructive", onClick: () => setConfirmDelete(e.id) }]}>
+                        <SwipeRow key={e.id} actions={[{ label: t("sp.edit"), onClick: () => openEdit(e) }, { label: t("sp.delete"), kind: "destructive", onClick: () => setConfirmDelete(e.id) }]}>
                         <div className="flex items-center gap-2 py-1.5 px-1 rounded-lg hover:bg-muted/30 active:bg-muted/50 transition-colors group cursor-pointer overflow-hidden" onClick={() => openEdit(e)}>
                           <span className={cn("h-8 w-8 rounded-lg flex items-center justify-center text-white shrink-0 shadow-sm", iconGrad)}><Icon className="h-3.5 w-3.5" /></span>
                           <div className="flex-1 min-w-0 overflow-hidden">
                             <div className="flex items-center gap-1.5">
                               <span className="font-medium text-[13px] truncate">{e.title}</span>
-                              {isTransfer && <Badge variant="secondary" className="text-[9px] h-4 px-1 shrink-0">transfer</Badge>}{tagsForNote(e.id).map(t => <Badge key={t.id} variant="outline" className="text-[8px] h-3.5 px-1 shrink-0">{t.name}</Badge>)}
+                              {isTransfer && <Badge variant="secondary" className="text-[9px] h-4 px-1 shrink-0">{t("sp.transfer")}</Badge>}{tagsForNote(e.id).map(tg => <Badge key={tg.id} variant="outline" className="text-[8px] h-3.5 px-1 shrink-0">{tg.name}</Badge>)}
                             </div>
                             <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                               {isTransfer ? (
@@ -602,7 +603,7 @@ export default function Space() {
     {!isNative() && (
     <Dialog open={showAdd} onOpenChange={setShowAdd}>
       <DialogHeader>
-        <DialogTitle>{editing ? "Edit Transaction" : "New Transaction"}</DialogTitle>
+        <DialogTitle>{editing ? t("sp.editTx") : t("sp.newTx")}</DialogTitle>
       </DialogHeader>
       <DialogContent className="space-y-4">
         <TxTypeTabs value={txType} onPick={(k)=>{setTxType(k); setFormErr(null);}} />
@@ -616,11 +617,11 @@ export default function Space() {
     )}
     {isNative() && showAdd && (
       <NativePortal>
-      <div className="fixed inset-0 z-50 bg-background flex flex-col" role="dialog" aria-modal="true" aria-label={editing ? "Edit Transaction" : "New Transaction"}>
+      <div className="fixed inset-0 z-50 bg-background flex flex-col" role="dialog" aria-modal="true" aria-label={editing ? t("sp.editTx") : t("sp.newTx")}>
         <header className="shrink-0 border-b border-border/60 bg-background pt-[env(safe-area-inset-top)]">
           <div className="flex items-center gap-1 px-2 h-16">
-            <button type="button" aria-label="Close" onClick={()=>setShowAdd(false)} className="m3-press rounded-full p-3"><X className="h-5 w-5" /></button>
-            <h1 className="text-[22px] leading-7 truncate px-1">{editing ? "Edit Transaction" : "New Transaction"}</h1>
+            <button type="button" aria-label={t("sp.close")} onClick={()=>setShowAdd(false)} className="m3-press rounded-full p-3"><X className="h-5 w-5" /></button>
+            <h1 className="text-[22px] leading-7 truncate px-1">{editing ? t("sp.editTx") : t("sp.newTx")}</h1>
           </div>
         </header>
         <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4">
@@ -639,13 +640,13 @@ export default function Space() {
       </NativePortal>
     )}
     <Dialog open={showMenu} onOpenChange={setShowMenu}>
-      <DialogHeader><DialogTitle>Space actions</DialogTitle></DialogHeader>
+      <DialogHeader><DialogTitle>{t("sp.actions")}</DialogTitle></DialogHeader>
       <DialogContent className="space-y-1">
         {[
-          { icon: Download, label: "Export CSV", fn: () => { setShowMenu(false); exportCsv(); } },
-          { icon: Bookmark, label: "Templates", fn: () => { setShowMenu(false); setShowTemplates(true); } },
-          { icon: Repeat, label: "Recurring", fn: () => { setShowMenu(false); setShowRecurring(true); } },
-          { icon: Wallet, label: "New ledger", fn: () => { setShowMenu(false); setShowAcc(true); } },
+          { icon: Download, label: t("sp.exportCsv"), fn: () => { setShowMenu(false); exportCsv(); } },
+          { icon: Bookmark, label: t("sp.templates"), fn: () => { setShowMenu(false); setShowTemplates(true); } },
+          { icon: Repeat, label: t("sp.recurring"), fn: () => { setShowMenu(false); setShowRecurring(true); } },
+          { icon: Wallet, label: t("sp.newLedger"), fn: () => { setShowMenu(false); setShowAcc(true); } },
         ].map((a) => (
           <button key={a.label} type="button" onClick={a.fn} className="m3-press w-full flex items-center gap-3 px-4 h-14 rounded-2xl hover:bg-accent text-sm font-medium">
             <a.icon className="h-5 w-5 text-primary" />{a.label}
@@ -657,51 +658,51 @@ export default function Space() {
     {/* New Account Dialog */}
     <Dialog open={showAcc} onOpenChange={setShowAcc}>
       <DialogHeader>
-        <DialogTitle>New Ledger Account</DialogTitle>
-        <DialogDescription>Track BCA, Cash, Savings… each with its own balance</DialogDescription>
+        <DialogTitle>{t("sp.newAcc")}</DialogTitle>
+        <DialogDescription>{t("sp.newAccDesc")}</DialogDescription>
       </DialogHeader>
       <DialogContent className="space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="space-y-3">
-          <div><Label>Name</Label><Input value={newAcc.name} onChange={(e)=>setNewAcc({...newAcc,name:e.target.value})} placeholder="BCA / Cash / Savings" className="mt-1.5" /></div>
+          <div><Label>{t("sp.name")}</Label><Input value={newAcc.name} onChange={(e)=>setNewAcc({...newAcc,name:e.target.value})} placeholder={t("sp.namePh")} className="mt-1.5" /></div>
           <div className="grid grid-cols-2 gap-3">
-            <SheetSelect label="Icon" value={newAcc.icon} onPick={(v)=>setNewAcc({...newAcc,icon:v})} placeholder="Wallet" options={[{value:"wallet",label:"Wallet"},{value:"bca",label:"BCA"},{value:"cash",label:"Cash"},{value:"bank",label:"Bank"},{value:"investment",label:"Invest"}]} />
-            <SheetSelect label="Color" value={newAcc.color} onPick={(v)=>setNewAcc({...newAcc,color:v})} placeholder="Blue" options={[{value:"blue",label:"Blue"},{value:"violet",label:"Violet"},{value:"emerald",label:"Green"},{value:"amber",label:"Amber"},{value:"rose",label:"Rose"},{value:"slate",label:"Slate"}]} />
+            <SheetSelect label={t("sp.icon")} value={newAcc.icon} onPick={(v)=>setNewAcc({...newAcc,icon:v})} placeholder={t("sp.iconWallet")} options={[{value:"wallet",label:t("sp.iconWallet")},{value:"bca",label:t("sp.iconBca")},{value:"cash",label:t("sp.iconCash")},{value:"bank",label:t("sp.iconBank")},{value:"investment",label:t("sp.iconInvest")}]} />
+            <SheetSelect label={t("sp.color")} value={newAcc.color} onPick={(v)=>setNewAcc({...newAcc,color:v})} placeholder={t("sp.colorBlue")} options={[{value:"blue",label:t("sp.colorBlue")},{value:"violet",label:t("sp.colorViolet")},{value:"emerald",label:t("sp.colorEmerald")},{value:"amber",label:t("sp.colorAmber")},{value:"rose",label:t("sp.colorRose")},{value:"slate",label:t("sp.colorSlate")}]} />
           </div>
-          <div><Label>Initial Balance (IDR)</Label><Input value={newAcc.initial_balance} onChange={(e)=>setNewAcc({...newAcc,initial_balance:e.target.value})} inputMode="decimal" placeholder="0" className="mt-1.5" /></div>
+          <div><Label>{t("sp.initBal")}</Label><Input value={newAcc.initial_balance} onChange={(e)=>setNewAcc({...newAcc,initial_balance:e.target.value})} inputMode="decimal" placeholder="0" className="mt-1.5" /></div>
         </div>
       </DialogContent>
       <DialogFooter className="[&>*]:flex-1 sm:[&>*]:flex-none">
-        <Button variant="outline" onClick={()=>setShowAcc(false)} className="h-12">Cancel</Button>
-        <Button onClick={()=>createAcc.mutate()} disabled={createAcc.isPending} className="h-12 text-base">Create</Button>
+        <Button variant="outline" onClick={()=>setShowAcc(false)} className="h-12">{t("sp.cancel")}</Button>
+        <Button onClick={()=>createAcc.mutate()} disabled={createAcc.isPending} className="h-12 text-base">{t("sp.create")}</Button>
       </DialogFooter>
     </Dialog>
 
     {/* Delete Confirmation Dialog */}
     <Dialog open={!!confirmDelete} onOpenChange={(o) => { if (!o) setConfirmDelete(null); }}>
       <DialogHeader>
-        <DialogTitle>{confirmDelete?.startsWith("acc:") ? "Delete Account" : "Delete Transaction"}</DialogTitle>
-        <DialogDescription>{confirmDelete?.startsWith("acc:") ? "Remove this ledger permanently?" : "This cannot be undone."}</DialogDescription>
+        <DialogTitle>{confirmDelete?.startsWith("acc:") ? t("sp.delAcc") : t("sp.delTx")}</DialogTitle>
+        <DialogDescription>{confirmDelete?.startsWith("acc:") ? t("sp.delAccDesc") : t("sp.delTxDesc")}</DialogDescription>
       </DialogHeader>
       <DialogContent>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setConfirmDelete(null)}>Cancel</Button>
+          <Button variant="outline" onClick={() => setConfirmDelete(null)}>{t("sp.cancel")}</Button>
           <Button variant="destructive" onClick={() => {
             if (!confirmDelete) return;
             if (confirmDelete.startsWith("acc:")) { delAcc.mutate(confirmDelete.slice(4)); }
             else { delTx.mutate(confirmDelete); }
-          }} disabled={delTx.isPending || delAcc.isPending}>{(delTx.isPending || delAcc.isPending) ? "Deleting…" : "Delete"}</Button>
+          }} disabled={delTx.isPending || delAcc.isPending}>{(delTx.isPending || delAcc.isPending) ? t("sp.deleting") : t("sp.delete")}</Button>
         </div>
       </DialogContent>
     </Dialog>
 
     {/* Monthly Report */}
     <Card>
-      <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-1.5"><BarChart3 className="h-4 w-4" />Monthly Report</CardTitle></CardHeader>
+      <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-1.5"><BarChart3 className="h-4 w-4" />{t("sp.report")}</CardTitle></CardHeader>
       <CardContent className="text-sm space-y-2">
-        <div className="flex justify-between items-baseline"><span className="text-muted-foreground">Total spent</span><span className="font-display tnum text-lg font-semibold">{formatMoney(monthReport.total)}</span></div>
-        <div className="flex justify-between items-baseline"><span className="text-muted-foreground">Transactions</span><span className="font-display tnum text-lg font-semibold">{monthReport.txCount}</span></div>
-        <div className="flex justify-between items-baseline"><span className="text-muted-foreground">Daily average</span><span className="font-display tnum text-lg font-semibold">{formatMoney(monthReport.avgPerDay)}</span></div>
-        {monthReport.topCats.length > 0 && <div className="pt-2 border-t"><div className="text-xs text-muted-foreground mb-1">Top categories</div>
+        <div className="flex justify-between items-baseline"><span className="text-muted-foreground">{t("sp.totalSpent")}</span><span className="font-display tnum text-lg font-semibold">{formatMoney(monthReport.total)}</span></div>
+        <div className="flex justify-between items-baseline"><span className="text-muted-foreground">{t("sp.transactions")}</span><span className="font-display tnum text-lg font-semibold">{monthReport.txCount}</span></div>
+        <div className="flex justify-between items-baseline"><span className="text-muted-foreground">{t("sp.dailyAvg")}</span><span className="font-display tnum text-lg font-semibold">{formatMoney(monthReport.avgPerDay)}</span></div>
+        {monthReport.topCats.length > 0 && <div className="pt-2 border-t"><div className="text-xs text-muted-foreground mb-1">{t("sp.topCats")}</div>
           {monthReport.topCats.map(([name, amt]) => <div key={name} className="flex justify-between text-xs py-0.5"><span>{name}</span><span className="font-medium tnum">{formatMoney(amt)} ({monthReport.total > 0 ? Math.round(amt/monthReport.total*100) : 0}%)</span></div>)}
         </div>}
       </CardContent>
@@ -709,15 +710,15 @@ export default function Space() {
 
     {/* Tag Manager Dialog */}
     <Dialog open={showTagMgr} onOpenChange={setShowTagMgr}>
-      <DialogHeader><DialogTitle>Manage Tags</DialogTitle></DialogHeader>
+      <DialogHeader><DialogTitle>{t("sp.manageTags")}</DialogTitle></DialogHeader>
       <DialogContent className="space-y-3">
         <div className="flex gap-2">
-          <Input value={newTagName} onChange={(e)=>setNewTagName(e.target.value)} placeholder="Tag name" className="flex-1" maxLength={30} />
-          <div className="w-28 shrink-0"><SheetSelect label="Color" value={newTagColor} onPick={setNewTagColor} placeholder="Color" options={TAG_COLORS.map(c => ({ value: c, label: c }))} /></div>
-          <Button size="sm" onClick={()=>saveTag.mutate()} disabled={saveTag.isPending || !newTagName.trim()}>Add</Button>
+          <Input value={newTagName} onChange={(e)=>setNewTagName(e.target.value)} placeholder={t("sp.tagName")} className="flex-1" maxLength={30} />
+          <div className="w-28 shrink-0"><SheetSelect label={t("sp.color")} value={newTagColor} onPick={setNewTagColor} placeholder={t("sp.color")} options={TAG_COLORS.map(c => ({ value: c, label: c }))} /></div>
+          <Button size="sm" onClick={()=>saveTag.mutate()} disabled={saveTag.isPending || !newTagName.trim()}>{t("sp.add")}</Button>
         </div>
         <div className="flex flex-wrap gap-1.5 max-h-[200px] overflow-y-auto">
-          {(tags ?? []).length === 0 && <span className="text-xs text-muted-foreground">No tags yet</span>}
+          {(tags ?? []).length === 0 && <span className="text-xs text-muted-foreground">{t("sp.noTagsYet")}</span>}
           {(tags ?? []).map(t => (
               <span key={t.id} className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs group">
                 <span className="h-2 w-2 rounded-full bg-primary" />{t.name}
@@ -730,23 +731,23 @@ export default function Space() {
 
     {/* Recurring Transactions Dialog */}
     <Dialog open={showRecurring} onOpenChange={setShowRecurring}>
-      <DialogHeader><DialogTitle>Recurring Transactions</DialogTitle><DialogDescription>Auto-generate entries on schedule</DialogDescription></DialogHeader>
+      <DialogHeader><DialogTitle>{t("sp.recurring")}</DialogTitle><DialogDescription>{t("sp.recurringDesc")}</DialogDescription></DialogHeader>
       <DialogContent className="space-y-3">
         <div className="space-y-2">
-          <Input value={recForm.title} onChange={(e)=>setRecForm({...recForm,title:e.target.value})} placeholder="e.g. Rent, Salary" />
-          <Input value={recForm.amount} onChange={(e)=>setRecForm({...recForm,amount:e.target.value})} inputMode="decimal" placeholder="Amount" className="font-semibold tabular" />
+          <Input value={recForm.title} onChange={(e)=>setRecForm({...recForm,title:e.target.value})} placeholder={t("sp.recTitlePh")} />
+          <Input value={recForm.amount} onChange={(e)=>setRecForm({...recForm,amount:e.target.value})} inputMode="decimal" placeholder={t("sp.recAmountPh")} className="font-semibold tabular" />
           <div className="grid grid-cols-2 gap-2">
-            <SheetSelect label="Type" value={recForm.direction} onPick={(v)=>setRecForm({...recForm,direction:v as "expense"|"income"})} placeholder="Expense" options={[{value:"expense",label:"Expense"},{value:"income",label:"Income"}]} />
-            <SheetSelect label="Every" value={recForm.frequency} onPick={(v)=>setRecForm({...recForm,frequency:v})} placeholder="Monthly" options={FREQUENCIES.map(f => ({ value: f.value, label: f.label }))} />
+            <SheetSelect label={t("sp.type")} value={recForm.direction} onPick={(v)=>setRecForm({...recForm,direction:v as "expense"|"income"})} placeholder={t("sp.expense")} options={[{value:"expense",label:t("sp.expense")},{value:"income",label:t("sp.income")}]} />
+            <SheetSelect label={t("sp.every")} value={recForm.frequency} onPick={(v)=>setRecForm({...recForm,frequency:v})} placeholder={t("sp.freqMonthly")} options={FREQUENCIES.map(f => ({ value: f.value, label: freqLabel(f.value) }))} />
           </div>
-          <SheetSelect label="Account" value={recForm.account_id} onPick={(v)=>setRecForm({...recForm,account_id:v})} placeholder="Account" options={(accounts ?? []).map(a => ({ value: a.id, label: a.name }))} />
-            <DateField label="Next date" value={recForm.next_date} onChange={(iso)=>setRecForm({...recForm,next_date:iso})} locale={dateLocale(lang)} />
+          <SheetSelect label={t("sp.account")} value={recForm.account_id} onPick={(v)=>setRecForm({...recForm,account_id:v})} placeholder={t("sp.account")} options={(accounts ?? []).map(a => ({ value: a.id, label: a.name }))} />
+            <DateField label={t("sp.nextDate")} value={recForm.next_date} onChange={(iso)=>setRecForm({...recForm,next_date:iso})} locale={dateLocale(lang)} />
         </div>
-        <Button onClick={()=>saveRecurring.mutate()} disabled={saveRecurring.isPending || !recForm.title.trim() || !recForm.amount} className="w-full h-12 text-base">Create Recurring</Button>
+        <Button onClick={()=>saveRecurring.mutate()} disabled={saveRecurring.isPending || !recForm.title.trim() || !recForm.amount} className="w-full h-12 text-base">{t("sp.createRecurring")}</Button>
         {(recurring ?? []).length > 0 && <div className="border-t pt-2 space-y-1.5 max-h-[200px] overflow-y-auto">
           {(recurring ?? []).map(r => (
             <div key={r.id} className="flex items-center justify-between py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
-              <div className="min-w-0"><div className="font-medium truncate">{r.title}</div><div className="text-xs text-muted-foreground">{formatMoney(r.amount)} • {r.frequency} • next {r.next_date}</div></div>
+              <div className="min-w-0"><div className="font-medium truncate">{r.title}</div><div className="text-xs text-muted-foreground">{formatMoney(r.amount)} • {freqLabel(r.frequency)} • {t("sp.nextOn", { date: r.next_date })}</div></div>
               <button onClick={()=>delRecurring.mutate(r.id)} className="shrink-0 text-destructive hover:bg-destructive/10 rounded p-1"><Trash2 className="h-3.5 w-3.5" /></button>
             </div>
           ))}
@@ -756,16 +757,16 @@ export default function Space() {
 
     {/* Templates Dialog */}
     <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
-      <DialogHeader><DialogTitle>Transaction Templates</DialogTitle><DialogDescription>Quick-fill from saved templates</DialogDescription></DialogHeader>
+      <DialogHeader><DialogTitle>{t("sp.templates")}</DialogTitle><DialogDescription>{t("sp.templatesDesc")}</DialogDescription></DialogHeader>
       <DialogContent>
         {templates.length === 0 ? (
-          <div className="text-sm text-muted-foreground text-center py-4">No templates yet. Open a transaction and tap the bookmark icon to save it as a template.</div>
+          <div className="text-sm text-muted-foreground text-center py-4">{t("sp.noTemplates")}</div>
         ) : (
           <div className="space-y-1.5 max-h-[300px] overflow-y-auto">
-            {templates.map((t, i) => (
-              <button key={i} onClick={()=>applyTemplate(t)} className="w-full flex items-center justify-between py-2 px-3 rounded-lg border hover:bg-muted/30 transition-colors text-sm text-left">
-                <div className="min-w-0"><div className="font-medium truncate">{t.title}</div><div className="text-xs text-muted-foreground">{t.direction} • {cats?.find(c=>c.id===t.category_id)?.name ?? "No category"}</div></div>
-                <span className="font-semibold tabular shrink-0 ml-2">{formatMoney(Number(t.amount))}</span>
+            {templates.map((tpl, i) => (
+              <button key={i} onClick={()=>applyTemplate(tpl)} className="w-full flex items-center justify-between py-2 px-3 rounded-lg border hover:bg-muted/30 transition-colors text-sm text-left">
+                <div className="min-w-0"><div className="font-medium truncate">{tpl.title}</div><div className="text-xs text-muted-foreground">{tpl.direction === "income" ? t("sp.income") : t("sp.expense")} • {cats?.find(c=>c.id===tpl.category_id)?.name ?? t("sp.noCategory")}</div></div>
+                <span className="font-semibold tabular shrink-0 ml-2">{formatMoney(Number(tpl.amount))}</span>
               </button>
             ))}
           </div>
