@@ -645,7 +645,7 @@ const en = {
   "goals.archive": "Archive",
   "goals.noGoals": "No goals yet — create the first pot.",
   "goals.ofTarget": "{saved} of {target}",
-
+  "goals.remaining": "{amount} to go",
   "set.push": "Push notifications",
   "set.pushDesc": "Get notified on this device when requests arrive.",
   "set.enable": "Enable",
@@ -1344,6 +1344,7 @@ const id: Record<StringKey, string> = {
   "goals.archive": "Arsipkan",
   "goals.noGoals": "Belum ada target — buat pot pertama.",
   "goals.ofTarget": "{saved} dari {target}",
+  "goals.remaining": "{amount} lagi",
 
   "set.push": "Notifikasi push",
   "set.pushDesc": "Dapatkan notifikasi di perangkat ini saat permintaan masuk.",

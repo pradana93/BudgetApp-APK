@@ -356,21 +356,27 @@ export default function Dashboard(){
       {(goals?.length ?? 0) === 0 && <div className="text-sm text-muted-foreground">{t("goals.noGoals")}</div>}
       {goals?.map((g) => (
         <div key={g.id} className="rounded-xl border p-3 flex flex-col sm:flex-row sm:items-center gap-3">
-          <svg viewBox="0 0 36 36" className="h-14 w-14 shrink-0">
-            <circle cx="18" cy="18" r="15.9" fill="none" className="stroke-muted" strokeWidth="3" />
-            <circle cx="18" cy="18" r="15.9" fill="none" stroke={`url(#goalGrad-${g.id})`} strokeWidth="3" strokeLinecap="round"
-              strokeDasharray={`${goalPct(g)} 100`} transform="rotate(-90 18 18)" />
-            <defs><linearGradient id={`goalGrad-${g.id}`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#3b82f6" /><stop offset="100%" stopColor="#8b5cf6" /></linearGradient></defs>
+          <svg viewBox="0 0 36 36" className="h-14 w-14 shrink-0 -rotate-90">
+            <circle cx="18" cy="18" r="15.9" fill="none" className="stroke-muted" strokeWidth="4" />
+            <circle cx="18" cy="18" r="15.9" fill="none" className="stroke-primary" strokeWidth="4" strokeLinecap="round"
+              strokeDasharray={`${goalPct(g)} 100`} style={{ transition: "stroke-dasharray 0.8s cubic-bezier(0.2,0,0,1)" }} />
           </svg>
           <div className="flex-1 min-w-0">
             <div className="font-semibold truncate">{g.name} {g.status === "done" && <Badge variant="approved" className="ml-1">{t("goals.complete")}</Badge>}</div>
-            <div className="text-sm text-muted-foreground tabular">{t("goals.ofTarget", { saved: formatMoney(Number(g.saved_amount), g.currency), target: formatMoney(Number(g.target_amount), g.currency) })}</div>
+            <div className="font-display tnum text-xl font-semibold leading-tight">{formatMoney(Number(g.saved_amount), g.currency)}</div>
+            <div className="text-xs text-muted-foreground tabular">{t("goals.ofTarget", { saved: "", target: formatMoney(Number(g.target_amount), g.currency) }).trim()} • {goalPct(g)}%{Number(g.target_amount) > Number(g.saved_amount) ? (
+              <> • <span className="text-primary font-medium">{t("goals.remaining", { amount: formatMoney(Number(g.target_amount) - Number(g.saved_amount), g.currency) })}</span></>
+            ) : null}</div>
             {isOwner && g.status === "active" && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                <Input placeholder={t("goals.amountPh")} value={fundAmts[g.id] ?? ""} onChange={(e) => setFundAmts({ ...fundAmts, [g.id]: e.target.value })} inputMode="decimal" className="max-w-[140px] h-8 text-sm" />
-                <Button size="sm" variant="outline" onClick={() => addFunds.mutate({ g, amt: Number(fundAmts[g.id]) })} disabled={addFunds.isPending || !(Number(fundAmts[g.id]) > 0)}>{t("goals.addFunds")}</Button>
-                <Button size="sm" variant="ghost" onClick={() => setGoalStatus.mutate({ id: g.id, status: "done" })}>{t("goals.complete")}</Button>
-                <Button size="sm" variant="ghost" onClick={() => setGoalStatus.mutate({ id: g.id, status: "archived" })}>{t("goals.archive")}</Button>
+              <div className="mt-2 space-y-2">
+                <div className="flex gap-2">
+                  <Input placeholder={t("goals.amountPh")} value={fundAmts[g.id] ?? ""} onChange={(e) => setFundAmts({ ...fundAmts, [g.id]: e.target.value })} inputMode="decimal" className="flex-1 h-10" />
+                  <Button size="sm" variant="outline" onClick={() => addFunds.mutate({ g, amt: Number(fundAmts[g.id]) })} disabled={addFunds.isPending || !(Number(fundAmts[g.id]) > 0)} className="h-10">{t("goals.addFunds")}</Button>
+                </div>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="ghost" onClick={() => setGoalStatus.mutate({ id: g.id, status: "done" })}>{t("goals.complete")}</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setGoalStatus.mutate({ id: g.id, status: "archived" })}>{t("goals.archive")}</Button>
+                </div>
               </div>
             )}
           </div>
