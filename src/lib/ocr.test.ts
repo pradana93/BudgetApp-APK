@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseReceiptText } from "./ocr";
+import { findReceiptDate } from "./ocr";
 
 describe("parseReceiptText", () => {
   it("finds merchant and largest amount", () => {
@@ -14,5 +15,13 @@ describe("parseReceiptText", () => {
   it("returns null on empty input", () => {
     expect(parseReceiptText([])).toBeNull();
     expect(parseReceiptText(["   "])).toBeNull();
+  });
+});
+
+describe("findReceiptDate", () => {
+  it("parses id-style dates", () => {
+    expect(findReceiptDate(["TOTAL Rp 45.000", "10/10/2026"])).toBe("2026-10-10");
+    expect(findReceiptDate(["05-01-26"])).toBe("2026-01-05");
+    expect(findReceiptDate(["no date here"])).toBe("");
   });
 });

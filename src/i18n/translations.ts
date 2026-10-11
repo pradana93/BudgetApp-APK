@@ -615,6 +615,8 @@ const en = {
   "msg.you": "You",
   "msg.them": "Them",
 
+  "scan.tab": "Scan",
+
   "dash.goals": "Savings goals",
   "goals.new": "New goal",
   "goals.name": "Goal name",
@@ -1296,6 +1298,8 @@ const id: Record<StringKey, string> = {
   "msg.emptySub": "Diskusi pada pengajuan akan muncul di sini.",
   "msg.you": "Anda",
   "msg.them": "Mereka",
+
+  "scan.tab": "Pindai",
 
   "dash.goals": "Target menabung",
   "goals.new": "Target baru",

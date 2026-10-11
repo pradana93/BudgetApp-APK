@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useSession } from "@/hooks/useSession";
 import {
   LayoutDashboard, Wallet, Receipt, Bell, NotebookPen, ShieldCheck,
-  Settings, LogOut, Menu, Plus, CalendarDays, History, X, ListChecks, MessageCircle,
+  Settings, LogOut, Menu, Plus, CalendarDays, History, X, ListChecks, MessageCircle, Camera,
   type LucideIcon,
 } from "lucide-react";
 import { useLang } from "@/i18n/LanguageContext";
@@ -159,13 +159,10 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
     enabled: !!profile,
   });
 
-  const roleTab: Dest =
-    profile?.role === "owner"
-      ? { to: "/admin", key: "nav.admin", icon: ShieldCheck }
-      : { to: "/space", key: "nav.space", icon: NotebookPen };
+  // Center slot is the scan action; admin/space live in the drawer on native.
   const bar: (Dest & { badge?: number })[] = [
-    ...PRIMARY,
-    roleTab,
+    ...PRIMARY.slice(0, 2),
+    { to: "/requests", key: "nav.requests", icon: Receipt },
     { to: "/notifications", key: "nav.notifications", icon: Bell, badge: unread ?? 0 },
   ];
 
@@ -184,6 +181,19 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
       return;
     }
     nav("/requests/new");
+  };
+
+  // Center scan action: camera → OCR → prefilled request form.
+  const [scanning, setScanning] = React.useState(false);
+  const scanPress = async () => {
+    if (scanning) return;
+    setScanning(true);
+    try {
+      const { startScanFlow } = await import("@/lib/scan");
+      await startScanFlow((to) => nav(to));
+    } finally {
+      setScanning(false);
+    }
   };
 
   const displayName = profile?.display_name || profile?.email || t("nav.userFallback");
@@ -205,11 +215,15 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // One gliding pill positioned by index — all pills share identical
-  // geometry, so measurement is unnecessary (and unbreakable).
-  const activeIndex = bar.findIndex((tb) =>
-    tb.to === "/" ? loc.pathname === "/" : loc.pathname.startsWith(tb.to)
-  );
+  // One gliding pill positioned by index — identical pills make measurement
+  // unnecessary. Slots: dashboard, budgets, SCAN, requests, notifications.
+  const slotIndex = (() => {
+    const ai = bar.findIndex((tb) =>
+      tb.to === "/" ? loc.pathname === "/" : loc.pathname.startsWith(tb.to)
+    );
+    if (ai < 0) return -1;
+    return ai + (ai >= 2 ? 1 : 0);
+  })();
   const drawerItems: Dest[] = [
     ...PRIMARY,
     { to: "/calendar", key: "nav.calendar", icon: CalendarDays },
@@ -407,17 +421,60 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
       {/* M3 navigation bar */}
       <nav aria-label="Primary" className="fixed bottom-0 inset-x-0 z-40 bg-background">
         <div className="relative grid grid-cols-5 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-          {activeIndex >= 0 && (
+          {slotIndex >= 0 && (
             <span
               aria-hidden
               className="pointer-events-none absolute top-2 h-9 w-16 rounded-full bg-primary/15 transition-all duration-300"
               style={{
-                left: `calc(${activeIndex * 20}% + 10% - 32px)`,
+                left: `calc(${slotIndex * 20}% + 10% - 32px)`,
                 transitionTimingFunction: "var(--ease-enter)",
               }}
             />
           )}
-          {bar.map((tb) => {
+          {[bar[0], bar[1]].map((tb) => {
+            const active = tb.to === "/" ? loc.pathname === "/" : loc.pathname.startsWith(tb.to);
+            const Icon = tb.icon;
+            return (
+              <button
+                key={tb.to}
+                type="button"
+                onClick={() => go(tb.to)}
+                className="m3-press flex flex-col items-center gap-1 min-w-0"
+              >
+                <span
+                  className={`relative rounded-full px-5 py-1.5 transition-colors duration-200 ${
+                    active ? "text-foreground" : "text-muted-foreground"
+                  }`}
+                >
+                  <Icon className={`h-6 w-6 transition-transform duration-200 ${active ? "scale-110" : ""}`} strokeWidth={active ? 2.25 : 2} />
+                  {!!tb.badge && tb.badge > 0 && (
+                    <span className="absolute top-0 right-2 rounded-full bg-destructive text-destructive-foreground text-[10px] px-1 leading-4">
+                      {tb.badge}
+                    </span>
+                  )}
+                </span>
+                <span className={`text-xs truncate max-w-full ${active ? "font-semibold" : "font-medium"}`}>
+                  {t(tb.key)}
+                </span>
+              </button>
+            );
+          })}
+          <button
+            key="scan"
+            type="button"
+            aria-label={t("scan.tab")}
+            onClick={() => void scanPress()}
+            disabled={scanning}
+            className="m3-press flex flex-col items-center gap-1 min-w-0"
+          >
+            <span className="flex h-14 w-14 -mt-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
+              <Camera className="h-6 w-6" />
+            </span>
+            <span className="text-xs font-medium text-muted-foreground truncate max-w-full">
+              {t("scan.tab")}
+            </span>
+          </button>
+          {[bar[2], bar[3]].map((tb) => {
             const active = tb.to === "/" ? loc.pathname === "/" : loc.pathname.startsWith(tb.to);
             const Icon = tb.icon;
             return (

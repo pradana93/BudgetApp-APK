@@ -49,9 +49,24 @@ export default function NewRequest(){
     try {
       const raw = window.localStorage.getItem(DRAFT_KEY);
       if (raw) {
-        const d = JSON.parse(raw) as Partial<typeof form>;
-        setForm((f) => ({ ...f, ...d }));
+        const d = JSON.parse(raw) as Partial<typeof form> & { _photoPath?: string };
+        const { _photoPath, ...rest } = d;
+        setForm((f) => ({ ...f, ...rest }));
         setDraftLoaded(true);
+        if (_photoPath) {
+          (async () => {
+            try {
+              const { Filesystem } = await import("@capacitor/filesystem");
+              const saved = await Filesystem.readFile({ path: _photoPath });
+              const bin = atob(saved.data as unknown as string);
+              const bytes = new Uint8Array(bin.length);
+              for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+              setFile(new File([bytes], "receipt.jpg", { type: "image/jpeg" }));
+            } catch {
+              // photo unavailable — form fields still apply
+            }
+          })();
+        }
       }
     } catch {
       /* storage unavailable */

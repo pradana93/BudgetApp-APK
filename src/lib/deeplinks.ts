@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 export type DeepLinkAction =
   | { kind: "dashboard" }
   | { kind: "new-request" }
+  | { kind: "scan" }
   | { kind: "request"; id: string }
   | { kind: "budget"; id: string }
   | { kind: "approve"; id: string }
@@ -18,6 +19,7 @@ export function parseDeepLink(url: string): DeepLinkAction | null {
     const id = decodeURIComponent(u.pathname.replace(/^\//, ""));
     if (host === "dashboard" || host === "") return { kind: "dashboard" };
     if (host === "new-request") return { kind: "new-request" };
+    if (host === "scan") return { kind: "scan" };
     if ((host === "request" || host === "approve" || host === "reject") && id) {
       return { kind: host, id } as DeepLinkAction;
     }
@@ -52,6 +54,11 @@ export async function runDeepLink(
       case "new-request":
         nav("/requests/new");
         return { ok: true, message: "" };
+      case "scan": {
+        const { startScanFlow } = await import("@/lib/scan");
+        await startScanFlow(nav);
+        return { ok: true, message: "" };
+      }
       case "request":
         nav(`/requests/${action.id}`);
         return { ok: true, message: "" };

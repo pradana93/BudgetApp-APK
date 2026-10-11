@@ -1,6 +1,6 @@
 import { Capacitor } from "@capacitor/core";
 
-export type OcrResult = { merchant: string; amount: string };
+export type OcrResult = { merchant: string; amount: string; date: string };
 
 /**
  * On-device receipt OCR (ML Kit, Latin). Writes the image to cache,
@@ -39,6 +39,24 @@ export async function recognizeReceipt(file: File): Promise<OcrResult | null> {
 
 const AMOUNT_RE = /(\d[\d.,]*)/;
 
+/** First calendar-plausible date found, as yyyy-mm-dd. */
+export function findReceiptDate(lines: string[]): string {
+  for (const raw of lines) {
+    const l = raw.trim();
+    let m = l.match(/\b(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})\b/);
+    if (m) {
+      let [, dd, mm, yy] = m;
+      if (yy.length === 2) yy = String(2000 + Number(yy));
+      const d = Number(dd);
+      const mo = Number(mm);
+      if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31) {
+        return `${yy}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      }
+    }
+  }
+  return "";
+}
+
 /** Merchant = first texty line; amount = largest numeric figure. */
 export function parseReceiptText(lines: string[]): OcrResult | null {
   const clean = lines.map((l) => l.trim()).filter(Boolean);
@@ -56,5 +74,6 @@ export function parseReceiptText(lines: string[]): OcrResult | null {
   return {
     merchant,
     amount: best > 0 ? String(Math.round(best)) : "",
+    date: findReceiptDate(clean),
   };
 }
