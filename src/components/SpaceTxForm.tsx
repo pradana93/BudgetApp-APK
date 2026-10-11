@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { AmountKeypad } from "@/components/AmountKeypad";
 import { groupDigits } from "@/lib/calc";
 import { SheetSelect, DateField } from "@/components/pickers";
-import { useLang } from "@/i18n/lang";
+import { useLang } from "@/i18n/LanguageContext";
 
 export interface TxFormState {
   title: string;
