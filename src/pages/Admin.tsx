@@ -2,9 +2,10 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -42,6 +43,8 @@ export default function Admin() {
   const { t, lang } = useLang();
   const [reasons, setReasons] = React.useState<Record<string, string>>({});
   const [topups, setTopups] = React.useState<Record<string, string>>({});
+  const [deducts, setDeducts] = React.useState<Record<string, string>>({});
+  const [transfer, setTransfer] = React.useState({ from: "", to: "", amount: "" });
   const [limit, setLimit] = React.useState(100);
   const [resetText, setResetText] = React.useState("");
   const { categories } = useCategories();
@@ -91,6 +94,34 @@ export default function Admin() {
     },
     onSuccess: () => { invalidate(); setTopups({}); toast({ title: t("admin.toppedUp") }); },
     onError: (e: Error) => toast({ title: t("admin.failTopup"), description: e.message, variant: "destructive" }),
+  });
+
+  const deduct = useMutation({
+    mutationFn: async ({ id, amount }: { id: string; amount: number }) => {
+      const { error } = await supabase.rpc("deduct_budget", { p_budget_id: id, p_amount: amount, p_description: "Admin deduction" });
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidate(); setDeducts({}); toast({ title: t("admin.deducted") }); },
+    onError: (e: Error) => toast({ title: t("admin.failDeduct"), description: e.message, variant: "destructive" }),
+  });
+
+  const deleteBudget = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      if (!window.confirm(t("admin.deleteBudgetConfirm", { name }))) throw new Error("__cancelled");
+      const { error } = await supabase.rpc("delete_budget", { p_budget_id: id });
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidate(); toast({ title: t("admin.deletedBudget") }); },
+    onError: (e: Error) => { if (e.message !== "__cancelled") toast({ title: t("admin.failDelete"), description: e.message, variant: "destructive" }); },
+  });
+
+  const transferBudget = useMutation({
+    mutationFn: async ({ from, to, amount }: { from: string; to: string; amount: number }) => {
+      const { error } = await supabase.rpc("transfer_budget", { p_from_budget_id: from, p_to_budget_id: to, p_amount: amount, p_description: "Admin transfer" });
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidate(); setTransfer({ from: "", to: "", amount: "" }); toast({ title: t("admin.transferred") }); },
+    onError: (e: Error) => toast({ title: t("admin.failTransfer"), description: e.message, variant: "destructive" }),
   });
 
   const addCat = useMutation({
@@ -523,7 +554,7 @@ export default function Admin() {
       <Card>
         <CardHeader><CardTitle>{t("admin.budgetsTopup")}</CardTitle></CardHeader>
         <CardContent>
-          <Table><TableHeader><TableRow><TableHead>{t("admin.bName")}</TableHead><TableHead>{t("admin.bTotal")}</TableHead><TableHead>{t("admin.bAvail")}</TableHead><TableHead>{t("admin.bStatus")}</TableHead><TableHead>{t("admin.topupCol")}</TableHead></TableRow></TableHeader>
+          <Table><TableHeader><TableRow><TableHead>{t("admin.bName")}</TableHead><TableHead>{t("admin.bTotal")}</TableHead><TableHead>{t("admin.bAvail")}</TableHead><TableHead>{t("admin.bStatus")}</TableHead><TableHead>{t("admin.topupCol")}</TableHead><TableHead>{t("admin.deductCol")}</TableHead><TableHead>{t("admin.deleteCol")}</TableHead></TableRow></TableHeader>
           <TableBody>{budgets?.map((b) => (
             <TableRow key={b.id}>
               <TableCell><Link to={`/budgets/${b.id}`} className="text-primary underline">{b.name}</Link></TableCell>
@@ -534,8 +565,42 @@ export default function Admin() {
                 <Input placeholder={t("admin.amountPh")} value={topups[b.id] ?? ""} onChange={(e) => setTopups({ ...topups, [b.id]: e.target.value })} className="max-w-[140px]" />
                 <Button size="sm" variant="outline" onClick={() => topup.mutate({ id: b.id, amount: Number(topups[b.id]) })} disabled={topup.isPending || !(Number(topups[b.id]) > 0)}>{t("admin.topup")}</Button>
               </div></TableCell>
+              <TableCell data-label={t("admin.deductCol")}><div className="flex gap-2">
+                <Input placeholder={t("admin.amountPh")} value={deducts[b.id] ?? ""} onChange={(e) => setDeducts({ ...deducts, [b.id]: e.target.value })} className="max-w-[140px]" />
+                <Button size="sm" variant="outline" onClick={() => deduct.mutate({ id: b.id, amount: Number(deducts[b.id]) })} disabled={deduct.isPending || !(Number(deducts[b.id]) > 0)}>{t("admin.deduct")}</Button>
+              </div></TableCell>
+              <TableCell data-label={t("admin.deleteCol")}>
+                <Button size="sm" variant="destructive" onClick={() => deleteBudget.mutate({ id: b.id, name: b.name })} disabled={deleteBudget.isPending}>{t("admin.delete")}</Button>
+              </TableCell>
             </TableRow>))}
           </TableBody></Table>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>{t("admin.transferTitle")}</CardTitle><CardDescription>{t("admin.transferDesc")}</CardDescription></CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Select value={transfer.from} onChange={(e) => setTransfer({ ...transfer, from: e.target.value })} aria-label={t("admin.transferFrom")} className="sm:max-w-[220px]">
+              <option value="">{t("admin.transferFrom")}…</option>
+              {(budgets ?? []).filter((b) => b.status === "active").map((b) => (
+                <option key={b.id} value={b.id}>{b.name} • {formatMoney(Number(b.available_amount), b.currency)}</option>
+              ))}
+            </Select>
+            <Select value={transfer.to} onChange={(e) => setTransfer({ ...transfer, to: e.target.value })} aria-label={t("admin.transferTo")} className="sm:max-w-[220px]">
+              <option value="">{t("admin.transferTo")}…</option>
+              {(budgets ?? []).filter((b) => b.status === "active" && b.id !== transfer.from).map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </Select>
+            <Input placeholder={t("admin.amountPh")} value={transfer.amount} onChange={(e) => setTransfer({ ...transfer, amount: e.target.value })} className="sm:max-w-[160px]" inputMode="decimal" />
+            <Button
+              onClick={() => transferBudget.mutate({ from: transfer.from, to: transfer.to, amount: Number(transfer.amount) })}
+              disabled={transferBudget.isPending || !transfer.from || !transfer.to || !(Number(transfer.amount) > 0)}
+            >
+              {t("admin.transfer")}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
