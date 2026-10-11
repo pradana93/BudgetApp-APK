@@ -73,7 +73,17 @@ function patchFile(file, transform, label) {
       n++;
     }
   }
-  // launcher background brand blue
+  // THE ROBOT KILL: the Capacitor template ships a default robot vector at
+  // drawable-v24/ic_launcher_foreground.xml which shadows our PNG on API 24+.
+  // Delete every stray vector foreground; ours lives in drawable/ as PNG.
+  {
+    const stale = path.join(RES, "drawable-v24", "ic_launcher_foreground.xml");
+    if (fs.existsSync(stale)) {
+      fs.rmSync(stale, { force: true });
+      console.log("removed template robot foreground");
+    }
+  }
+  // launcher background brand pine
   const bgXml = path.join(RES, "values", "ic_launcher_background.xml");
   if (fs.existsSync(bgXml)) {
     fs.writeFileSync(
@@ -82,10 +92,10 @@ function patchFile(file, transform, label) {
     );
     n++;
   }
-  // deterministic adaptive-icon XMLs (API 26+)
+  // deterministic adaptive-icon XMLs (API 26+), monochrome for themed icons
   const anydpi = path.join(RES, "mipmap-anydpi-v26");
   const adaptive = (round) =>
-    `<?xml version="1.0" encoding="utf-8"?>\n<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n    <background android:drawable="@color/ic_launcher_background" />\n    <foreground android:drawable="@drawable/ic_launcher_foreground" />\n</adaptive-icon>\n`;
+    `<?xml version="1.0" encoding="utf-8"?>\n<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n    <background android:drawable="@color/ic_launcher_background" />\n    <foreground android:drawable="@drawable/ic_launcher_foreground" />\n    <monochrome android:drawable="@drawable/ic_launcher_monochrome" />\n</adaptive-icon>\n`;
   if (fs.existsSync(anydpi)) {
     fs.writeFileSync(path.join(anydpi, "ic_launcher.xml"), adaptive(false));
     fs.writeFileSync(path.join(anydpi, "ic_launcher_round.xml"), adaptive(true));
@@ -93,7 +103,7 @@ function patchFile(file, transform, label) {
   }
   // app shortcuts artwork
   const scDir = path.join(RES, "drawable");
-  for (const sc of ["sc_new", "sc_dash"]) {
+  for (const sc of ["sc_new", "sc_dash", "sc_scan"]) {
     const src = path.join(ROOT, "assets", "shortcuts", `${sc}.png`);
     if (fs.existsSync(src) && fs.existsSync(scDir)) {
       fs.copyFileSync(src, path.join(scDir, `${sc}.png`));

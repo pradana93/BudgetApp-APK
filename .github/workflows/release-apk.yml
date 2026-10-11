@@ -84,6 +84,7 @@ jobs:
           cmp android/app/src/main/res/drawable/ic_launcher_foreground.png assets/icon/ic_launcher_foreground.png
           grep -q ic_launcher_foreground android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
           grep -q ic_launcher_monochrome android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+          test ! -e android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml
 
       - name: Publish GitHub Release
         run: |
