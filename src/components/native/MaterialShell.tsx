@@ -13,7 +13,7 @@ import { titleFor } from "@/components/Layout";
 import { tapLight } from "@/lib/haptics";
 import { registerDrawerCloser } from "@/lib/nativeUi";
 import { parseDeepLink, runDeepLink } from "@/lib/deeplinks";
-import { shouldLock, unlockApp, recordUnlock, unlockedSinceBackground, noteInactive, brieflyAway, verifyPin } from "@/lib/applock";
+import { shouldLock, unlockApp, recordUnlock, unlockedSinceBackground, noteInactive, brieflyAway, verifyPin, reauthWithPassword, clearPin, getLockoutRemainingMs } from "@/lib/applock";
 import { UserAvatar } from "@/components/UserAvatar";
 import { initialsOf } from "@/lib/avatar";
 import { useToast } from "@/components/ui/toast";
@@ -244,6 +244,18 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
   const [lockMode, setLockMode] = React.useState<"biometric" | "pin4" | "pin6">("biometric");
   const [pinEntry, setPinEntry] = React.useState("");
   const [pinError, setPinError] = React.useState("");
+  const [pwMode, setPwMode] = React.useState(false);
+  const [password, setPassword] = React.useState("");
+  const [pwError, setPwError] = React.useState("");
+  const [pwBusy, setPwBusy] = React.useState(false);
+  const [lockLeft, setLockLeft] = React.useState(0);
+  React.useEffect(() => {
+    if (!locked) return;
+    const tick = () => setLockLeft(getLockoutRemainingMs());
+    tick();
+    const t = window.setInterval(tick, 1000);
+    return () => window.clearInterval(t);
+  }, [locked]);
   const tryUnlock = async () => {
     setUnlocking(true);
     try {
@@ -284,6 +296,33 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
   if (locked) {
     const pinLen = lockMode === "pin6" ? 6 : 4;
     const showPin = lockMode === "pin4" || lockMode === "pin6";
+    const submitPassword = async () => {
+      if (!password || pwBusy) return;
+      setPwBusy(true);
+      setPwError("");
+      try {
+        const res = await reauthWithPassword(password);
+        if (!res.ok) {
+          if (res.reason === "wrong-password") {
+            setLockFails((n) => n + 1);
+            setPwError("Wrong password — try again.");
+          } else {
+            setPwError("Can't verify right now — check your connection.");
+          }
+          return;
+        }
+        // Password proved ownership: unlock. If a PIN was forgotten,
+        // clear it so a fresh one can be set in Settings.
+        if (showPin) clearPin();
+        setLocked(false);
+        setLockFails(0);
+        setPassword("");
+        setPwMode(false);
+        setPinEntry("");
+      } finally {
+        setPwBusy(false);
+      }
+    };
     return (
       <div className="native-app min-h-screen bg-foreground text-background flex flex-col items-center justify-center gap-4 p-8 text-center">
         <span className="rounded-2xl bg-background/10 p-4">
@@ -291,7 +330,39 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
         </span>
         <h1 className="font-display text-2xl font-semibold">BudgetApp locked</h1>
         <p className="text-sm opacity-70">Confirm it&apos;s you to open your budgets.</p>
-        {showPin ? (
+        {lockLeft > 0 ? (
+          <p className="text-sm font-semibold text-amber-300">
+            Too many tries — retry in {Math.ceil(lockLeft / 1000)}s.
+          </p>
+        ) : pwMode ? (
+          <div className="flex w-full max-w-xs flex-col gap-2.5">
+            <input
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") void submitPassword(); }}
+              placeholder="Account password"
+              className="h-12 rounded-xl border border-background/25 bg-background/10 px-4 text-base text-background placeholder:text-background/50 outline-none focus:border-background/60"
+            />
+            {pwError && <p className="text-xs text-red-300">{pwError}</p>}
+            <button
+              type="button"
+              onClick={() => void submitPassword()}
+              disabled={pwBusy || password.length === 0}
+              className="m3-press rounded-full bg-background px-6 h-12 text-sm font-semibold text-foreground disabled:opacity-60"
+            >
+              {pwBusy ? "…" : "Unlock with password"}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setPwMode(false); setPwError(""); setPassword(""); }}
+              className="text-xs opacity-60 underline"
+            >
+              Back
+            </button>
+          </div>
+        ) : showPin ? (
           <div className="flex flex-col items-center gap-4">
             <div className="flex gap-2.5" aria-label="PIN entry">
               {Array.from({ length: pinLen }).map((_, i) => (
@@ -309,7 +380,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
                 <button
                   key={i}
                   type="button"
-                  disabled={k === ""}
+                  disabled={k === "" || lockLeft > 0}
                   onClick={() => {
                     if (k === "⌫") setPinEntry((p) => p.slice(0, -1));
                     else if (k !== "") pressPinDigit(k);
@@ -320,15 +391,31 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
                 </button>
               ))}
             </div>
+            <button
+              type="button"
+              onClick={() => { setPwMode(true); setPwError(""); setPassword(""); }}
+              className="text-xs opacity-60 underline"
+            >
+              Forgot PIN? Use password
+            </button>
           </div>
         ) : (
           <button
             type="button"
             onClick={() => void tryUnlock()}
-            disabled={unlocking}
+            disabled={unlocking || lockLeft > 0}
             className="m3-press rounded-full bg-background px-6 h-12 text-sm font-semibold text-foreground disabled:opacity-60"
           >
             {unlocking ? "…" : "Unlock"}
+          </button>
+        )}
+        {!pwMode && lockMode !== "pin4" && lockMode !== "pin6" && (
+          <button
+            type="button"
+            onClick={() => { setPwMode(true); setPwError(""); setPassword(""); }}
+            className="text-xs opacity-60 underline"
+          >
+            Fingerprint not working? Use password
           </button>
         )}
         {lockFails >= 3 && (

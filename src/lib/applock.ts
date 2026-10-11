@@ -1,10 +1,16 @@
 import { Capacitor } from "@capacitor/core";
+import { supabase } from "@/lib/supabase";
 
 const FLAG_KEY = "budgetapp-applock";
 const MODE_KEY = "budgetapp-applock-mode";
 const PIN_KEY = "budgetapp-applock-pin";
 const UNLOCKED_AT_KEY = "budgetapp-unlocked-at";
 const INACTIVE_AT_KEY = "budgetapp-inactive-at";
+const FAILS_KEY = "budgetapp-applock-fails";
+
+const PBKDF2_ITERS = 120000;
+const FAIL_WINDOW_MS = 15 * 60 * 1000;
+const MAX_FAILS_BEFORE_LOCKOUT = 5;
 
 export type LockMode = "off" | "biometric" | "pin4" | "pin6";
 
@@ -19,6 +25,14 @@ function read(key: string): string | null {
 function write(key: string, value: string): void {
   try {
     localStorage.setItem(key, value);
+  } catch {
+    // ignore
+  }
+}
+
+function remove(key: string): void {
+  try {
+    localStorage.removeItem(key);
   } catch {
     // ignore
   }
@@ -70,6 +84,7 @@ export function brieflyAway(thresholdMs = 2500): boolean {
 /** Stamp a successful unlock (loop guard, persisted across reloads). */
 export function recordUnlock(): void {
   write(UNLOCKED_AT_KEY, String(Date.now()));
+  clearFailedAttempts();
 }
 
 export function unlockTimestamp(): number {
@@ -150,19 +165,38 @@ export async function unlockApp(): Promise<boolean> {
   }
 }
 
-// ---------- PIN ----------
+// ---------- PIN (PBKDF2, salted) ----------
 
-type PinRecord = { salt: string; hash: string; len: 4 | 6 };
+type PinRecord =
+  | { salt: string; hash: string; len: 4 | 6; iters: number }
+  | { salt: string; hash: string; len: 4 | 6 };
 
-async function sha256Hex(s: string): Promise<string> {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
-  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+function hex(bytes: ArrayBuffer): string {
+  return [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 function randomSalt(): string {
   const bytes = new Uint8Array(16);
   crypto.getRandomValues(bytes);
   return [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function pbkdf2Hex(pin: string, saltHex: string, iters: number): Promise<string> {
+  const salt = new Uint8Array(saltHex.match(/../g)?.map((h) => parseInt(h, 16)) ?? []);
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(pin), "PBKDF2", false, [
+    "deriveBits",
+  ]);
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt: salt as BufferSource, iterations: iters, hash: "SHA-256" },
+    key,
+    256
+  );
+  return hex(bits);
+}
+
+async function legacySha256Hex(s: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return hex(buf);
 }
 
 function readPin(): (PinRecord & { mode: LockMode }) | null {
@@ -188,28 +222,57 @@ async function hasPin(mode: LockMode): Promise<boolean> {
   }
 }
 
-/** Store a new PIN (length must match the active pin mode). */
+/** Store a new PIN (length must match the active pin mode). Clears failures. */
 export async function setPin(pin: string): Promise<boolean> {
   try {
     const mode = getLockMode();
     const len = mode === "pin6" ? 6 : 4;
     if (!new RegExp(`^\\d{${len}}$`).test(pin)) return false;
     const salt = randomSalt();
-    const hash = await sha256Hex(`${salt}:${pin}`);
-    write(PIN_KEY, JSON.stringify({ salt, hash, len }));
+    const hash = await pbkdf2Hex(pin, salt, PBKDF2_ITERS);
+    write(PIN_KEY, JSON.stringify({ salt, hash, len, iters: PBKDF2_ITERS }));
+    clearFailedAttempts();
     return true;
   } catch {
     return false;
   }
 }
 
-/** Verify a PIN entry. Never throws. */
+/** Remove the stored PIN (used after password-verified reset). */
+export function clearPin(): void {
+  remove(PIN_KEY);
+  clearFailedAttempts();
+}
+
+/** Verify a PIN entry. Enforces lockout. Never throws. */
 export async function verifyPin(pin: string): Promise<boolean> {
   try {
+    if (getLockoutRemainingMs() > 0) return false;
     const rec = readPin();
-    if (!rec || pin.length !== rec.len) return false;
-    const hash = await sha256Hex(`${rec.salt}:${pin}`);
-    return hash === rec.hash;
+    if (!rec || pin.length !== rec.len) {
+      recordFailedAttempt();
+      return false;
+    }
+    const ok =
+      "iters" in rec && typeof rec.iters === "number" && rec.iters > 0
+        ? (await pbkdf2Hex(pin, rec.salt, rec.iters)) === rec.hash
+        : (await legacySha256Hex(`${rec.salt}:${pin}`)) === rec.hash;
+    if (!ok) {
+      recordFailedAttempt();
+      return false;
+    }
+    // transparent upgrade: legacy SHA-256 hash -> PBKDF2
+    if (!("iters" in rec) || typeof rec.iters !== "number") {
+      try {
+        const salt = randomSalt();
+        const hash = await pbkdf2Hex(pin, salt, PBKDF2_ITERS);
+        write(PIN_KEY, JSON.stringify({ salt, hash, len: rec.len, iters: PBKDF2_ITERS }));
+      } catch {
+        // non-fatal
+      }
+    }
+    clearFailedAttempts();
+    return true;
   } catch {
     return false;
   }
@@ -219,4 +282,82 @@ export async function verifyPin(pin: string): Promise<boolean> {
 export function pinLength(): number {
   const mode = getLockMode();
   return mode === "pin6" ? 6 : mode === "pin4" ? 4 : 0;
+}
+
+// ---------- Brute-force protection ----------
+
+function readFails(): number[] {
+  try {
+    const raw = read(FAILS_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw) as number[];
+    if (!Array.isArray(arr)) return [];
+    const cutoff = Date.now() - FAIL_WINDOW_MS;
+    return arr.filter((t) => typeof t === "number" && t > cutoff);
+  } catch {
+    return [];
+  }
+}
+
+/** Record a failed unlock attempt. */
+export function recordFailedAttempt(): void {
+  try {
+    const fails = readFails();
+    fails.push(Date.now());
+    write(FAILS_KEY, JSON.stringify(fails.slice(-20)));
+  } catch {
+    // ignore
+  }
+}
+
+export function clearFailedAttempts(): void {
+  remove(FAILS_KEY);
+}
+
+/** Consecutive recent failures (15-minute window). */
+export function failedAttemptCount(): number {
+  return readFails().length;
+}
+
+/**
+ * Milliseconds remaining on the current lockout, or 0.
+ * Lockout starts after MAX_FAILS_BEFORE_LOCKOUT failures and doubles
+ * from 30s up to 15 minutes.
+ */
+export function getLockoutRemainingMs(now = Date.now()): number {
+  const fails = readFails();
+  if (fails.length < MAX_FAILS_BEFORE_LOCKOUT) return 0;
+  const over = fails.length - MAX_FAILS_BEFORE_LOCKOUT;
+  const lockMs = Math.min(30_000 * 2 ** over, 15 * 60 * 1000);
+  const last = fails[fails.length - 1];
+  return Math.max(0, last + lockMs - now);
+}
+
+// ---------- Password fallback ----------
+
+export type PasswordCheck = {
+  ok: boolean;
+  reason?: "no-session" | "wrong-password" | "error";
+};
+
+/**
+ * Fallback for forgotten PIN / broken biometrics: re-authenticate with
+ * the account password. Uses the current session's email so there is
+ * nothing to enumerate. Success clears failures and records an unlock.
+ */
+export async function reauthWithPassword(password: string): Promise<PasswordCheck> {
+  try {
+    const { data } = await supabase.auth.getUser();
+    const email = data.user?.email;
+    if (!email) return { ok: false, reason: "no-session" };
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      recordFailedAttempt();
+      return { ok: false, reason: "wrong-password" };
+    }
+    recordUnlock();
+    return { ok: true };
+  } catch {
+    return { ok: false, reason: "error" };
+  }
 }

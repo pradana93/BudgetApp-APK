@@ -15,7 +15,65 @@ import { xpOf, levelOf, type ReqLite } from "@/lib/gamify";
 import { formatDate } from "@/lib/datetime";
 import { Check, Trophy } from "lucide-react";
 import { isNative } from "@/lib/native";
-import { getLockMode, setLockMode, setPin, type LockMode } from "@/lib/applock";
+import { getLockMode, setLockMode, setPin, clearPin, reauthWithPassword, type LockMode } from "@/lib/applock";
+
+/** Verify account password, then clear a forgotten PIN so a new one can be set. */
+function ResetPinBlock() {
+  const [open, setOpen] = React.useState(false);
+  const [password, setPassword] = React.useState("");
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [done, setDone] = React.useState(false);
+  if (!open) {
+    return (
+      <button type="button" onClick={() => { setOpen(true); setError(""); }} className="text-xs text-muted-foreground underline">
+        Forgot PIN? Reset it with your password
+      </button>
+    );
+  }
+  const submit = async () => {
+    if (!password || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const res = await reauthWithPassword(password);
+      if (!res.ok) {
+        if (res.reason === "wrong-password") setError("Wrong password — try again.");
+        else setError("Can't verify right now — check your connection.");
+        return;
+      }
+      clearPin();
+      setDone(true);
+      setOpen(false);
+      setPassword("");
+    } finally {
+      setBusy(false);
+    }
+  };
+  if (done) {
+    return <p className="text-xs text-emerald-600">PIN cleared — choose a PIN mode above to set a new one, or pick Fingerprint.</p>;
+  }
+  return (
+    <div className="rounded-xl border border-border/60 p-3 space-y-2">
+      <div className="text-xs font-medium">Confirm your account password to clear this PIN</div>
+      <Input
+        type="password"
+        autoComplete="current-password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") void submit(); }}
+        placeholder="Account password"
+      />
+      {error && <p className="text-xs text-destructive">{error}</p>}
+      <div className="flex gap-2">
+        <Button type="button" variant="outline" size="sm" onClick={() => { setOpen(false); setPassword(""); setError(""); }}>Cancel</Button>
+        <Button type="button" size="sm" onClick={() => void submit()} disabled={busy || password.length === 0}>
+          {busy ? "…" : "Verify & clear PIN"}
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 /** Native-only lock settings: biometric / PIN-4 / PIN-6 + setup. Renders nothing on web. */
 function DeviceLockCard() {
@@ -139,6 +197,9 @@ function DeviceLockCard() {
           </div>
         )}
         {saved && <p className="text-xs text-emerald-600">PIN saved — lock engages when you leave the app.</p>}
+        {(mode === "pin4" || mode === "pin6") && step === "idle" && (
+          <ResetPinBlock />
+        )}
       </CardContent>
     </Card>
   );
