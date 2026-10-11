@@ -58,11 +58,20 @@ function patchFile(file, transform, label) {
     n++;
   }
   // adaptive-icon foreground (anydpi-v26 shadows PNGs on Android 8+)
-  const fgSrc = path.join(ROOT, "assets", "icon", "ic_launcher_foreground.png");
+  // stale Capacitor-default foregrounds must never surface anywhere:
+  // overwrite every mipmap foreground with our own mark as well.
+  const fg432 = path.join(ROOT, "assets", "icon", "ic_launcher_foreground.png");
   const fgDest = path.join(RES, "drawable", "ic_launcher_foreground.png");
-  if (fs.existsSync(fgSrc) && fs.existsSync(path.dirname(fgDest))) {
-    fs.copyFileSync(fgSrc, fgDest);
+  if (fs.existsSync(fg432) && fs.existsSync(path.dirname(fgDest))) {
+    fs.copyFileSync(fg432, fgDest);
     n++;
+  }
+  for (const d of ["mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"]) {
+    const dest = path.join(RES, `mipmap-${d}`, "ic_launcher_foreground.png");
+    if (fs.existsSync(fg432) && fs.existsSync(path.dirname(dest))) {
+      fs.copyFileSync(fg432, dest);
+      n++;
+    }
   }
   // launcher background brand blue
   const bgXml = path.join(RES, "values", "ic_launcher_background.xml");
