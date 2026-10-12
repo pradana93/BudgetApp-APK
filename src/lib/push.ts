@@ -37,9 +37,19 @@ export async function initNativePush(): Promise<PushInitResult> {
       return "error";
     }
     // Foreground notifications are surfaced by the OS tray; the in-app
-    // Notifications page stays the source of truth. No core logic touched.
+    // Notifications page stays the source of truth. Tapping a push opens
+    // its link: the router-side PushTapHandler navigates there.
     PushNotifications.addListener("pushNotificationReceived", () => undefined);
-    PushNotifications.addListener("pushNotificationActionPerformed", () => undefined);
+    PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
+      try {
+        const link = (action?.notification as { data?: { link?: string } } | undefined)?.data?.link;
+        if (link && link.startsWith("/")) {
+          window.dispatchEvent(new CustomEvent("budgetapp:push-tap", { detail: { link } }));
+        }
+      } catch {
+        // A tap must never break the app.
+      }
+    });
 
     return "granted";
   } catch (e) {

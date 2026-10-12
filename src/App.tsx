@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { SessionProvider } from "@/hooks/useSession";
@@ -43,6 +44,20 @@ function Shell({ children }: { children: ReactNode }) {
   return isNativeApp() ? <MaterialShell>{children}</MaterialShell> : <Layout>{children}</Layout>;
 }
 
+/** Navigates to a push notification's link when tapped (dispatched from push.ts). */
+function PushTapHandler() {
+  const nav = useNavigate();
+  useEffect(() => {
+    const h = (e: Event) => {
+      const link = (e as CustomEvent<{ link?: string }>).detail?.link;
+      if (link && link.startsWith("/")) nav(link);
+    };
+    window.addEventListener("budgetapp:push-tap", h);
+    return () => window.removeEventListener("budgetapp:push-tap", h);
+  }, [nav]);
+  return null;
+}
+
 export default function App(){
   return <QueryClientProvider client={qc}>
     <LanguageProvider>
@@ -50,6 +65,7 @@ export default function App(){
       <ToastProvider>
         <NativeEffects />
         <BrowserRouter>
+          <PushTapHandler />
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

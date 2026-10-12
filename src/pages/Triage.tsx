@@ -9,10 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { formatMoney } from "@/lib/money";
 import { formatDate } from "@/lib/datetime";
 import { useLang } from "@/i18n/LanguageContext";
-import { useSession } from "@/hooks/useSession";
 import { useToast } from "@/components/ui/toast";
 import { approvalRisk } from "@/lib/advisor";
-import { notifyRequesterBoth, merchantOf } from "@/lib/notify";
+import { merchantOf } from "@/lib/notify";
 import { PullToRefresh } from "@/components/PullToRefresh";
 
 type Row = {
@@ -37,8 +36,6 @@ export default function Triage() {
   const { t, lang } = useLang();
   const { toast } = useToast();
   const qc = useQueryClient();
-  const { profile } = useSession();
-  const myId = profile?.id ?? "";
   const [reasons, setReasons] = React.useState<Record<string, string>>({});
 
   const { data: requests } = useQuery({
@@ -63,22 +60,6 @@ export default function Triage() {
   });
   const budgetName = (id: string) => budgets?.find((b) => b.id === id)?.name ?? "";
 
-  const ping = (r: Row, kind: "approved" | "rejected") => {
-    if (r.requester_id === myId) return;
-    const title = kind === "approved" ? t("nt.approvedT") : t("nt.rejectedT");
-    const body =
-      kind === "approved"
-        ? t("nt.approvedB", { merchant: merchantOf(r), amount: formatMoney(Number(r.amount)) })
-        : t("nt.rejectedB", { merchant: merchantOf(r), amount: formatMoney(Number(r.amount)) });
-    void notifyRequesterBoth(r.requester_id, {
-      type: kind === "approved" ? "request_approved" : "request_rejected",
-      title,
-      body,
-      link: `/requests/${r.id}`,
-      request_id: r.id,
-    });
-  };
-
   const approve = useMutation({
     mutationFn: async (r: Row) => {
       const { error } = await supabase.rpc("approve_request", { p_request_id: r.id });
@@ -88,7 +69,6 @@ export default function Triage() {
     onSuccess: (r) => {
       qc.invalidateQueries({ queryKey: ["requests"] });
       toast({ title: t("admin.approvedMsg") });
-      ping(r, "approved");
     },
     onError: (e: Error) => toast({ title: t("admin.failApprove"), description: e.message, variant: "destructive" }),
   });
@@ -105,7 +85,6 @@ export default function Triage() {
       qc.invalidateQueries({ queryKey: ["requests"] });
       setReasons((m) => ({ ...m, [r.id]: "" }));
       toast({ title: t("admin.rejectedMsg") });
-      ping(r, "rejected");
     },
     onError: (e: Error) => toast({ title: t("admin.failReject"), description: e.message, variant: "destructive" }),
   });

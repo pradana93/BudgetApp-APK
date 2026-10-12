@@ -29,11 +29,10 @@ export function merchantOf(r: { merchant?: string | null; category?: string }): 
 }
 
 /**
- * Request lifecycle fan-out: in-app notification row + push.
- * Both best-effort. Callers are owners here; member-scoped sends
- * (comments) go through notifyUser directly with request_id.
- */
-export async function notifyRequesterBoth(
+ * Manual pings (comment replies). Lifecycle pushes (new request, approve,
+ * reject, reconcile) are owned server-side by the DB webhook + push-event
+ * function, so they land with the app closed. Never throws.
+ */export async function notifyRequesterBoth(
   userId: string | null | undefined,
   opts: { type: string; title: string; body: string; link: string; request_id?: string }
 ): Promise<void> {
@@ -53,6 +52,6 @@ export async function notifyRequesterBoth(
     userId,
     opts.title,
     opts.body,
-    opts.request_id ? { request_id: opts.request_id } : undefined
+    { ...(opts.request_id ? { request_id: opts.request_id } : {}), link: opts.link }
   );
 }

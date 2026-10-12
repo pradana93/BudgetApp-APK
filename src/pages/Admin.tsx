@@ -15,7 +15,6 @@ import { reconciliationScore } from "@/lib/matcher";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { approvalRisk } from "@/lib/advisor";
 import { useToast } from "@/components/ui/toast";
-import { notifyRequesterBoth, merchantOf } from "@/lib/notify";
 import { useRealtime } from "@/hooks/useRealtime";
 import { normalizeCategory, useCategories } from "@/hooks/useCategories";
 import { useLang } from "@/i18n/LanguageContext";
@@ -75,7 +74,7 @@ export default function Admin() {
       const { error } = await supabase.rpc("approve_request", { p_request_id: id });
       if (error) throw error;
     },
-    onSuccess: (_d, id) => { invalidate(); toast({ title: t("admin.approvedMsg") }); const r = (requests ?? []).find((x) => x.id === id); if (r && r.requester_id !== myId) { void notifyRequesterBoth(r.requester_id, { type: "request_approved", title: t("nt.approvedT"), body: t("nt.approvedB", { merchant: merchantOf(r), amount: formatMoney(Number(r.amount)) }), link: `/requests/${r.id}`, request_id: r.id }); } },
+    onSuccess: (_d, id) => { invalidate(); toast({ title: t("admin.approvedMsg") }); },
     onError: (e: Error) => toast({ title: t("admin.failApprove"), description: e.message, variant: "destructive" }),
   });
 
@@ -84,7 +83,7 @@ export default function Admin() {
       const { error } = await supabase.rpc("reject_request", { p_request_id: id, p_reason: reason });
       if (error) throw error;
     },
-    onSuccess: (_d, v) => { invalidate(); setReasons({}); toast({ title: t("admin.rejectedMsg") }); const r = (requests ?? []).find((x) => x.id === (v as { id: string }).id); if (r && r.requester_id !== myId) { void notifyRequesterBoth(r.requester_id, { type: "request_rejected", title: t("nt.rejectedT"), body: t("nt.rejectedB", { merchant: merchantOf(r), amount: formatMoney(Number(r.amount)) }), link: `/requests/${r.id}`, request_id: r.id }); } },
+    onSuccess: (_d, v) => { invalidate(); setReasons({}); toast({ title: t("admin.rejectedMsg") }); },
     onError: (e: Error) => toast({ title: t("admin.failReject"), description: e.message, variant: "destructive" }),
   });
 
@@ -249,7 +248,7 @@ export default function Admin() {
       const { error } = await supabase.rpc("reconcile_request", { p_request_id: id, p_note: "" });
       if (error) throw error;
     },
-    onSuccess: (_d, id) => { invalidate(); toast({ title: t("admin.reconciledOne") }); const r = (requests ?? []).find((x) => x.id === (id as string)); if (r && r.requester_id !== myId) { void notifyRequesterBoth(r.requester_id, { type: "request_reconciled", title: t("nt.reconciledT"), body: t("nt.reconciledB", { merchant: merchantOf(r), amount: formatMoney(Number(r.amount)) }), link: `/requests/${r.id}`, request_id: r.id }); } },
+    onSuccess: (_d, id) => { invalidate(); toast({ title: t("admin.reconciledOne") }); },
     onError: (e: Error) => toast({ title: t("admin.failRecon"), description: e.message, variant: "destructive" }),
   });
 
@@ -321,15 +320,10 @@ export default function Admin() {
     if (targets.length === 0 || bulk.running) return;
     setBulk({ running: true, done: 0, total: targets.length });
     let ok = 0;
-    const done: typeof targets = [];
     for (const r of targets) {
       const { error } = await supabase.rpc("reconcile_request", { p_request_id: r.id, p_note: "Bulk auto-reconcile" });
-      if (!error) { ok++; done.push(r); }
+      if (!error) { ok++; }
       setBulk((b) => ({ ...b, done: b.done + 1 }));
-    }
-    for (const r of done) {
-      if (r.requester_id === myId) continue;
-      void notifyRequesterBoth(r.requester_id, { type: "request_reconciled", title: t("nt.reconciledT"), body: t("nt.reconciledB", { merchant: merchantOf(r), amount: formatMoney(Number(r.amount)) }), link: `/requests/${r.id}`, request_id: r.id });
     }
     invalidate();
     setBulk({ running: false, done: 0, total: 0 });
