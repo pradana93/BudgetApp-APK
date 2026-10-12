@@ -2,6 +2,7 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { useLang } from "@/i18n/LanguageContext";
 import { Wallet, Receipt, ShieldCheck, Trophy } from "lucide-react";
+import { registerSheetCloser } from "@/lib/nativeUi";
 
 const STEPS = [
   { icon: Wallet, title: "tour.s1t", desc: "tour.s1d" },
@@ -37,9 +38,13 @@ export function Tour({ userId }: { userId: string }) {
     setVisible(false);
   };
 
+  React.useEffect(() => {
+    if (!visible) return;
+    return registerSheetCloser(() => { finish(); return true; });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
   if (!visible) return null;
-  const s = STEPS[Math.min(step, STEPS.length - 1)];
-  const last = step >= STEPS.length - 1;
+  const s = STEPS[Math.min(step, STEPS.length - 1)];  const last = step >= STEPS.length - 1;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog" aria-label={t("tour.s1t")}>

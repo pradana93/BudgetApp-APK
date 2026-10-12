@@ -125,7 +125,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const displayName = profile?.display_name || profile?.email || t("nav.userFallback");
 
   return (
-    <div className="min-h-screen flex bg-muted/30 relative">
+    <div className="min-h-dvh flex bg-muted/30 relative">
       <div aria-hidden className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute top-1/3 -right-32 h-96 w-96 rounded-full bg-amber-500/10 blur-3xl" />
       <aside className="w-[270px] shrink-0 border-r border-border/60 bg-card/80 backdrop-blur hidden md:flex flex-col sticky top-0 h-screen">

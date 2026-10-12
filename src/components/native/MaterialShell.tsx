@@ -326,7 +326,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
       }
     };
     return (
-      <div className="native-app min-h-screen bg-foreground text-background flex flex-col items-center justify-center gap-4 p-8 text-center">
+      <div className="native-app min-h-dvh bg-foreground text-background flex flex-col items-center justify-center gap-4 p-4 sm:p-8 text-center">
         <span className="rounded-2xl bg-background/10 p-4">
           <Fingerprint className="h-10 w-10" />
         </span>
@@ -442,7 +442,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="native-app min-h-screen bg-background text-foreground flex flex-col">
+    <div className="native-app min-h-dvh bg-background text-foreground flex flex-col">
       {/* M3 small top app bar */}
       <header className={`sticky top-0 z-30 bg-background pt-[env(safe-area-inset-top)] transition-shadow duration-200 ${scrolled ? "shadow-[0_1px_0_hsl(var(--border))]" : ""}`}>
         <div className="flex items-center gap-1 px-2 h-16">
@@ -488,7 +488,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 pb-40">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 pb-40 scroll-pb-40">
         <div key={loc.pathname} className="m3-page-in">
           {children}
         </div>

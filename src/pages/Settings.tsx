@@ -397,7 +397,7 @@ export default function Settings(){
           {photoSrc
             ? <img src={photoSrc} alt={name} onError={() => setImgFailed(true)} className="h-full w-full object-cover" />
             : <span className="flex h-full w-full items-center justify-center text-2xl font-bold">{initialsOf(name)}</span>}
-          <span className="absolute inset-0 flex items-center justify-center bg-black/45 text-[11px] font-semibold opacity-0 transition-opacity group-hover:opacity-100">
+          <span className="absolute inset-0 flex items-center justify-center bg-black/45 text-[11px] font-semibold opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
             {uploading ? t("common.loading") : photoSrc ? t("profile.change") : t("profile.upload")}
           </span>
         </button>

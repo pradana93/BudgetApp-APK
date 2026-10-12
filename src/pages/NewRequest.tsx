@@ -431,11 +431,11 @@ export default function NewRequest(){
         <form onSubmit={onSubmit} className="space-y-4">
           <h3 className="font-semibold">{t("new.reviewTitle")}</h3>
           <dl className="rounded-lg border divide-y text-sm">
-            <div className="flex justify-between gap-3 p-3"><dt className="text-muted-foreground">{t("new.budget")}</dt><dd className="font-medium text-right">{chosenBudget?.name ?? "—"}</dd></div>
+            <div className="flex justify-between gap-3 p-3"><dt className="text-muted-foreground">{t("new.budget")}</dt><dd className="font-medium text-right break-words min-w-0">{chosenBudget?.name ?? "—"}</dd></div>
             <div className="flex justify-between gap-3 p-3"><dt className="text-muted-foreground">{t("new.amount")}</dt><dd className="font-display tnum font-semibold text-right">{amountValid ? formatMoney(Number(form.amount)) : form.amount || "—"}</dd></div>
             <div className="flex justify-between gap-3 p-3"><dt className="text-muted-foreground">{t("new.category")}</dt><dd className="font-medium">{form.category || "—"}</dd></div>
-            <div className="flex justify-between gap-3 p-3"><dt className="text-muted-foreground">{t("new.merchant")}</dt><dd className="font-medium text-right">{form.merchant || "—"}</dd></div>
-            {form.description && <div className="flex justify-between gap-3 p-3"><dt className="text-muted-foreground">{t("new.description")}</dt><dd className="text-right max-w-[60%]">{form.description}</dd></div>}
+            <div className="flex justify-between gap-3 p-3"><dt className="text-muted-foreground">{t("new.merchant")}</dt><dd className="font-medium text-right break-words min-w-0">{form.merchant || "—"}</dd></div>
+            {form.description && <div className="flex justify-between gap-3 p-3"><dt className="text-muted-foreground">{t("new.description")}</dt><dd className="text-right max-w-[60%] break-words min-w-0">{form.description}</dd></div>}
             <div className="flex justify-between gap-3 p-3"><dt className="text-muted-foreground">{t("new.dueDate")}</dt><dd className="font-medium">{form.due_date ? formatDate(form.due_date, lang) : "—"}</dd></div>
           </dl>
           <div>

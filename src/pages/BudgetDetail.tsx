@@ -14,6 +14,7 @@ import { dateLocale, formatDate, formatDateTime } from "@/lib/datetime";
 import { useLang } from "@/i18n/LanguageContext";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { ink, slimAxis, smallTick, MoneyTip } from "@/components/charts";
+import { QueryError } from "@/components/QueryError";
 
 export default function BudgetDetail(){
   const { id } = useParams();
@@ -23,7 +24,7 @@ export default function BudgetDetail(){
   const nav = useNavigate();
   const qc = useQueryClient();
   const isOwner = profile?.role === "owner";
-  const { data: budget } = useQuery({ queryKey:["budgets",id], queryFn: async()=>{
+  const { data: budget, isError: budgetError, refetch: refetchBudget } = useQuery({ queryKey:["budgets",id], queryFn: async()=>{
     const { data, error } = await supabase.from("budgets").select("*").eq("id",id!).single(); if(error) throw error; return data;
   }});
   const { data: ledger } = useQuery({ queryKey:["ledger",id], queryFn: async()=>{
@@ -97,6 +98,7 @@ export default function BudgetDetail(){
     const blob = new Blob([csv],{type:"text/csv"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url);
   };
 
+  if(budgetError) return <div className="p-4"><QueryError onRetry={() => void refetchBudget()} /></div>;
   if(!budget) return <div className="p-4 text-sm text-muted-foreground">{t("common.loading")}</div>;
   return <div className="space-y-6">
     <div className="flex flex-wrap justify-between gap-2"><div><h1 className="text-2xl font-bold">{budget.name} <Badge variant={healthVariant} className="ml-1 align-middle">{healthLabel}</Badge></h1><p className="text-sm text-muted-foreground">{formatMoney(Number(budget.total_amount),budget.currency)} total • {formatMoney(Number(budget.allocated_amount),budget.currency)} allocated • {formatMoney(Number(budget.available_amount),budget.currency)} available</p></div><div className="flex gap-2 shrink-0"><Button variant="outline" onClick={exportCsv}>{t("bd.export")}</Button>{isOwner && <Button variant="outline" onClick={()=>clone.mutate()} disabled={clone.isPending}>{clone.isPending ? t("common.loading") : t("bd.clone")}</Button>}</div></div>

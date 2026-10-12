@@ -64,7 +64,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-amber-500/10 p-4 relative overflow-hidden">
+    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-amber-500/10 p-4 relative overflow-hidden">
       <div aria-hidden className="pointer-events-none absolute -top-24 -left-24 h-80 w-80 rounded-full bg-primary/15 blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-amber-500/15 blur-3xl" />
       <Card className="relative w-full max-w-3xl overflow-hidden md:grid md:grid-cols-[1fr_1.15fr] animate-pop shadow-2xl">

@@ -10,6 +10,7 @@ import { useRealtime } from "@/hooks/useRealtime";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { timeAgo } from "@/lib/datetime";
 import { MessageCircle } from "lucide-react";
+import { QueryError } from "@/components/QueryError";
 
 type RequestRow = {
   id: string;
@@ -39,7 +40,7 @@ export default function Messages() {
   const qc = useQueryClient();
   const me = profile?.id ?? "";
 
-  const { data: requests, isLoading } = useQuery({
+  const { data: requests, isLoading, isError: reqError, refetch: refetchReqs } = useQuery({
     queryKey: ["requests"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -120,6 +121,8 @@ export default function Messages() {
       qc.invalidateQueries({ queryKey: ["comment-reads"] }),
     ]);
   }, [qc]);
+
+  if (reqError) return <div className="space-y-4 max-w-2xl"><QueryError onRetry={() => void refetchReqs()} /></div>;
 
   return (
     <PullToRefresh onRefresh={refresh}>

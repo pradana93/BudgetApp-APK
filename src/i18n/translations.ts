@@ -4,6 +4,8 @@ const en = {
   "common.loading": "Loading…",
   "common.cancel": "Cancel",
   "common.save": "Save",
+  "common.retry": "Retry",
+  "common.loadFailed": "Couldn't load this view.",
 
   "nav.dashboard": "Dashboard",
   "nav.budgets": "Budgets",
@@ -854,6 +856,8 @@ const id: Record<StringKey, string> = {
   "common.loading": "Memuat…",
   "common.cancel": "Batal",
   "common.save": "Simpan",
+  "common.retry": "Coba lagi",
+  "common.loadFailed": "Gagal memuat tampilan ini.",
 
   "nav.dashboard": "Dasbor",
   "nav.budgets": "Anggaran",

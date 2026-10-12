@@ -1,6 +1,6 @@
 import * as React from "react";
 import { isNative } from "@/lib/native";
-import { tryCloseDrawer } from "@/lib/nativeUi";
+import { tryCloseDrawer, tryCloseSheet } from "@/lib/nativeUi";
 import { checkForAppUpdate, type AppUpdate } from "@/lib/updater";
 import { initNativePush } from "@/lib/push";
 import { UpdateBanner } from "@/components/UpdateBanner";
@@ -58,6 +58,7 @@ async function applyNativeShell(): Promise<void> {
     await App.removeAllListeners();
     void App.addListener("backButton", ({ canGoBack }) => {
       try {
+        if (tryCloseSheet()) return;
         if (tryCloseDrawer()) return;
       } catch {
         // fall through to history navigation

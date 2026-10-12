@@ -37,7 +37,7 @@ export function ApprovalRiskCard({ risk }: { risk: RiskScore }) {
           </div>
           <div className="flex-1 min-w-0">
             <div className="h-2 rounded-full bg-muted overflow-hidden"><div className={`h-2 rounded-full ${grad} transition-all duration-700`} style={{ width: `${pct}%` }} /></div>
-            <ul className="mt-2 space-y-1 text-sm text-muted-foreground">{risk.reasons.map((r, i) => <li key={i} className="flex gap-1.5"><span className={risk.level === "risky" ? "text-red-500" : risk.level === "review" ? "text-amber-500" : "text-emerald-500"}>•</span><span>{r}</span></li>)}</ul>
+            <ul className="mt-2 space-y-1 text-sm text-muted-foreground">{risk.reasons.map((r, i) => <li key={i} className="flex gap-1.5"><span aria-hidden="true" className={risk.level === "risky" ? "text-red-500" : risk.level === "review" ? "text-amber-500" : "text-emerald-500"}>•</span><span>{r}</span></li>)}</ul>
           </div>
         </div>
       </CardContent>

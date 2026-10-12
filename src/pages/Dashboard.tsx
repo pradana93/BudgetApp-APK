@@ -20,6 +20,7 @@ import { Wallet, TrendingUp, Clock, ArrowDownLeft, ArrowUpRight, Receipt, Trophy
 import AskBudgetApp from "@/components/AskBudgetApp";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { useWidgetSnapshot } from "@/lib/widget";
+import { QueryError } from "@/components/QueryError";
 import { isNative } from "@/lib/native";
 
 export default function Dashboard(){
@@ -29,7 +30,7 @@ export default function Dashboard(){
   const { toast } = useToast();
   const qc = useQueryClient();
   const isOwner = profile?.role === "owner";
-  const { data: budgets, isLoading: loadingBudgets } = useQuery({ queryKey:["budgets"], queryFn: async()=>{
+  const { data: budgets, isLoading: loadingBudgets, isError: budgetsError, refetch: refetchBudgets } = useQuery({ queryKey:["budgets"], queryFn: async()=>{
     const { data, error } = await supabase.from("budgets").select("*").order("created_at",{ascending:false}); if(error) throw error; return data;
   }});
   const { data: requests, isLoading: loadingRequests } = useQuery({ queryKey:["requests"], queryFn: async()=>{
@@ -233,6 +234,8 @@ export default function Dashboard(){
     await new Promise((r) => setTimeout(r, 350));
   }, [qc]);
 
+  if (budgetsError) return <div className="space-y-4"><QueryError onRetry={() => void refetchBudgets()} /></div>;
+
   return <PullToRefresh onRefresh={refresh}><div className="space-y-6">
     <div className="rounded-2xl bg-foreground text-background p-5 md:p-6 shadow-lg overflow-hidden relative">
       <div aria-hidden className="pointer-events-none absolute -right-10 -top-14 h-44 w-44 rounded-full bg-primary/25 blur-2xl" />
@@ -240,6 +243,8 @@ export default function Dashboard(){
         <div>
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.14em] opacity-70">
             <span className={`h-2 w-2 rounded-full animate-pulse ${pulseHealth === "over" ? "bg-red-400" : pulseHealth === "atRisk" ? "bg-amber-400" : "bg-emerald-400"}`} />
+            <span>{t(pulseHealth === "over" ? "health.over" : pulseHealth === "atRisk" ? "health.atRisk" : "health.onTrack")}</span>
+            <span aria-hidden="true">·</span>
             {today}
           </div>
           <h1 className="font-display text-lg mt-1 font-medium opacity-90">{t(greetKey)}{who ? `, ${who}` : ""}</h1>
@@ -391,8 +396,8 @@ export default function Dashboard(){
             {f.icon === "out" ? <ArrowDownLeft className="h-4 w-4" /> : f.icon === "in" ? <ArrowUpRight className="h-4 w-4" /> : <Receipt className="h-4 w-4" />}
           </span>
           <span className="flex-1 min-w-0 truncate">{f.title}</span>
-          <span className="text-muted-foreground tabular whitespace-nowrap">{f.sub}</span>
-          <span className="text-xs text-muted-foreground whitespace-nowrap w-20 text-right">{timeAgo(f.ts, lang)}</span>
+          <span className="text-muted-foreground tabular truncate min-w-0">{f.sub}</span>
+          <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">{timeAgo(f.ts, lang)}</span>
         </div>
       ))}
     </CardContent></Card>

@@ -53,7 +53,7 @@ export class ErrorBoundary extends Component<Props, State> {
     const s = STRINGS[crashLang()];
     if (error) {
       return (
-        <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "system-ui, sans-serif" }}>
+        <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "system-ui, sans-serif" }}>
           <div style={{ maxWidth: 640, width: "100%" }}>
             <h1 style={{ fontSize: 20, fontWeight: 700 }}>{s["eb.title"]}</h1>
             <p style={{ marginTop: 8, fontSize: 14, opacity: 0.8 }}>{error.message}</p>

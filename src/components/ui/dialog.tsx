@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { NativePortal } from "@/lib/portal";
+import { registerSheetCloser } from "@/lib/nativeUi";
 
 /**
  * Dialog shell with a FIXED layout: pinned header, independently scrolling
@@ -8,8 +9,15 @@ import { NativePortal } from "@/lib/portal";
  * no matter how tall the viewport is.
  */
 export function Dialog({ open, onOpenChange, children }: { open: boolean; onOpenChange:(o:boolean)=>void; children: React.ReactNode }){
+  React.useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onOpenChange(false); };
+    window.addEventListener("keydown", onKey);
+    const unregister = registerSheetCloser(() => { onOpenChange(false); return true; });
+    return () => { window.removeEventListener("keydown", onKey); unregister(); };
+  }, [open, onOpenChange]);
   if(!open) return null;
-  return <NativePortal><div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
+  return <NativePortal><div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4" role="dialog" aria-modal="true">
     <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px] animate-fade-up" onClick={()=>onOpenChange(false)} />
     <div className="mobile-sheet relative bg-background rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:max-w-lg sm:mx-4 max-h-[92vh] sm:max-h-[85vh] overflow-hidden animate-pop border border-border/60 flex flex-col">{children}</div>
   </div></NativePortal>;

@@ -1,8 +1,10 @@
 import { Delete, X } from "lucide-react";
+import * as React from "react";
 import { evaluateExpression, hasCalcOps, groupDigits } from "@/lib/calc";
 import { tapLight } from "@/lib/haptics";
 import { NativePortal } from "@/lib/portal";
 import { cn } from "@/lib/utils";
+import { registerSheetCloser } from "@/lib/nativeUi";
 
 /**
  * In-app amount keypad: identical experience everywhere, never at the
@@ -57,6 +59,8 @@ function KeypadBody({
     }
     onClose();
   };
+
+  React.useEffect(() => registerSheetCloser(() => { closeAndCollapse(); return true; }), [closeAndCollapse]);
 
   const typeDigit = (d: string) => {
     if (lastSegment === "0" && d !== "0") onDigits(digits.slice(0, -1) + d);

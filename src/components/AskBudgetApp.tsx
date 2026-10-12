@@ -105,7 +105,7 @@ export default function AskBudgetApp({ ctx }: { ctx: AskCtx }) {
             </div>
           ) : msgs.map((m) => (
             <div key={m.id} className={`flex ${m.role==="user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm ${m.role==="user" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-card text-card-foreground border border-border rounded-bl-sm"}`}>
+              <div className={`max-w-[85%] min-w-0 break-words rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm ${m.role==="user" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-card text-card-foreground border border-border rounded-bl-sm"}`}>
                 <div>{m.text}</div>
                 {m.role==="assistant" && (
                   <div className="mt-2 flex items-center gap-1.5 flex-wrap">

@@ -16,6 +16,7 @@ import { useLang } from "@/i18n/LanguageContext";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { Wallet } from "lucide-react";
 import { HealthRing } from "@/components/HealthRing";
+import { QueryError } from "@/components/QueryError";
 
 export default function Budgets(){
   useRealtime();
@@ -25,7 +26,7 @@ export default function Budgets(){
   const isOwner = profile?.role==="owner";
   const qc=useQueryClient(); const { toast }=useToast();
 
-  const { data, isLoading } = useQuery({ queryKey:["budgets"], queryFn: async()=>{
+  const { data, isLoading, isError: budgetsError, refetch: refetchBudgets } = useQuery({ queryKey:["budgets"], queryFn: async()=>{
     const { data, error } = await supabase.from("budgets").select("*").order("created_at",{ascending:false}); if(error) throw error; return data;
   }});
   const { data: allReqs } = useQuery({ queryKey:["requests"], queryFn: async()=>{
@@ -73,6 +74,8 @@ export default function Budgets(){
     await new Promise((r) => setTimeout(r, 300));
   }, [qc]);
 
+  if (budgetsError) return <div className="space-y-4"><QueryError onRetry={() => void refetchBudgets()} /></div>;
+
   return <PullToRefresh onRefresh={refresh}><div className="space-y-4">
     <div className="flex flex-wrap justify-between items-center gap-2"><h1 className="text-2xl font-bold">{t("budgets.title")}</h1><div className="flex gap-2">
       <Input placeholder={t("budgets.searchPh")} value={bq} onChange={(e)=>setBq(e.target.value)} className="max-w-[200px]" />
@@ -88,12 +91,12 @@ export default function Budgets(){
       {isOwner && <Button onClick={()=>nav("/budgets/new")}>{t("budgets.new")}</Button>}
         </div>
       ) : (
-      <Table className="min-w-[720px]"><TableHeader><TableRow><TableHead>{t("budgets.name")}</TableHead><TableHead>{t("budgets.total")}</TableHead><TableHead>{t("budgets.allocated")}</TableHead><TableHead>{t("budgets.available")}</TableHead><TableHead>{t("budgets.usage")}</TableHead><TableHead>{t("budgets.status")}</TableHead>{isOwner && <TableHead>{t("budgets.action")}</TableHead>}</TableRow></TableHeader>
+      <div className="overflow-x-auto -mx-4 px-4"><Table className="min-w-[720px]"><TableHeader><TableRow><TableHead>{t("budgets.name")}</TableHead><TableHead>{t("budgets.total")}</TableHead><TableHead>{t("budgets.allocated")}</TableHead><TableHead>{t("budgets.available")}</TableHead><TableHead>{t("budgets.usage")}</TableHead><TableHead>{t("budgets.status")}</TableHead>{isOwner && <TableHead>{t("budgets.action")}</TableHead>}</TableRow></TableHeader>
       <TableBody>{filteredBudgets?.map(b=> <TableRow key={b.id}><TableCell><Link to={`/budgets/${b.id}`} className="text-primary underline">{b.name}</Link></TableCell><TableCell data-label={t("budgets.total")} className="font-display tnum">{formatMoney(Number(b.total_amount), b.currency)}</TableCell><TableCell data-label={t("budgets.allocated")} className="font-display tnum">{formatMoney(Number(b.allocated_amount), b.currency)}</TableCell><TableCell data-label={t("budgets.available")} className="font-display tnum">{formatMoney(Number(b.available_amount), b.currency)}</TableCell><TableCell data-label={t("budgets.usage")}><span className="inline-flex items-center gap-2"><HealthRing pct={usagePct(b)} size={36} /><span className="tnum text-sm font-semibold">{usagePct(b).toFixed(0)}%</span></span></TableCell><TableCell data-label={t("budgets.status")}><span className="flex flex-wrap gap-1"><Badge variant={b.status==="active"?"approved":"secondary"}>{b.status}</Badge><Badge variant={healthMeta[healthOf(b)].variant}>{healthMeta[healthOf(b)].label}</Badge></span></TableCell>{isOwner && <TableCell data-label={t("budgets.action")}>{b.status === "active"
         ? <Button size="sm" variant="outline" onClick={()=>statusMut.mutate({ id: b.id, status: "closed" })} disabled={statusMut.isPending}>{t("budgets.close")}</Button>
         : <Button size="sm" variant="outline" onClick={()=>statusMut.mutate({ id: b.id, status: "active" })} disabled={statusMut.isPending}>{t("budgets.reopen")}</Button>}</TableCell>}</TableRow>)}
       {filteredBudgets?.length===0 && <TableRow><TableCell colSpan={isOwner ? 7 : 6} className="text-center text-muted-foreground">{t("req.noMatch")}</TableCell></TableRow>}
-      </TableBody></Table>)}
+      </TableBody></Table></div>)}
     </CardContent></Card>
   </div></PullToRefresh>;
 }

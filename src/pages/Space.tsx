@@ -19,10 +19,12 @@ import { cn } from "@/lib/utils";
 import { SwipeRow } from "@/components/SwipeRow";
 import { Download, Tag, Repeat, BarChart3, X, Bookmark, MoreVertical } from "lucide-react";
 import { isNative } from "@/lib/native";
+import { registerSheetCloser } from "@/lib/nativeUi";
 import { NativePortal } from "@/lib/portal";
 import { TxTypeTabs, TxFields, TxFooter } from "@/components/SpaceTxForm";
 import { SheetSelect, DateField } from "@/components/pickers";
 import { PullToRefresh } from "@/components/PullToRefresh";
+import { QueryError } from "@/components/QueryError";
 
 type Entry = { id: string; title: string; body: string; amount: number | null; category_id: string | null; direction: "income" | "expense" | "transfer"; entry_date: string; created_at: string; account_id: string | null; transfer_to_account_id: string | null };
 type PCat = { id: string; name: string; color: string; monthly_budget: number | null };
@@ -79,7 +81,7 @@ export default function Space() {
   const [recForm, setRecForm] = React.useState({ title: "", amount: "", category_id: "", direction: "expense" as "expense" | "income", account_id: "", frequency: "monthly", next_date: new Date().toISOString().slice(0,10) });
   const [templates, setTemplates] = React.useState<Template[]>(() => { try { return JSON.parse(localStorage.getItem("space-templates") ?? "[]"); } catch { return []; } });
 
-  const { data: entries } = useQuery({
+  const { data: entries, isError: entriesError, refetch: refetchEntries } = useQuery({
     queryKey: ["personal-entries", profile?.id],
     queryFn: async () => {
       const { data, error } = await supabase.from("personal_notes").select("id,title,body,amount,category_id,direction,entry_date,created_at,account_id,transfer_to_account_id").order("entry_date", { ascending: false }).order("created_at", { ascending: false });
@@ -145,6 +147,11 @@ export default function Space() {
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [qc, profile]);
+
+  React.useEffect(() => {
+    if (!isNative() || !showAdd) return;
+    return registerSheetCloser(() => { setShowAdd(false); return true; });
+  }, [showAdd]);
 
   const accById = (id: string | null) => accounts?.find((a) => a.id === id);
   const catById = (id: string | null) => cats?.find((c) => c.id === id);
@@ -407,6 +414,8 @@ export default function Space() {
     await new Promise((r) => setTimeout(r, 300));
   }, [qc, profile]);
 
+  if (entriesError) return <div className="space-y-3 overflow-x-clip"><QueryError onRetry={() => void refetchEntries()} /></div>;
+
   return <PullToRefresh onRefresh={refresh}><div className="space-y-3 overflow-x-clip">
     {/* Page Header — matches Budgets/Requests pattern */}
     <div className="flex flex-wrap justify-between items-center gap-2 overflow-hidden">
@@ -431,7 +440,7 @@ export default function Space() {
     <Card>
       <CardHeader className="pb-3"><CardTitle className="text-sm">{t("sp.thisMonth")}</CardTitle></CardHeader>
       <CardContent className="pt-2 overflow-hidden">
-        <div className="flex items-center gap-2 mb-2 text-[10px] sm:text-[11px] overflow-hidden">
+        <div className="flex items-center gap-2 mb-2 text-xs sm:text-[11px] overflow-hidden">
           {lastMonth.exp.greaterThan(0) ? (() => {
             const pct = monthTotals.exp.sub(lastMonth.exp).div(lastMonth.exp).mul(100);
             const up = pct.greaterThan(0);
@@ -439,8 +448,8 @@ export default function Space() {
           })() : <span className="text-muted-foreground">{t("sp.noLastMonth")}</span>}
         </div>
         <div className="mb-3 overflow-hidden">
-          <div className="text-[10px] text-muted-foreground mb-1">{t("sp.daily")}</div>
-          <div className="grid grid-cols-7 gap-0.5 mx-auto w-full max-w-[300px]">
+          <div className="text-xs text-muted-foreground mb-1">{t("sp.daily")}</div>
+          <div className="grid grid-cols-7 gap-0.5 mx-auto w-full max-w-[300px]" role="img" aria-label={t("sp.daily")}>
             {Array.from({ length: daysInMonth }, (_, i) => {
               const day = String(i + 1).padStart(2, "0");
               const val = heatmap.get(day) ?? 0;
@@ -449,6 +458,7 @@ export default function Space() {
               return <div key={i} className={cn("aspect-square rounded-[3px]", bg)} title={`${day}: ${formatMoney(val)}`} />;
             })}
           </div>
+          <div className="mt-1 flex items-center justify-end gap-1 text-xs text-muted-foreground"><span>{formatMoney(0)}</span><span className="h-2 w-2 rounded-[2px] bg-muted/30" /><span className="h-2 w-2 rounded-[2px] bg-primary" /><span>{formatMoney(maxHeat)}</span></div>
         </div>
         <div className="rounded-2xl bg-foreground text-background p-4 space-y-2.5">
           <div className="space-y-1">
@@ -474,7 +484,7 @@ export default function Space() {
       <CardContent>
         <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory" style={{ scrollbarWidth: "none" }}>
           <button onClick={() => setAccFilter("all")} className={cn("snap-start shrink-0 rounded-lg px-2.5 sm:px-3 py-2 text-left min-w-[88px] sm:min-w-[100px] border transition-all", accFilter==="all" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:border-primary/30")}>
-            <div className="text-[10px] font-medium uppercase tracking-wide">{t("sp.all")}</div>
+            <div className="text-xs font-medium uppercase tracking-wide">{t("sp.all")}</div>
             <div className="font-bold text-sm tabular mt-0.5">{formatMoney(totalBalance.toNumber())}</div>
             <div className="text-[11px] opacity-70 mt-0.5">{t("sp.txCount", { n: filtered.length })}</div>
           </button>
@@ -489,13 +499,13 @@ export default function Space() {
                   <span className="font-medium text-xs truncate">{a.name}</span>
                 </div>
                 <div className="font-bold text-sm text-primary tabular">{formatMoney(bal.toNumber())}</div>
-                <button onClick={(ev) => { ev.stopPropagation(); setConfirmDelete("acc:" + a.id); }} className="hidden group-hover/acct:flex absolute top-1 right-1 h-5 w-5 rounded bg-destructive/10 text-destructive items-center justify-center"><Trash2 className="h-3 w-3" /></button>
+                <button onClick={(ev) => { ev.stopPropagation(); setConfirmDelete("acc:" + a.id); }} className="flex sm:opacity-0 sm:group-hover/acct:opacity-100 sm:group-focus-within/acct:opacity-100 absolute top-1 right-1 h-5 w-5 rounded bg-destructive/10 text-destructive items-center justify-center after:absolute after:-inset-3 after:content-['']"><Trash2 className="h-3 w-3" /></button>
               </button>
             );
           })}
           <button onClick={() => setShowAcc(true)} className="shrink-0 rounded-lg border border-dashed border-border px-3 py-2 min-w-[80px] flex flex-col items-center justify-center gap-1 hover:border-primary/40 hover:bg-accent/50 transition-colors">
             <span className="h-6 w-6 rounded bg-primary/10 text-primary flex items-center justify-center"><Plus className="h-3.5 w-3.5" /></span>
-            <span className="text-[10px] font-medium text-muted-foreground">{t("sp.add")}</span>
+            <span className="text-xs font-medium text-muted-foreground">{t("sp.add")}</span>
           </button>
         </div>
       </CardContent>
@@ -585,7 +595,7 @@ export default function Space() {
                             <div className={cn("font-display tnum text-[15px] font-semibold", amtColor)}>{e.direction === "expense" ? "−" : e.direction === "income" ? "+" : ""}{formatMoney(Number(e.amount ?? 0))}</div>
                             <div className="text-[11px] text-muted-foreground mt-0.5">{new Date(e.entry_date).toLocaleDateString(dateLocale(lang), { day:"2-digit", month:"short" })}</div>
                           </div>
-                          <div className="hidden sm:flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-all"><button onClick={(ev) => { ev.stopPropagation(); saveTemplate(e); }} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground/30 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/20"><Bookmark className="h-3.5 w-3.5" /></button><button onClick={(ev) => { ev.stopPropagation(); setConfirmDelete(e.id); }} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10"><Trash2 className="h-3.5 w-3.5" /></button></div>
+                          <div className="hidden sm:flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all"><button onClick={(ev) => { ev.stopPropagation(); saveTemplate(e); }} className="relative h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground/30 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/20 after:absolute after:-inset-2 after:content-['']"><Bookmark className="h-3.5 w-3.5" /></button><button onClick={(ev) => { ev.stopPropagation(); setConfirmDelete(e.id); }} className="relative h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 after:absolute after:-inset-2 after:content-['']"><Trash2 className="h-3.5 w-3.5" /></button></div>
                         </div>
                         </SwipeRow>
                       );
@@ -722,7 +732,7 @@ export default function Space() {
           {(tags ?? []).map(t => (
               <span key={t.id} className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs group">
                 <span className="h-2 w-2 rounded-full bg-primary" />{t.name}
-              <button onClick={()=>delTag.mutate(t.id)} className="opacity-0 group-hover:opacity-100 text-destructive"><X className="h-3 w-3" /></button>
+              <button onClick={()=>delTag.mutate(t.id)} className="relative opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 text-destructive after:absolute after:-inset-3 after:content-['']"><X className="h-3 w-3" /></button>
             </span>
           ))}
         </div>

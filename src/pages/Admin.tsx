@@ -22,6 +22,7 @@ import { useLang } from "@/i18n/LanguageContext";
 import { useSession } from "@/hooks/useSession";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList } from "recharts";
 import { ink, slimAxis, smallTick, pineBar, MoneyTip, ChartEmpty, compactMoney } from "@/components/charts";
+import { QueryError } from "@/components/QueryError";
 
 type Budget = { id: string; name: string; total_amount: number; allocated_amount: number; available_amount: number; currency: string; status: string };
 type Req = { id: string; budget_id: string; requester_id: string; amount: number; category: string; merchant: string | null; status: string; created_at: string; receipt_url: string | null; due_date: string | null };
@@ -58,8 +59,8 @@ export default function Admin() {
   const [catErr, setCatErr] = React.useState<string | null>(null);
   const usageCount = (name: string) => (requests ?? []).filter((r) => r.category === name).length;
 
-  const { data: budgets } = useQuery({ queryKey: ["budgets"], queryFn: () => fetchAll<Budget>("budgets") });
-  const { data: requests } = useQuery({ queryKey: ["requests"], queryFn: () => fetchAll<Req>("reimbursement_requests") });
+  const { data: budgets, isLoading: budgetsLoading } = useQuery({ queryKey: ["budgets"], queryFn: () => fetchAll<Budget>("budgets") });
+  const { data: requests, isLoading: requestsLoading, isError: reqError, refetch: refetchReqs } = useQuery({ queryKey: ["requests"], queryFn: () => fetchAll<Req>("reimbursement_requests") });
   const { data: ledger } = useQuery({ queryKey: ["admin-ledger", limit], queryFn: () => fetchAll<Ledger>("ledger_entries", "created_at", false, limit) });
   const { data: users } = useQuery({ queryKey: ["admin-users"], queryFn: () => fetchAll<Profile>("profiles") });
 
@@ -358,6 +359,9 @@ export default function Admin() {
     await new Promise((r) => setTimeout(r, 300));
   }, [qc]);
 
+  if (budgetsLoading || requestsLoading) return <div className="space-y-2" aria-busy="true">{[0, 1, 2].map((i) => <div key={i} className="skeleton h-16" />)}</div>;
+  if (reqError) return <div className="space-y-6"><QueryError onRetry={() => void refetchReqs()} /></div>;
+
   return (
     <PullToRefresh onRefresh={refresh}><div className="space-y-6">
       <div className="rounded-xl bg-foreground text-background p-6 flex flex-wrap items-center justify-between gap-3">
@@ -379,7 +383,7 @@ export default function Admin() {
         <CardHeader><CardTitle>{t("admin.queue")} {pending.length > 0 && <Badge variant="pending" className="ml-2">{t("admin.waiting", { n: pending.length })}</Badge>}</CardTitle></CardHeader>
         <CardContent>
           {pending.length === 0 ? <div className="text-sm text-muted-foreground">{t("admin.clear")}</div> :
-          <Table><TableHeader><TableRow><TableHead>{t("admin.qRequest")}</TableHead><TableHead>{t("admin.qBudget")}</TableHead><TableHead>{t("admin.qAmount")}</TableHead><TableHead>{t("risk.title")}</TableHead><TableHead>{t("admin.qReason")}</TableHead><TableHead>{t("admin.qActions")}</TableHead></TableRow></TableHeader>
+          <div className="overflow-x-auto -mx-4 px-4"><Table><TableHeader><TableRow><TableHead>{t("admin.qRequest")}</TableHead><TableHead>{t("admin.qBudget")}</TableHead><TableHead>{t("admin.qAmount")}</TableHead><TableHead>{t("risk.title")}</TableHead><TableHead>{t("admin.qReason")}</TableHead><TableHead>{t("admin.qActions")}</TableHead></TableRow></TableHeader>
           <TableBody>{pending.map((r) => (
             <TableRow key={r.id}>
               <TableCell><Link to={`/requests/${r.id}`} className="text-primary underline">{r.merchant ?? r.category}</Link><div className="text-xs text-muted-foreground">{r.category} • {formatDate(r.created_at, lang)}</div></TableCell>
@@ -392,7 +396,7 @@ export default function Admin() {
                 <Button size="sm" variant="destructive" onClick={() => reject.mutate({ id: r.id, reason: (reasons[r.id] ?? "").trim() })} disabled={reject.isPending || (reasons[r.id] ?? "").trim().length < 3}>{t("admin.reject")}</Button>
               </div></TableCell>
             </TableRow>))}
-          </TableBody></Table>}
+          </TableBody></Table></div>}
         </CardContent>
       </Card>
 

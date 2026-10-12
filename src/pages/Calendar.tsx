@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatMoney } from "@/lib/money";
 import { formatDate, dateLocale } from "@/lib/datetime";
 import { useLang } from "@/i18n/LanguageContext";
+import { QueryError } from "@/components/QueryError";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 type CalReq = {
@@ -33,7 +34,7 @@ export default function Calendar() {
   const [ym, setYm] = React.useState({ y: now.getFullYear(), m: now.getMonth() });
   const [selected, setSelected] = React.useState<string | null>(null);
 
-  const { data } = useQuery({
+  const { data, isError: calError, refetch: refetchCal } = useQuery({
     queryKey: ["calendar-requests"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -76,6 +77,8 @@ export default function Calendar() {
     });
     setSelected(null);
   };
+
+  if (calError) return <div className="space-y-4 max-w-3xl"><QueryError onRetry={() => void refetchCal()} /></div>;
 
   return (
     <div className="space-y-4 max-w-3xl">

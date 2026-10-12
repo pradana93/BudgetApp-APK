@@ -6,7 +6,7 @@
 export function LaunchScreen() {
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center gap-5 p-8 text-center"
+      className="min-h-dvh flex flex-col items-center justify-center gap-5 p-4 sm:p-8 text-center"
       style={{ background: "#14532D", color: "#FFFFFF" }}
       role="status"
       aria-label="Loading BudgetApp"

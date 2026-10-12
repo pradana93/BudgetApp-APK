@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import AskBudgetApp from "@/components/AskBudgetApp";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { registerSheetCloser } from "@/lib/nativeUi";
 
 export function AskDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { data: budgets } = useQuery({
@@ -42,6 +43,11 @@ export function AskDrawer({ open, onClose }: { open: boolean; onClose: () => voi
       created_at: String(r.created_at ?? ""),
     })),
   }), [budgets, requests]);
+
+  React.useEffect(() => {
+    if (!open) return;
+    return registerSheetCloser(() => { onClose(); return true; });
+  }, [open, onClose]);
 
   if (!open) return null;
   return (

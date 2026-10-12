@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useSession } from "@/hooks/useSession";
 import { useLang } from "@/i18n/LanguageContext";
 import { UserAvatar } from "@/components/UserAvatar";
+import { QueryError } from "@/components/QueryError";
 import {
   achievementsFor, achMeta, isUnlocked, xpOf, levelOf, duoTable,
   type AchId, type ReqLite,
@@ -35,7 +36,7 @@ export default function Rewards() {
   const { profile } = useSession();
   const { t, lang } = useLang();
 
-  const { data: requests } = useQuery({
+  const { data: requests, isLoading: reqLoading, isError: reqError, refetch: refetchReqs } = useQuery({
     queryKey: ["rewards-requests"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -67,6 +68,9 @@ export default function Rewards() {
     const handle = String(u?.display_name || u?.email || "").split("@")[0];
     return handle || String(id || "").slice(0, 8);
   };
+
+  if (reqLoading) return <div className="space-y-2" aria-busy="true"><div className="skeleton h-[104px]" /><div className="skeleton h-[104px]" /></div>;
+  if (reqError) return <QueryError onRetry={() => void refetchReqs()} />;
 
   return (
     <div className="space-y-6">
