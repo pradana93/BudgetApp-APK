@@ -44,13 +44,22 @@ Deno.serve(async (req) => {
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
     const rec = event.record;
 
+    // Never trust the payload alone: re-read the row. A missing row means
+    // a malformed event, and sending from it would spam owners with junk.
+    const { data: row } = await admin
+      .from("reimbursement_requests")
+      .select("id,merchant,category,amount,requester_id,budget_id,status")
+      .eq("id", String(rec.id))
+      .maybeSingle();
+    if (!row) return json({ ok: false, error: "request not found" }, 404);
+
     let toUserId: string | null = null;
     let title = "";
     let body = "";
-    const link = `/requests/${String(rec.id)}`;
+    const link = `/requests/${String(row.id)}`;
 
     if (event.type === "INSERT") {
-      const requester = String(rec.requester_id ?? "");
+      const requester = String(row.requester_id ?? "");
       // Oldest owner gets the bell (notify_on_request_change); FCM matches.
       const { data: owner } = await admin
         .from("profiles")
@@ -63,19 +72,19 @@ Deno.serve(async (req) => {
         return json({ ok: true, skipped: "no recipient" });
       }
       toUserId = owner.id;
-      const what = `${String(rec.merchant ?? rec.category ?? "Request")} — ${idr(rec.amount)}`;
+      const what = `${String(row.merchant ?? row.category ?? "Request")} — ${idr(row.amount)}`;
       title = `New request: ${what}`;
       body = `A member submitted a reimbursement request. / Anggota mengajukan permintaan reimbursement.`;
     } else if (event.type === "UPDATE") {
       const before = String(event.old_record?.status ?? "");
-      const after = String(rec.status ?? "");
+      const after = String(row.status ?? "");
       if (before === after || !(TERMINAL as readonly string[]).includes(after)) {
         return json({ ok: true, skipped: "not a status change" });
       }
-      const requester = String(rec.requester_id ?? "");
+      const requester = String(row.requester_id ?? "");
       if (!requester) return json({ ok: true, skipped: "no recipient" });
       toUserId = requester;
-      const what = `${String(rec.merchant ?? rec.category ?? "Request")} — ${idr(rec.amount)}`;
+      const what = `${String(row.merchant ?? row.category ?? "Request")} — ${idr(row.amount)}`;
       const verb = after === "approved" ? "approved/disetujui" : after === "rejected" ? "rejected/ditolak" : "reconciled/direkonsiliasi";
       title = `Request ${after}: ${what}`;
       body = `Your request was ${verb}. / Permintaan Anda ${verb}.`;
@@ -98,7 +107,7 @@ Deno.serve(async (req) => {
       tokens,
       title,
       body,
-      data: { request_id: String(rec.id), link },
+      data: { request_id: String(row.id), link },
     });
     if (dead.length > 0) {
       await admin.from("push_tokens").delete().in("token", dead);
