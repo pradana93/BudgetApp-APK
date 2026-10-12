@@ -19,6 +19,7 @@ import { getLockMode, setLockMode, setPin, clearPin, reauthWithPassword, type Lo
 
 /** Verify account password, then clear a forgotten PIN so a new one can be set. */
 function ResetPinBlock() {
+  const { t } = useLang();
   const [open, setOpen] = React.useState(false);
   const [password, setPassword] = React.useState("");
   const [busy, setBusy] = React.useState(false);
@@ -27,7 +28,7 @@ function ResetPinBlock() {
   if (!open) {
     return (
       <button type="button" onClick={() => { setOpen(true); setError(""); }} className="text-xs text-muted-foreground underline">
-        Forgot PIN? Reset it with your password
+        {t("pin.forgot")}
       </button>
     );
   }
@@ -38,8 +39,8 @@ function ResetPinBlock() {
     try {
       const res = await reauthWithPassword(password);
       if (!res.ok) {
-        if (res.reason === "wrong-password") setError("Wrong password — try again.");
-        else setError("Can't verify right now — check your connection.");
+        if (res.reason === "wrong-password") setError(t("pin.wrongPw"));
+        else setError(t("pin.cantVerify"));
         return;
       }
       clearPin();
@@ -51,24 +52,24 @@ function ResetPinBlock() {
     }
   };
   if (done) {
-    return <p className="text-xs text-emerald-600">PIN cleared — choose a PIN mode above to set a new one, or pick Fingerprint.</p>;
+    return <p className="text-xs text-emerald-600">{t("pin.cleared")}</p>;
   }
   return (
     <div className="rounded-xl border border-border/60 p-3 space-y-2">
-      <div className="text-xs font-medium">Confirm your account password to clear this PIN</div>
+      <div className="text-xs font-medium">{t("pin.confirmTitle")}</div>
       <Input
         type="password"
         autoComplete="current-password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter") void submit(); }}
-        placeholder="Account password"
+        placeholder={t("pin.pwPh")}
       />
       {error && <p className="text-xs text-destructive">{error}</p>}
       <div className="flex gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={() => { setOpen(false); setPassword(""); setError(""); }}>Cancel</Button>
+        <Button type="button" variant="outline" size="sm" onClick={() => { setOpen(false); setPassword(""); setError(""); }}>{t("common.cancel")}</Button>
         <Button type="button" size="sm" onClick={() => void submit()} disabled={busy || password.length === 0}>
-          {busy ? "…" : "Verify & clear PIN"}
+          {busy ? "…" : t("pin.verifyClear")}
         </Button>
       </div>
     </div>
@@ -77,6 +78,7 @@ function ResetPinBlock() {
 
 /** Native-only lock settings: biometric / PIN-4 / PIN-6 + setup. Renders nothing on web. */
 function DeviceLockCard() {
+  const { t } = useLang();
   const [mode, setModeState] = React.useState<LockMode>("off");
   const [step, setStep] = React.useState<"idle" | "enter" | "confirm">("idle");
   const [first, setFirst] = React.useState("");
@@ -112,7 +114,7 @@ function DeviceLockCard() {
         setStep("confirm");
       } else {
         if (next !== first) {
-          setError("PINs don't match — start over.");
+          setError(t("pin.mismatch"));
           setFirst("");
           setEntry("");
           setStep("enter");
@@ -125,7 +127,7 @@ function DeviceLockCard() {
             setFirst("");
             window.setTimeout(() => setSaved(false), 2500);
           } else {
-            setError("Couldn't save PIN — try again.");
+            setError(t("pin.saveFail"));
             setEntry("");
           }
         }
@@ -196,7 +198,7 @@ function DeviceLockCard() {
             </div>
           </div>
         )}
-        {saved && <p className="text-xs text-emerald-600">PIN saved — lock engages when you leave the app.</p>}
+        {saved && <p className="text-xs text-emerald-600">{t("pin.saved")}</p>}
         {(mode === "pin4" || mode === "pin6") && step === "idle" && (
           <ResetPinBlock />
         )}

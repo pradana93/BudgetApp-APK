@@ -219,8 +219,8 @@ export function answerQuestion(q: string, ctx: AskCtx, lang: InsightLang = "en",
     }
     if (!best) return null;
     return id
-      ? `Paling berisiko: ${best.merchant ?? best.category} ${money(num(best.amount))} — skor ${bestScore} (${bestReasons.slice(0, 2).join(", ")}).`
-      : `Riskiest: ${best.merchant ?? best.category} ${money(num(best.amount))} — score ${bestScore} (${bestReasons.slice(0, 2).join(", ")}).`;
+      ? `Paling berisiko: ${best.merchant ?? best.category} ${money(num(best.amount))}, skor ${bestScore} (${bestReasons.slice(0, 2).join(", ")}).`
+      : `Riskiest: ${best.merchant ?? best.category} ${money(num(best.amount))}, score ${bestScore} (${bestReasons.slice(0, 2).join(", ")}).`;
   }
 
   // 3) Reconciled tally
@@ -277,9 +277,9 @@ export function answerQuestion(q: string, ctx: AskCtx, lang: InsightLang = "en",
     const cutoff = new Date(now.getTime() - 30 * 86_400_000);
     const recent = realized.filter((r) => new Date(r.created_at) >= cutoff);
     const burn = recent.length ? sum(recent) / 30 : 0;
-    if (burn <= 0) return id ? "Tidak ada belanja 30 hari — runway tidak terbatas." : "No spend in last 30 days — runway is unlimited.";
+    if (burn <= 0) return id ? "Tidak ada belanja 30 hari. Runway tidak terbatas." : "No spend in last 30 days. Runway is unlimited.";
     const days = Math.floor(totalAvail / burn);
-    const per = ctx.budgets[0].period_end ? (() => { const f = forecastSpend(burn, totalAvail, ctx.budgets[0].period_end ?? null, now); return f ? (id ? ` Proyeksi ${money(Number(f.projected))} hingga ${f.date} — sisa ${money(Number(f.remaining))} (${f.onTrack ? "aman" : "melebihi"}).` : ` Projected ${money(Number(f.projected))} by ${f.date} — remaining ${money(Number(f.remaining))} (${f.onTrack ? "on track" : "over"}).`) : ""; })() : "";
+    const per = ctx.budgets[0].period_end ? (() => { const f = forecastSpend(burn, totalAvail, ctx.budgets[0].period_end ?? null, now); return f ? (id ? ` Proyeksi ${money(Number(f.projected))} hingga ${f.date}, sisa ${money(Number(f.remaining))} (${f.onTrack ? "aman" : "melebihi"}).` : ` Projected ${money(Number(f.projected))} by ${f.date}, remaining ${money(Number(f.remaining))} (${f.onTrack ? "on track" : "over"}).`) : ""; })() : "";
     return id
       ? `Runway ~${days} hari pada ${money(burn)}/hari (total tersedia ${money(totalAvail)}).${per}`
       : `Runway ~${days} day(s) at ${money(burn)}/day (total available ${money(totalAvail)}).${per}`;
@@ -295,8 +295,8 @@ export function answerQuestion(q: string, ctx: AskCtx, lang: InsightLang = "en",
     const usage = totalAll > 0 ? Math.round((totalAlloc / totalAll) * 100) : 0;
     const health = usage >= 85 ? (id ? "berisiko" : "at risk") : usage >= 60 ? (id ? "waspada" : "watch") : (id ? "sehat" : "healthy");
     return id
-      ? `Sisa: ${lines.join("; ")}. Total tersedia ${money(totalAvail)} (${usage}% terpakai — ${health}).`
-      : `Remaining: ${lines.join("; ")}. Total available ${money(totalAvail)} (${usage}% used — ${health}).`;
+      ? `Sisa: ${lines.join("; ")}. Total tersedia ${money(totalAvail)} (${usage}% terpakai, ${health}).`
+      : `Remaining: ${lines.join("; ")}. Total available ${money(totalAvail)} (${usage}% used, ${health}).`;
   }
 
   // 10) Total spend

@@ -109,7 +109,7 @@ export const CHANGELOGS: ChangeEntry[] = [
   {
     version: "0.5.0",
     date: "2026-09-14",
-    title: "Flagship Batch — Risk, Pulse, Kanban, Studio, Focus",
+    title: "Flagship Batch: Risk, Pulse, Kanban, Studio, Focus",
     tag: "flagship",
     items: [
       "Approval Risk Card flagship: radial ring + gradient + confetti on approve",
@@ -117,7 +117,7 @@ export const CHANGELOGS: ChangeEntry[] = [
       "Xero Inbox Kanban: Ready vs Review columns with score rings",
       "Receipt Studio 2.0: drag-drop studio + mock OCR auto-fill",
       "Focus Mode: Cmd+J drawer + Command Palette flagship promotion",
-      "Ask BudgetApp copilot already flagship — now dockable anywhere",
+      "Ask BudgetApp copilot already flagship, now dockable anywhere",
     ],
   },
   {

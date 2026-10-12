@@ -91,7 +91,7 @@ export function CommandPalette({ open, onClose, onAsk }: { open: boolean; onClos
   const match = (s: string) => !needle || s.toLowerCase().includes(needle) || fuzzy(s);
 
   const focusAsk: Item = {
-    id: "focus-ask", group: "cmd.actions" as StringKey, label: `${t("ask.title")} — Focus Mode`, hint: "⌘J", icon: Sparkles,
+    id: "focus-ask", group: "cmd.actions" as StringKey, label: `${t("ask.title")}: Focus Mode`, hint: "⌘J", icon: Sparkles,
     run: () => { onClose(); onAsk?.(); },
   };
   const pages: Item[] = [

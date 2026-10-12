@@ -1,9 +1,19 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { STRINGS, type Lang } from "@/i18n/translations";
 
 type Props = { children: ReactNode };
 type State = { error: Error | null; stack: string | null; copied: boolean };
 
 const CRASH_KEY = "budgetapp-last-crash";
+
+/** Class component can't use the lang hook; read the saved locale directly. */
+function crashLang(): Lang {
+  try {
+    return window.localStorage.getItem("budgetapp-lang") === "id" ? "id" : "en";
+  } catch {
+    return "en";
+  }
+}
 
 /** Catches render-time crashes so users see a message instead of a blank page. */
 export class ErrorBoundary extends Component<Props, State> {
@@ -40,24 +50,25 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render(): ReactNode {
     const { error, stack, copied } = this.state;
+    const s = STRINGS[crashLang()];
     if (error) {
       return (
         <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "system-ui, sans-serif" }}>
           <div style={{ maxWidth: 640, width: "100%" }}>
-            <h1 style={{ fontSize: 20, fontWeight: 700 }}>Something went wrong</h1>
+            <h1 style={{ fontSize: 20, fontWeight: 700 }}>{s["eb.title"]}</h1>
             <p style={{ marginTop: 8, fontSize: 14, opacity: 0.8 }}>{error.message}</p>
             {stack && (
               <details style={{ marginTop: 12, fontSize: 12 }}>
-                <summary style={{ cursor: "pointer", opacity: 0.8 }}>Technical details</summary>
+                <summary style={{ cursor: "pointer", opacity: 0.8 }}>{s["eb.details"]}</summary>
                 <pre style={{ marginTop: 8, padding: 12, borderRadius: 8, background: "rgba(127,127,127,0.12)", overflow: "auto", maxHeight: 220 }}>{stack}</pre>
               </details>
             )}
             <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
               <button style={{ padding: "8px 16px", cursor: "pointer" }} onClick={() => window.location.reload()}>
-                Reload
+                {s["eb.reload"]}
               </button>
               <button style={{ padding: "8px 16px", cursor: "pointer" }} onClick={this.copy}>
-                {copied ? "Copied" : "Copy error details"}
+                {copied ? s["eb.copied"] : s["eb.copyDetails"]}
               </button>
             </div>
           </div>

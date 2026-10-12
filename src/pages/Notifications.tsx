@@ -98,7 +98,7 @@ export default function Notifications() {
             ]}
           >
             <Link to={n.link ?? "/"} onClick={() => { if (!n.is_read) markOne.mutate(n.id); }} className={`flex justify-between gap-3 py-2 px-2 text-sm rounded ${n.is_read ? "opacity-70" : "bg-muted/40"}`}>
-              <span><span className="font-medium">{n.title}</span><span className="text-muted-foreground"> — {n.body}</span></span>
+              <span><span className="font-medium">{n.title}</span><span className="text-muted-foreground">: {n.body}</span></span>
               <span className="text-xs text-muted-foreground whitespace-nowrap">{formatDateTime(n.created_at, lang)}</span>
             </Link>
           </SwipeRow>

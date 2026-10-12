@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { PartyPopper } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { SheetSelect } from "@/components/pickers";
@@ -200,7 +201,7 @@ export default function RequestDetail(){
   if(!data) return <div className="p-4">{t("rd.notFound")}</div>;
 
   return <div className="space-y-6 max-w-2xl relative">
-    {showConfetti && <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center text-3xl animate-bounce">🎉✨🎉</div>}
+    {showConfetti && <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center animate-bounce"><PartyPopper className="h-10 w-10 text-amber-500" /></div>}
     <div className="flex justify-between items-start"><div><h1 className="text-2xl font-bold">{data.merchant ?? data.category}</h1><p className="text-sm text-muted-foreground">{data.description}</p></div><Badge variant={data.status as never}>{data.status}</Badge></div>
     <Card><CardHeader><CardTitle>{t("rd.request")}</CardTitle></CardHeader><CardContent className="space-y-3 text-sm">
       <div className="grid grid-cols-2 gap-3"><div><span className="text-muted-foreground">{t("rd.amount")}</span><div className="font-medium">{formatMoney(Number(data.amount))}</div></div><div><span className="text-muted-foreground">{t("rd.category")}</span><div>{data.category}</div></div></div>
@@ -217,7 +218,7 @@ export default function RequestDetail(){
         <div className="font-semibold">{t("dup.title")}</div>
         <div className="text-muted-foreground">{t("dup.desc", { n: dups.length })}</div>
         {dups.slice(0, 3).map((d) => (
-          <div key={d.id}><Link to={`/requests/${d.id}`} className="text-primary underline">{d.merchant ?? d.category} — {formatMoney(Number(d.amount))}</Link></div>
+          <div key={d.id}><Link to={`/requests/${d.id}`} className="text-primary underline">{d.merchant ?? d.category} · {formatMoney(Number(d.amount))}</Link></div>
         ))}
       </div>
     )}

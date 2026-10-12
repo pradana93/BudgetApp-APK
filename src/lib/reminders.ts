@@ -41,8 +41,8 @@ export async function maybeFireReminders(): Promise<void> {
         title: "Overdue requests",
         body:
           overdue.length === 1
-            ? `${overdue[0].merchant ?? "A request"} is past due — tap to review.`
-            : `${overdue.length} requests are past due — tap to review.`,
+            ? `${overdue[0].merchant ?? "A request"} is past due. Tap to review.`
+            : `${overdue.length} requests are past due. Tap to review.`,
       });
     } else if (rows.length > 0) {
       notes.push({

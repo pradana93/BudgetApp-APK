@@ -66,7 +66,7 @@ export default function AskBudgetApp({ ctx }: { ctx: AskCtx }) {
           <div className="flex items-center gap-2.5">
             <span className="rounded-xl bg-background/15 p-2"><Sparkles className="h-5 w-5" /></span>
             <div>
-              <div className="font-bold leading-none flex items-center gap-2">{t("ask.title")} <Badge variant="secondary" className="bg-background text-foreground hover:bg-background text-[10px]">FLAGSHIP</Badge></div>
+              <div className="font-bold leading-none flex items-center gap-2">{t("ask.title")}</div>
               <div className="text-xs text-background/85 mt-1">{t("ask.subtitle")}</div>
             </div>
           </div>

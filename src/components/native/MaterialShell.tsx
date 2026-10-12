@@ -288,7 +288,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
           setPinEntry("");
         } else {
           setLockFails((n) => n + 1);
-          setPinError("Wrong PIN — try again.");
+          setPinError(t("pin.wrongPin"));
           window.setTimeout(() => setPinEntry(""), 350);
         }
       })();
@@ -307,9 +307,9 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
         if (!res.ok) {
           if (res.reason === "wrong-password") {
             setLockFails((n) => n + 1);
-            setPwError("Wrong password — try again.");
+            setPwError(t("pin.wrongPw"));
           } else {
-            setPwError("Can't verify right now — check your connection.");
+            setPwError(t("pin.cantVerify"));
           }
           return;
         }
@@ -330,11 +330,11 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
         <span className="rounded-2xl bg-background/10 p-4">
           <Fingerprint className="h-10 w-10" />
         </span>
-        <h1 className="font-display text-2xl font-semibold">BudgetApp locked</h1>
-        <p className="text-sm opacity-70">Confirm it&apos;s you to open your budgets.</p>
+        <h1 className="font-display text-2xl font-semibold">{t("pin.lockedTitle")}</h1>
+        <p className="text-sm opacity-70">{t("pin.lockedSub")}</p>
         {lockLeft > 0 ? (
           <p className="text-sm font-semibold text-amber-300">
-            Too many tries — retry in {Math.ceil(lockLeft / 1000)}s.
+            {t("pin.retryIn", { s: Math.ceil(lockLeft / 1000) })}
           </p>
         ) : pwMode ? (
           <div className="flex w-full max-w-xs flex-col gap-2.5">
@@ -344,7 +344,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") void submitPassword(); }}
-              placeholder="Account password"
+              placeholder={t("pin.pwPh")}
               className="h-12 rounded-xl border border-background/25 bg-background/15 px-4 text-base text-background placeholder:text-background/80 outline-none focus:border-background/60"
             />
             {pwError && <p className="text-xs text-red-300">{pwError}</p>}
@@ -354,14 +354,14 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
               disabled={pwBusy || password.length === 0}
               className="m3-press rounded-full bg-background px-6 h-12 text-sm font-semibold text-foreground disabled:opacity-60"
             >
-              {pwBusy ? "…" : "Unlock with password"}
+              {pwBusy ? "…" : t("pin.unlockPw")}
             </button>
             <button
               type="button"
               onClick={() => { setPwMode(false); setPwError(""); setPassword(""); }}
               className="text-xs opacity-60 underline"
             >
-              Back
+              {t("pin.back")}
             </button>
           </div>
         ) : showPin ? (

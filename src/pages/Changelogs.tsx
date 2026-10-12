@@ -25,7 +25,7 @@ export default function Changelogs() {
             <CardTitle className="flex flex-wrap items-center gap-2 text-base">
               {c.version} <Badge variant={c.tag === "flagship" ? "default" : c.tag === "feat" ? "approved" : "secondary"}>{c.tag ?? "update"}</Badge>
               <span className="text-xs font-normal text-muted-foreground">{c.date}</span>
-              {c.tag === "flagship" && <Sparkles className="h-4 w-4 text-violet-600" />}
+              {c.tag === "flagship" && <Sparkles className="h-4 w-4 text-amber-600" />}
             </CardTitle>
             <div className="font-semibold">{c.title}</div>
           </CardHeader>

@@ -267,14 +267,14 @@ export default function Admin() {
       qc.invalidateQueries({ queryKey: ["notifications-unread"] });
       qc.invalidateQueries({ queryKey: ["goals"] });
       const total = Object.values(counts).reduce((s, n) => s + (Number(n) || 0), 0);
-      toast({ title: `${t("admin.resetDone")} — ${total} rows` });
+      toast({ title: `${t("admin.resetDone")}, ${total} rows` });
     },
     onError: (e: unknown) => {
       const err = e as { message?: string; code?: string; hint?: string | null; details?: string | null };
       const extra = [err.code, err.hint ?? err.details].filter(Boolean).join(" • ");
       toast({
         title: t("admin.resetFailed"),
-        description: [err.message, extra].filter(Boolean).join(" — ") || String(e),
+        description: [err.message, extra].filter(Boolean).join("; ") || String(e),
         variant: "destructive",
       });
     },

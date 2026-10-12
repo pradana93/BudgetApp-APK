@@ -30,7 +30,7 @@ export function AuthBrand() {
           </li>
         ))}
       </ul>
-      <p className="text-xs text-background/60">IDR-first • RLS-secured • Realtime</p>
+      <p className="text-xs text-background/60">{t("auth.brandFoot")}</p>
     </div>
   );
 }

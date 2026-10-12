@@ -49,7 +49,7 @@ export function AskDrawer({ open, onClose }: { open: boolean; onClose: () => voi
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-[560px] h-full bg-background shadow-2xl flex flex-col animate-slide-in">
         <div className="flex items-center justify-between p-3 border-b">
-          <span className="font-semibold">Ask BudgetApp — Focus Mode</span>
+          <span className="font-semibold">Ask BudgetApp: Focus Mode</span>
           <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close"><X className="h-4 w-4" /></Button>
         </div>
         <div className="flex-1 overflow-auto p-4">

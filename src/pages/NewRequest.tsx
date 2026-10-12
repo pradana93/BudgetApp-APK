@@ -16,7 +16,7 @@ import { suggestCategory } from "@/lib/matcher";
 import { findDuplicates } from "@/lib/advisor";
 import { formatMoney, isValidMoney } from "@/lib/money";
 import { formatDate, dateLocale } from "@/lib/datetime";
-import { Sparkles, Check } from "lucide-react";
+import { Sparkles, Check, Camera } from "lucide-react";
 import { getRequestSchema } from "@/schemas/budget";
 import { z } from "zod";
 import { AmountKeypad } from "@/components/AmountKeypad";
@@ -439,10 +439,10 @@ export default function NewRequest(){
             <div className="flex justify-between gap-3 p-3"><dt className="text-muted-foreground">{t("new.dueDate")}</dt><dd className="font-medium">{form.due_date ? formatDate(form.due_date, lang) : "—"}</dd></div>
           </dl>
           <div>
-            <Label>{t("new.receipt")} <Badge variant="secondary" className="ml-1 text-[10px]">STUDIO 2.0</Badge></Label>
+            <Label>{t("new.receipt")}</Label>
             {recentReceipts && recentReceipts.length > 0 && (
               <div className="mt-1.5 mb-2">
-                <div className="text-xs text-muted-foreground mb-1.5">{t("new.recentReceipts")} — {t("new.tapReuse")}</div>
+                <div className="text-xs text-muted-foreground mb-1.5">{t("new.recentReceipts")} · {t("new.tapReuse")}</div>
                 <div className="flex gap-2 overflow-x-auto pb-1">
                   {recentReceipts.map((r) => (
                     <button key={r.id} type="button" onClick={() => reuseReceipt(r.url, r.merchant)} title={t("new.tapReuse")} className="shrink-0 rounded-lg border overflow-hidden hover:border-primary transition-colors">
@@ -457,7 +457,7 @@ export default function NewRequest(){
               onDragLeave={() => setDragOver(false)}
               onDrop={(e) => { e.preventDefault(); setDragOver(false); onFile(e.dataTransfer.files?.[0] ?? null); }}
               className={`mt-2 rounded-xl border-2 border-dashed p-4 text-center transition-all ${dragOver ? "border-primary bg-primary/5 scale-[1.01]" : "border-muted-foreground/20 hover:border-primary/40 bg-muted/20"}`}>
-              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">📸</div>
+              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary"><Camera className="h-5 w-5" /></div>
               <div className="mt-2 text-sm font-medium">{t("new.drop")}</div>
               <div className="text-xs text-muted-foreground">{t("new.dropHint")}</div>
               <Input type="file" accept="image/*,application/pdf" onChange={e=>onFile(e.target.files?.[0]??null)} className="mt-3" />
@@ -474,7 +474,7 @@ export default function NewRequest(){
                 </div>
                 {ocr && (
                   <div className="rounded-lg bg-accent text-accent-foreground p-3 text-xs space-y-1">
-                    <div className="font-bold flex items-center gap-1.5">✨ {t("new.ocrTitle")}</div>
+                    <div className="font-bold flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5" /> {t("new.ocrTitle")}</div>
                     <div>{t("new.ocrMerchant", { name: ocr.merchant })}</div>
                     <div>{t("new.ocrAmount", { amount: formatMoney(Number(ocr.amount)) })}</div>
                     <div className="opacity-80">{t("new.ocrHint")}</div>

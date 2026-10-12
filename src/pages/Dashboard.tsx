@@ -403,7 +403,7 @@ export default function Dashboard(){
       </CardContent></Card>
       <Card><CardHeader><CardTitle>{t("dash.recentRequests")}</CardTitle></CardHeader><CardContent className="space-y-2">
         {requests?.length===0 && <div className="text-sm text-muted-foreground">{t("dash.noRequests")}</div>}
-        {requests?.slice(0,6).map(r=> <div key={r.id} className="flex justify-between border-b py-2 text-sm"><span>{r.merchant ?? r.category} — {formatMoney(Number(r.amount))}</span><Badge variant={r.status as never}>{r.status}</Badge></div>)}
+        {requests?.slice(0,6).map(r=> <div key={r.id} className="flex justify-between border-b py-2 text-sm"><span>{r.merchant ?? r.category} · {formatMoney(Number(r.amount))}</span><Badge variant={r.status as never}>{r.status}</Badge></div>)}
       </CardContent></Card>
       </div>
     </div></PullToRefresh>;
