@@ -74,7 +74,7 @@ export default function Admin() {
       const { error } = await supabase.rpc("approve_request", { p_request_id: id });
       if (error) throw error;
     },
-    onSuccess: (_d, id) => { invalidate(); toast({ title: t("admin.approvedMsg") }); },
+    onSuccess: (_d, _id) => { invalidate(); toast({ title: t("admin.approvedMsg") }); },
     onError: (e: Error) => toast({ title: t("admin.failApprove"), description: e.message, variant: "destructive" }),
   });
 
@@ -83,7 +83,7 @@ export default function Admin() {
       const { error } = await supabase.rpc("reject_request", { p_request_id: id, p_reason: reason });
       if (error) throw error;
     },
-    onSuccess: (_d, v) => { invalidate(); setReasons({}); toast({ title: t("admin.rejectedMsg") }); },
+    onSuccess: (_d, _v) => { invalidate(); setReasons({}); toast({ title: t("admin.rejectedMsg") }); },
     onError: (e: Error) => toast({ title: t("admin.failReject"), description: e.message, variant: "destructive" }),
   });
 
@@ -248,7 +248,7 @@ export default function Admin() {
       const { error } = await supabase.rpc("reconcile_request", { p_request_id: id, p_note: "" });
       if (error) throw error;
     },
-    onSuccess: (_d, id) => { invalidate(); toast({ title: t("admin.reconciledOne") }); },
+    onSuccess: (_d, _id) => { invalidate(); toast({ title: t("admin.reconciledOne") }); },
     onError: (e: Error) => toast({ title: t("admin.failRecon"), description: e.message, variant: "destructive" }),
   });
 

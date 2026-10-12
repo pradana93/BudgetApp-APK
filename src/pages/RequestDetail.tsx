@@ -19,7 +19,7 @@ import { useToast } from "@/components/ui/toast";
 import { useLang } from "@/i18n/LanguageContext";
 import { useCategories } from "@/hooks/useCategories";
 import { ApprovalRiskCard } from "@/components/ApprovalRiskCard";
-import { merchantOf } from "@/lib/notify";
+import { notifyRequesterBoth, merchantOf } from "@/lib/notify";
 import { isNative } from "@/lib/native";
 
 export default function RequestDetail(){

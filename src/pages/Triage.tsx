@@ -66,7 +66,7 @@ export default function Triage() {
       if (error) throw error;
       return r;
     },
-    onSuccess: (r) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["requests"] });
       toast({ title: t("admin.approvedMsg") });
     },
