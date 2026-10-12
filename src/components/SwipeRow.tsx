@@ -7,7 +7,7 @@ export type SwipeAction = {
   onClick: () => void;
 };
 
-/** Touch swipe-to-reveal row actions (mouse users get the same buttons on tap-hold? no — tap works normally). */
+/** Swipe-to-reveal row actions. Content taps behave normally. */
 export function SwipeRow({ children, actions, className }: { children: React.ReactNode; actions: SwipeAction[]; className?: string }) {
   const [dx, setDx] = React.useState(0);
   const [dragging, setDragging] = React.useState(false);

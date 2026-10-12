@@ -84,7 +84,6 @@ export function initialsOf(name: string): string {
 const AVATAR_EDGE = 256;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-/** True when the file is an allowed avatar image. */
 export function isAcceptedAvatar(file: File): boolean {
   return ACCEPTED_TYPES.includes(file.type);
 }

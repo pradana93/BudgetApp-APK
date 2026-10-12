@@ -85,7 +85,7 @@ export function suggestCategory(opts: {
       : `Near your usual ${cat} spend (~${formatMoney(med, currency)})`;
   };
 
-  // 1) Merchant memory — the member filed this merchant before
+  // Merchant memory — the member filed this merchant before
   if (m) {
     const counts = new Map<string, number>();
     for (const h of history) {
@@ -110,7 +110,7 @@ export function suggestCategory(opts: {
     }
   }
 
-  // 2) Keyword rules
+  // Keyword rules
   if (m) {
     for (const { category, words } of KEYWORDS) {
       if (!categories.includes(category)) continue;
@@ -126,7 +126,7 @@ export function suggestCategory(opts: {
     }
   }
 
-  // 3) Amount habits — close to this category's usual spend
+  // Amount habits — close to this category's usual spend
   if (amt > 0) {
     let best: { cat: string; med: number; dist: number } | null = null;
     for (const [cat, med] of medians) {
@@ -146,7 +146,7 @@ export function suggestCategory(opts: {
     }
   }
 
-  // 4) Fallback — most-used, else a sensible default
+  // Fallback — most-used, else a sensible default
   const freq = new Map<string, number>();
   for (const h of history) {
     if (categories.includes(h.category)) freq.set(h.category, (freq.get(h.category) ?? 0) + 1);

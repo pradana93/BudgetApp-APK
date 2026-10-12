@@ -575,7 +575,7 @@ export default function Space() {
                       const iconGrad = isTransfer ? "bg-sky-800" : e.direction === "income" ? "bg-emerald-800" : cat ? GRAD[cat.color] ?? GRAD.slate : "bg-rose-700";
                       const amtColor = isTransfer ? "text-muted-foreground" : e.direction === "income" ? "text-emerald-700 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400";
                       return (
-                        <SwipeRow key={e.id} actions={[{ label: t("sp.edit"), onClick: () => openEdit(e) }, { label: t("sp.delete"), kind: "destructive", onClick: () => setConfirmDelete(e.id) }]}>
+                        <SwipeRow key={e.id} actions={[...(e.direction === "transfer" ? [] : [{ label: t("sp.tpl"), onClick: () => saveTemplate(e) }]), { label: t("sp.edit"), onClick: () => openEdit(e) }, { label: t("sp.delete"), kind: "destructive", onClick: () => setConfirmDelete(e.id) }]}>
                         <div className="flex items-center gap-2 py-1.5 px-1 rounded-lg hover:bg-muted/30 active:bg-muted/50 transition-colors group cursor-pointer overflow-hidden" onClick={() => openEdit(e)}>
                           <span className={cn("h-8 w-8 rounded-lg flex items-center justify-center text-white shrink-0 shadow-sm", iconGrad)}><Icon className="h-3.5 w-3.5" /></span>
                           <div className="flex-1 min-w-0 overflow-hidden">

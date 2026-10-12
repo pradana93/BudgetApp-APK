@@ -345,7 +345,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") void submitPassword(); }}
               placeholder={t("pin.pwPh")}
-              className="h-12 rounded-xl border border-background/25 bg-background/15 px-4 text-base text-background placeholder:text-background/80 outline-none focus:border-background/60"
+              className="h-12 rounded-xl border border-background/25 bg-background/15 px-4 text-base text-background placeholder:text-background/80 outline-none focus-visible:ring-2 focus-visible:ring-background/80 focus:border-background/60"
             />
             {pwError && <p className="text-xs text-red-300">{pwError}</p>}
             <button

@@ -213,7 +213,7 @@ export default function Dashboard(){
     return items.sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime()).slice(0, 8);
   }, [ledger, requests]);
 
-  // A: Live Pulse — total available + 30d burn + runway + sparkline
+  // Live Pulse — total available + 30d burn + runway + sparkline
   const totalAvailable = React.useMemo(() => (budgets ?? []).reduce((s, b) => s + Number(b.available_amount), 0), [budgets]);
   const burn30 = React.useMemo(() => {
     const cutoff = Date.now() - 30 * 86_400_000;
@@ -230,7 +230,7 @@ export default function Dashboard(){
       qc.invalidateQueries({ queryKey: ["dashboard-ledger"] }),
       qc.invalidateQueries({ queryKey: ["goals"] }),
     ]);
-    // small delay for flagship feel
+    // let pull-to-refresh settle before hiding the spinner
     await new Promise((r) => setTimeout(r, 350));
   }, [qc]);
 

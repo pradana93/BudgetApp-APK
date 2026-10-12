@@ -62,7 +62,7 @@
   body { @apply bg-background text-foreground font-sans antialiased; }
 }
 
-/* ---- BudgetApp UX layer: font, scrollbar, motion, skeletons ---- */
+/* BudgetApp UX layer: font, scrollbar, motion, skeletons */
 
 body {
   font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -193,7 +193,7 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Flagship type rhythm */
+/* Type rhythm */
 main h1 {
   letter-spacing: -0.02em;
   text-wrap: balance;
@@ -254,7 +254,7 @@ main h1 {
   font-size: 0.875rem;
 }
 
-/* ---- Native shell (Capacitor APK): kill web-isms, respect notches ---- */
+/* Native shell (Capacitor APK): kill web-isms, respect notches */
 html, body {
   overscroll-behavior: none;
 }
@@ -263,7 +263,7 @@ body {
   touch-action: manipulation;
 }
 
-/* ---- Material shell states (native APK only, scoped under .native-app) ---- */
+/* Material shell states (native APK only, scoped under .native-app) */
 .native-app .m3-press {
   transition: transform 0.12s ease, background-color 0.15s ease;
   -webkit-tap-highlight-color: transparent;
@@ -283,7 +283,7 @@ body {
   display: none;
 }
 
-/* ---- Statement tables (native APK, phones): rows become ledger cards ---- */
+/* Statement tables (native APK, phones): rows become ledger cards */
 @media (max-width: 820px) {
   .native-app table {
     display: block;
@@ -345,7 +345,7 @@ body {
   }
 }
 
-/* ---- M3 motion (native shell) ---- */
+/* M3 motion (native shell) */
 @keyframes m3-drawer-in {
   from { transform: translateX(-48px); opacity: 0.4; }
   to { transform: translateX(0); opacity: 1; }

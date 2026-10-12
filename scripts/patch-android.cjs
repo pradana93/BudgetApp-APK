@@ -36,8 +36,8 @@ function patchFile(file, transform, label) {
   }
 }
 
-// 1. google-services.json
-// 1b. brand icons + splash (committed under assets/, copied every run)
+// google-services.json
+// brand icons + splash (committed under assets/, copied every run)
 {
   const RES = path.join(ANDROID, "app", "src", "main", "res");
   let n = 0;
@@ -73,9 +73,7 @@ function patchFile(file, transform, label) {
       n++;
     }
   }
-  // THE ROBOT KILL: the Capacitor template ships a default robot vector at
-  // drawable-v24/ic_launcher_foreground.xml which shadows our PNG on API 24+.
-  // Delete every stray vector foreground; ours lives in drawable/ as PNG.
+  // Drop the template robot vector shadowing our PNG on API 24+.
   {
     const stale = path.join(RES, "drawable-v24", "ic_launcher_foreground.xml");
     if (fs.existsSync(stale)) {
@@ -83,7 +81,6 @@ function patchFile(file, transform, label) {
       console.log("removed template robot foreground");
     }
   }
-  // launcher background brand pine
   const bgXml = path.join(RES, "values", "ic_launcher_background.xml");
   if (fs.existsSync(bgXml)) {
     fs.writeFileSync(
@@ -101,7 +98,6 @@ function patchFile(file, transform, label) {
     fs.writeFileSync(path.join(anydpi, "ic_launcher_round.xml"), adaptive(true));
     n += 2;
   }
-  // app shortcuts artwork
   const scDir = path.join(RES, "drawable");
   for (const sc of ["sc_new", "sc_dash", "sc_scan"]) {
     const src = path.join(ROOT, "assets", "shortcuts", `${sc}.png`);
@@ -123,7 +119,7 @@ if (process.env.GOOGLE_SERVICES_JSON_PATH) {
   }
 }
 
-// 2. root build.gradle — Google services classpath
+// root build.gradle — Google services classpath
 patchFile(
   ROOT_GRADLE,
   (s) => {
@@ -136,7 +132,7 @@ patchFile(
   "root google-services classpath"
 );
 
-// 3. app/build.gradle — apply plugin
+// app/build.gradle — apply plugin
 patchFile(
   APP_GRADLE,
   (s) => {
@@ -149,7 +145,7 @@ patchFile(
   "app google-services plugin"
 );
 
-// 4. versionCode / versionName
+// versionCode / versionName
 if (process.env.APK_VERSION_CODE) {
   const code = String(parseInt(process.env.APK_VERSION_CODE, 10) || 1);
   patchFile(APP_GRADLE, (s) => s.replace(/versionCode\s+\d+/, `versionCode ${code}`), "versionCode");
@@ -163,7 +159,7 @@ if (process.env.APK_VERSION_NAME) {
   );
 }
 
-// 6. install-packages + post-notifications permissions
+// install-packages + post-notifications permissions
 patchFile(
   MANIFEST,
   (s) => {
@@ -185,7 +181,7 @@ patchFile(
   "native permissions"
 );
 
-// 7. keyboard resizes the WebView instead of covering inputs
+// keyboard resizes the WebView instead of covering inputs
 patchFile(
   MANIFEST,
   (s) => {
@@ -198,7 +194,7 @@ patchFile(
   "adjustResize"
 );
 
-// 8. predictive back (Android 14 gesture preview)
+// predictive back (Android 14 gesture preview)
 patchFile(
   MANIFEST,
   (s) => {
@@ -208,7 +204,7 @@ patchFile(
   "predictive back"
 );
 
-// 9. app shortcuts (long-press launcher): Dashboard + New request + Scan
+// app shortcuts (long-press launcher): Dashboard + New request + Scan
 {
   const RES = path.join(ANDROID, "app", "src", "main", "res");
   const xmlDir = path.join(RES, "xml");
@@ -243,7 +239,7 @@ patchFile(
     fs.writeFileSync(path.join(anydpi, "ic_launcher.xml"), adaptiveMono);
     fs.writeFileSync(path.join(anydpi, "ic_launcher_round.xml"), adaptiveMono);
   }
-  // strings for shortcuts + widget
+  // shortcut + widget strings
   const stringsXml = path.join(RES, "values", "strings.xml");
   patchFile(
     stringsXml,
@@ -274,7 +270,7 @@ patchFile(
   );
 }
 
-// 10. navigation bar matches light theme (dark icons on white)
+// navigation bar matches light theme (dark icons on white)
 {
   const styles = path.join(ANDROID, "app", "src", "main", "res", "values", "styles.xml");
   patchFile(
@@ -293,7 +289,7 @@ patchFile(
   );
 }
 
-// 11. bundled native module (approval service + widget + plugin bridge)
+// bundled native module (approval service + widget + plugin bridge)
 // NOTE: module sources stay under plugins/native-extras (library module).
 // Nothing is copied into :app — classes and resources merge automatically.
 // (Copying them would duplicate classes and break compilation.)

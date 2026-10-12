@@ -172,7 +172,7 @@ export function CommandPalette({ open, onClose, onAsk }: { open: boolean; onClos
           onChange={(e) => { setQ(e.target.value); setActive(0); }}
           onKeyDown={onKey}
           placeholder={t("cmd.placeholder")}
-          className="border-0 border-b rounded-none h-12 text-base focus-visible:ring-0"
+          className="border-0 border-b rounded-none h-12 text-base focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         />
         <div className="max-h-[50vh] overflow-auto p-2">
           {items.length === 0 && <div className="p-4 text-sm text-muted-foreground text-center">{t("cmd.noResults")}</div>}

@@ -165,7 +165,7 @@ export async function unlockApp(): Promise<boolean> {
   }
 }
 
-// ---------- PIN (PBKDF2, salted) ----------
+// PIN (PBKDF2, salted)
 
 type PinRecord =
   | { salt: string; hash: string; len: 4 | 6; iters: number }
@@ -284,7 +284,7 @@ export function pinLength(): number {
   return mode === "pin6" ? 6 : mode === "pin4" ? 4 : 0;
 }
 
-// ---------- Brute-force protection ----------
+// Brute-force protection
 
 function readFails(): number[] {
   try {
@@ -299,7 +299,6 @@ function readFails(): number[] {
   }
 }
 
-/** Record a failed unlock attempt. */
 export function recordFailedAttempt(): void {
   try {
     const fails = readFails();
@@ -333,7 +332,7 @@ export function getLockoutRemainingMs(now = Date.now()): number {
   return Math.max(0, last + lockMs - now);
 }
 
-// ---------- Password fallback ----------
+// Password fallback
 
 export type PasswordCheck = {
   ok: boolean;
