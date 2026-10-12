@@ -15,7 +15,55 @@ import { xpOf, levelOf, type ReqLite } from "@/lib/gamify";
 import { formatDate } from "@/lib/datetime";
 import { Check, Trophy } from "lucide-react";
 import { isNative } from "@/lib/native";
+import { initNativePush } from "@/lib/push";
+import { notifyUser } from "@/lib/notify";
 import { getLockMode, setLockMode, setPin, clearPin, reauthWithPassword, type LockMode } from "@/lib/applock";
+
+/** Native-only FCM status + self test. The web path uses the PWA block below. */
+function NativePushBlock() {
+  const { t } = useLang();
+  const { toast } = useToast();
+  const { profile } = useSession();
+  const [status, setStatus] = React.useState<"checking" | "ready" | "blocked" | "unregistered">("checking");
+  const [busy, setBusy] = React.useState(false);
+  const check = React.useCallback(async () => {
+    try {
+      const { PushNotifications } = await import("@capacitor/push-notifications");
+      const perm = await PushNotifications.checkPermissions();
+      const { data } = await supabase.from("push_tokens").select("token").limit(1);
+      if (perm.receive === "granted" && data && data.length > 0) setStatus("ready");
+      else if (perm.receive === "denied") setStatus("blocked");
+      else setStatus("unregistered");
+    } catch {
+      setStatus("unregistered");
+    }
+  }, []);
+  React.useEffect(() => { void check(); }, [check]);
+  const enable = async () => {
+    setBusy(true);
+    try { await initNativePush(); await check(); } finally { setBusy(false); }
+  };
+  const test = async () => {
+    setBusy(true);
+    try {
+      await notifyUser(profile?.id, t("set.testTitle"), t("set.testBody"));
+      toast({ title: t("set.testSent") });
+    } finally { setBusy(false); }
+  };
+  return (
+    <div className="space-y-2">
+      <div className="text-sm text-muted-foreground">
+        {status === "checking" ? t("common.loading") : status === "ready" ? t("set.pushReady") : status === "blocked" ? t("set.pushBlocked") : t("set.pushDesc")}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {status !== "ready" && status !== "checking" && (
+          <Button variant="outline" size="sm" disabled={busy} onClick={() => void enable()}>{t("set.enable")}</Button>
+        )}
+        <Button variant="outline" size="sm" disabled={busy || status !== "ready"} onClick={() => void test()}>{t("set.testPush")}</Button>
+      </div>
+    </div>
+  );
+}
 
 /** Verify account password, then clear a forgotten PIN so a new one can be set. */
 function ResetPinBlock() {
@@ -480,7 +528,8 @@ export default function Settings(){
       <p className="text-xs text-muted-foreground">{t("set.exportDesc")}</p>
     </CardContent></Card>
 
-    <Card><CardHeader><CardTitle>{t("set.install")}</CardTitle><CardDescription>{t("set.installDesc")}</CardDescription></CardHeader><CardContent className="space-y-4">
+    <Card><CardHeader><CardTitle>{isNative() ? t("set.push") : t("set.install")}</CardTitle><CardDescription>{isNative() ? t("set.pushDesc") : t("set.installDesc")}</CardDescription></CardHeader><CardContent className="space-y-4">
+      {isNative() ? <NativePushBlock /> : (<>
       <div className="flex flex-wrap items-center gap-2">
         {pwa.installed
           ? <Badge variant="approved">{t("set.installed")}</Badge>
@@ -500,6 +549,7 @@ export default function Settings(){
               else toast({ title: t("set.pushUnsupported"), variant: "destructive" });
             }}>{pwa.subscribed ? t("set.disable") : t("set.enable")}</Button>}
       </div>
+      </>)}
     </CardContent></Card>
 
     <Button variant="destructive" onClick={()=>supabase.auth.signOut()}>{t("set.signOut")}</Button>
