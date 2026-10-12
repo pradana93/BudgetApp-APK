@@ -70,7 +70,7 @@ export default function Rewards() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl bg-amber-600 text-white p-6 flex flex-wrap items-center gap-4">
+      <div className="rounded-xl bg-amber-800 text-white p-6 flex flex-wrap items-center gap-4">
         <span className="rounded-2xl bg-white/15 p-3"><Trophy className="h-8 w-8" /></span>
         <div className="flex-1 min-w-[200px]">
           <h1 className="text-2xl font-bold">{t("reward.title")}</h1>
@@ -89,7 +89,7 @@ export default function Rewards() {
           {duo.map((d, i) => (
             <div key={d.userId} className="flex items-center gap-3 border-b last:border-0 py-2 text-sm">
               <UserAvatar userId={d.userId} name={nameOf(d.userId)} className="h-8 w-8 text-[11px]" />
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? "bg-amber-500/15 text-amber-600" : "bg-muted text-muted-foreground"}`}>{i + 1}</span>
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? "bg-amber-800/15 text-amber-800 dark:text-amber-400" : "bg-muted text-muted-foreground"}`}>{i + 1}</span>
               <span className="flex-1 font-medium">{nameOf(d.userId)}</span>
               {d.userId === myId && <Badge variant="secondary">{t("reward.you")}</Badge>}
               <span className="tabular font-bold">{d.xp} XP</span>

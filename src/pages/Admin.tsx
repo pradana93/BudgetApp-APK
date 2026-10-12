@@ -419,12 +419,12 @@ export default function Admin() {
                 <div key={r.id} className={`rounded-xl border bg-card p-3 shadow-sm hover:shadow-md transition-shadow border-l-4 ${ring} space-y-2`}>
                   <div className="flex items-start justify-between gap-2">
                     <Link to={`/requests/${r.id}`} className="font-medium text-sm text-primary underline line-clamp-1">{r.merchant ?? r.category}</Link>
-                    <span className={`text-xs font-bold px-1.5 py-0.5 rounded tabular ${s.score >= 80 ? "bg-emerald-500 text-white" : s.score >= 50 ? "bg-amber-500 text-white" : "bg-slate-200 text-slate-700"}`}>{s.score}</span>
+                    <span className={`text-xs font-bold px-1.5 py-0.5 rounded tabular ${s.score >= 80 ? "bg-emerald-700 text-white" : s.score >= 50 ? "bg-amber-700 text-white" : "bg-slate-200 text-slate-700"}`}>{s.score}</span>
                   </div>
                   <div className="text-xs text-muted-foreground">{formatMoney(Number(r.amount))} • {budgetName(r.budget_id)}</div>
                   <div className="h-1.5 rounded bg-muted overflow-hidden"><div className={`h-1.5 rounded ${s.score >= 80 ? "bg-emerald-500" : s.score >= 50 ? "bg-amber-500" : "bg-slate-400"}`} style={{ width: `${s.score}%` }} /></div>
                   <div className="text-[11px] text-muted-foreground line-clamp-2">{s.reasons.slice(0,2).join(" • ")}</div>
-                  <Button size="sm" className="w-full h-7 text-xs" onClick={() => reconcileOne.mutate(r.id)} disabled={reconcileOne.isPending || bulk.running}>{t("admin.reconcile")}</Button>
+                  <Button size="sm" className="w-full h-11 text-xs" onClick={() => reconcileOne.mutate(r.id)} disabled={reconcileOne.isPending || bulk.running}>{t("admin.reconcile")}</Button>
                 </div>
               );
             };
@@ -489,13 +489,13 @@ export default function Admin() {
                   <TableCell data-label={t("admin.usersActions")} className="text-right">
                     {isEditing ? (
                       <span className="flex justify-end gap-1.5">
-                        <Button size="sm" className="h-7" onClick={() => updateUser.mutate({ user_id: u.id, display_name: editForm.display_name.trim(), role: editForm.role })} disabled={updateUser.isPending}>{t("common.save")}</Button>
-                        <Button size="sm" variant="outline" className="h-7" onClick={() => setEditingId(null)}>{t("common.cancel")}</Button>
+                        <Button size="sm" className="h-11" onClick={() => updateUser.mutate({ user_id: u.id, display_name: editForm.display_name.trim(), role: editForm.role })} disabled={updateUser.isPending}>{t("common.save")}</Button>
+                        <Button size="sm" variant="outline" className="h-11" onClick={() => setEditingId(null)}>{t("common.cancel")}</Button>
                       </span>
                     ) : (
                       <span className="flex justify-end gap-1.5">
-                        <Button size="sm" variant="outline" className="h-7" onClick={() => { setEditingId(u.id); setEditForm({ display_name: u.display_name ?? "", role: u.role as "owner" | "member" }); }}>{t("admin.edit")}</Button>
-                        <Button size="sm" variant="destructive" className="h-7" disabled={isSelf} onClick={() => { if (confirm(t("admin.deleteUserConfirm", { email: u.email }))) deleteUser.mutate(u.id); }}>{t("admin.delete")}</Button>
+                        <Button size="sm" variant="outline" className="h-11" onClick={() => { setEditingId(u.id); setEditForm({ display_name: u.display_name ?? "", role: u.role as "owner" | "member" }); }}>{t("admin.edit")}</Button>
+                        <Button size="sm" variant="destructive" className="h-11" disabled={isSelf} onClick={() => { if (confirm(t("admin.deleteUserConfirm", { email: u.email }))) deleteUser.mutate(u.id); }}>{t("admin.delete")}</Button>
                       </span>
                     )}
                   </TableCell></TableRow>

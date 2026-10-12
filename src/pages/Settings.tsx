@@ -390,7 +390,7 @@ export default function Settings(){
           onClick={() => fileRef.current?.click()}
           disabled={uploading}
           aria-label={photoSrc ? t("profile.change") : t("profile.upload")}
-          className={`group relative block h-20 w-20 overflow-hidden rounded-3xl ring-4 ring-white/30 shadow-xl transition-transform hover:scale-[1.03] active:scale-95 ${photoSrc ? "" : `${avatarCls}`}`}
+          className={`group relative block h-20 w-20 overflow-hidden rounded-3xl ring-4 ring-border shadow-xl transition-transform hover:scale-[1.03] active:scale-95 ${photoSrc ? "" : `${avatarCls}`}`}
         >
           {photoSrc
             ? <img src={photoSrc} alt={name} onError={() => setImgFailed(true)} className="h-full w-full object-cover" />

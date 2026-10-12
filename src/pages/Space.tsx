@@ -413,16 +413,16 @@ export default function Space() {
       <h1 className="text-2xl font-bold">{t("sp.title")}</h1>
       {isNative() ? (
         <div className="flex gap-2">
-          <Button onClick={() => openAdd("expense")} className="h-10"><Plus className="h-4 w-4 mr-1" />{t("sp.transaction")}</Button>
-          <Button variant="outline" size="icon" className="h-10 w-10 shrink-0" onClick={() => setShowMenu(true)} aria-label={t("sp.moreActions")}><MoreVertical className="h-4 w-4" /></Button>
+          <Button onClick={() => openAdd("expense")} className="h-11"><Plus className="h-4 w-4 mr-1" />{t("sp.transaction")}</Button>
+          <Button variant="outline" size="icon" className="h-11 w-11 shrink-0" onClick={() => setShowMenu(true)} aria-label={t("sp.moreActions")}><MoreVertical className="h-4 w-4" /></Button>
         </div>
       ) : (
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={exportCsv} className="hidden sm:inline-flex"><Download className="h-4 w-4 mr-1" />{t("sp.export")}</Button><Button variant="outline" size="sm" onClick={exportCsv} className="sm:hidden h-8 w-8 p-0"><Download className="h-4 w-4" /></Button>
-        <Button variant="outline" size="sm" onClick={() => setShowTemplates(true)} className="hidden sm:inline-flex"><Bookmark className="h-4 w-4 mr-1" />{t("sp.templates")}</Button><Button variant="outline" size="sm" onClick={() => setShowTemplates(true)} className="sm:hidden h-8 w-8 p-0"><Bookmark className="h-4 w-4" /></Button>
-        <Button variant="outline" size="sm" onClick={() => setShowRecurring(true)} className="hidden sm:inline-flex"><Repeat className="h-4 w-4 mr-1" />{t("sp.recurring")}</Button><Button variant="outline" size="sm" onClick={() => setShowRecurring(true)} className="sm:hidden h-8 w-8 p-0"><Repeat className="h-4 w-4" /></Button>
-        <Button variant="outline" size="sm" onClick={() => setShowAcc(true)} className="hidden sm:inline-flex"><Plus className="h-4 w-4 mr-1" />{t("sp.ledger")}</Button><Button variant="outline" size="sm" onClick={() => setShowAcc(true)} className="sm:hidden h-8 w-8 p-0"><Wallet className="h-4 w-4" /></Button>
-        <Button size="sm" onClick={() => openAdd("expense")} className="hidden sm:inline-flex"><Plus className="h-4 w-4 mr-1" />{t("sp.transaction")}</Button><Button size="sm" onClick={() => openAdd("expense")} className="sm:hidden h-8 w-8 p-0"><Plus className="h-4 w-4" /></Button>
+        <Button variant="outline" size="sm" onClick={exportCsv} className="hidden sm:inline-flex"><Download className="h-4 w-4 mr-1" />{t("sp.export")}</Button><Button variant="outline" size="sm" onClick={exportCsv} className="sm:hidden h-11 w-11 p-0"><Download className="h-4 w-4" /></Button>
+        <Button variant="outline" size="sm" onClick={() => setShowTemplates(true)} className="hidden sm:inline-flex"><Bookmark className="h-4 w-4 mr-1" />{t("sp.templates")}</Button><Button variant="outline" size="sm" onClick={() => setShowTemplates(true)} className="sm:hidden h-11 w-11 p-0"><Bookmark className="h-4 w-4" /></Button>
+        <Button variant="outline" size="sm" onClick={() => setShowRecurring(true)} className="hidden sm:inline-flex"><Repeat className="h-4 w-4 mr-1" />{t("sp.recurring")}</Button><Button variant="outline" size="sm" onClick={() => setShowRecurring(true)} className="sm:hidden h-11 w-11 p-0"><Repeat className="h-4 w-4" /></Button>
+        <Button variant="outline" size="sm" onClick={() => setShowAcc(true)} className="hidden sm:inline-flex"><Plus className="h-4 w-4 mr-1" />{t("sp.ledger")}</Button><Button variant="outline" size="sm" onClick={() => setShowAcc(true)} className="sm:hidden h-11 w-11 p-0"><Wallet className="h-4 w-4" /></Button>
+        <Button size="sm" onClick={() => openAdd("expense")} className="hidden sm:inline-flex"><Plus className="h-4 w-4 mr-1" />{t("sp.transaction")}</Button><Button size="sm" onClick={() => openAdd("expense")} className="sm:hidden h-11 w-11 p-0"><Plus className="h-4 w-4" /></Button>
       </div>
       )}
     </div>
@@ -435,7 +435,7 @@ export default function Space() {
           {lastMonth.exp.greaterThan(0) ? (() => {
             const pct = monthTotals.exp.sub(lastMonth.exp).div(lastMonth.exp).mul(100);
             const up = pct.greaterThan(0);
-            return <span className={cn("font-medium", up ? "text-rose-600" : "text-emerald-600")}>{up ? "↑" : "↓"} {Math.abs(pct.toNumber()).toFixed(0)}% {t("sp.vsLastMonth")}</span>;
+            return <span className={cn("font-medium", up ? "text-rose-600 dark:text-rose-400" : "text-emerald-700 dark:text-emerald-400")}>{up ? "↑" : "↓"} {Math.abs(pct.toNumber()).toFixed(0)}% {t("sp.vsLastMonth")}</span>;
           })() : <span className="text-muted-foreground">{t("sp.noLastMonth")}</span>}
         </div>
         <div className="mb-3 overflow-hidden">
@@ -458,11 +458,11 @@ export default function Space() {
           <div className="h-px bg-background/15" />
           <div className="flex items-center justify-between text-sm">
             <span className="opacity-70">{t("sp.spent")} · {t("sp.txCount", { n: monthTotals.expN })}</span>
-            <span className="tnum font-semibold text-red-300 shrink-0">{formatMoney(monthTotals.exp.toNumber())}</span>
+            <span className="tnum font-semibold text-red-300 dark:text-red-800 shrink-0">{formatMoney(monthTotals.exp.toNumber())}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="opacity-70">{t("sp.earned")} · {t("sp.txCount", { n: monthTotals.incN })}</span>
-            <span className="tnum font-semibold text-emerald-300 shrink-0">{formatMoney(monthTotals.inc.toNumber())}</span>
+            <span className="tnum font-semibold text-emerald-300 dark:text-emerald-800 shrink-0">{formatMoney(monthTotals.inc.toNumber())}</span>
           </div>
         </div>
       </CardContent>
@@ -508,14 +508,14 @@ export default function Space() {
         <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2">
           <div className="relative flex-shrink-0">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input placeholder={t("sp.search")} value={q} onChange={(e)=>setQ(e.target.value)} className="pl-7 h-8 text-xs w-full sm:max-w-[160px]" />
+            <Input placeholder={t("sp.search")} value={q} onChange={(e)=>setQ(e.target.value)} className="pl-7 h-11 text-xs w-full sm:max-w-[160px]" />
           </div>
           <div className="min-w-0 flex-1 sm:flex-none sm:w-[170px]"><SheetSelect value={catFilter} onPick={setCatFilter} placeholder={t("sp.allCats")} options={[{ value: "all", label: t("sp.allCats") }, { value: "none", label: t("sp.none") }, ...(cats ?? []).map((c) => ({ value: c.id, label: c.name }))]} /></div>
           <div className="min-w-0 flex-1 sm:flex-none sm:w-[150px]"><SheetSelect value={tagFilter} onPick={setTagFilter} placeholder={t("sp.allTags")} options={[{ value: "all", label: t("sp.allTags") }, ...(tags ?? []).map((t) => ({ value: t.id, label: t.name }))]} /></div>
           <div className="flex items-center rounded-full border bg-card p-0.5">
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full" onClick={() => shift(-1)}><ChevronLeft className="h-3.5 w-3.5" /></Button>
+            <Button variant="ghost" size="sm" className="h-11 w-11 p-0 rounded-full" onClick={() => shift(-1)}><ChevronLeft className="h-3.5 w-3.5" /></Button>
             <span className="min-w-[90px] text-center text-[11px] font-semibold capitalize">{monthLabel}</span>
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full" onClick={() => shift(1)}><ChevronRight className="h-3.5 w-3.5" /></Button>
+            <Button variant="ghost" size="sm" className="h-11 w-11 p-0 rounded-full" onClick={() => shift(1)}><ChevronRight className="h-3.5 w-3.5" /></Button>
           </div>
           {ym.y !== now0.getFullYear() || ym.m !== now0.getMonth() ? (
             <Button variant="outline" size="sm" className="h-8 rounded-full text-[11px] px-2.5 gap-1" onClick={() => setYm({ y: now0.getFullYear(), m: now0.getMonth() })}><CalendarClock className="h-3 w-3" />{t("sp.now")}</Button>
@@ -563,7 +563,7 @@ export default function Space() {
                       const isTransfer = e.direction === "transfer";
                       const Icon = isTransfer ? ArrowLeftRight : catIcon(cat?.name ?? e.title);
                       const iconGrad = isTransfer ? "bg-sky-800" : e.direction === "income" ? "bg-emerald-800" : cat ? GRAD[cat.color] ?? GRAD.slate : "bg-rose-700";
-                      const amtColor = isTransfer ? "text-muted-foreground" : e.direction === "income" ? "text-emerald-600" : "text-rose-600";
+                      const amtColor = isTransfer ? "text-muted-foreground" : e.direction === "income" ? "text-emerald-700 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400";
                       return (
                         <SwipeRow key={e.id} actions={[{ label: t("sp.edit"), onClick: () => openEdit(e) }, { label: t("sp.delete"), kind: "destructive", onClick: () => setConfirmDelete(e.id) }]}>
                         <div className="flex items-center gap-2 py-1.5 px-1 rounded-lg hover:bg-muted/30 active:bg-muted/50 transition-colors group cursor-pointer overflow-hidden" onClick={() => openEdit(e)}>
@@ -585,7 +585,7 @@ export default function Space() {
                             <div className={cn("font-display tnum text-[15px] font-semibold", amtColor)}>{e.direction === "expense" ? "−" : e.direction === "income" ? "+" : ""}{formatMoney(Number(e.amount ?? 0))}</div>
                             <div className="text-[11px] text-muted-foreground mt-0.5">{new Date(e.entry_date).toLocaleDateString(dateLocale(lang), { day:"2-digit", month:"short" })}</div>
                           </div>
-                          <div className="hidden sm:flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-all"><button onClick={(ev) => { ev.stopPropagation(); saveTemplate(e); }} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground/30 hover:text-amber-600 hover:bg-amber-50"><Bookmark className="h-3.5 w-3.5" /></button><button onClick={(ev) => { ev.stopPropagation(); setConfirmDelete(e.id); }} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10"><Trash2 className="h-3.5 w-3.5" /></button></div>
+                          <div className="hidden sm:flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-all"><button onClick={(ev) => { ev.stopPropagation(); saveTemplate(e); }} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground/30 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/20"><Bookmark className="h-3.5 w-3.5" /></button><button onClick={(ev) => { ev.stopPropagation(); setConfirmDelete(e.id); }} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10"><Trash2 className="h-3.5 w-3.5" /></button></div>
                         </div>
                         </SwipeRow>
                       );

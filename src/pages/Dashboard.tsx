@@ -304,7 +304,7 @@ export default function Dashboard(){
         {statusData.length===0 ? <ChartEmpty>{t("dash.noRequestsYet")}</ChartEmpty> :
         <div className="flex h-full flex-col">
           <div className="relative h-[168px] shrink-0">
-            <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={statusData} dataKey="value" nameKey="name" innerRadius={58} outerRadius={78} paddingAngle={statusData.length > 1 ? 3 : 0} cornerRadius={6} strokeWidth={0} animationDuration={600} animationEasing="ease-out">{statusData.map((d) => <Cell key={d.name} fill={statusColors[d.name]} />)}</Pie><Tooltip content={<MoneyTip />} /></PieChart></ResponsiveContainer>
+            <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={statusData} dataKey="value" nameKey="name" innerRadius={58} outerRadius={78} paddingAngle={statusData.length > 1 ? 3 : 0} cornerRadius={6} strokeWidth={2} stroke="hsl(var(--card))" animationDuration={600} animationEasing="ease-out">{statusData.map((d) => <Cell key={d.name} fill={statusColors[d.name]} />)}</Pie><Tooltip content={<MoneyTip />} /></PieChart></ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
               <span className="font-display tnum text-4xl font-semibold">{statusData.reduce((a, d) => a + d.value, 0)}</span>
             </div>

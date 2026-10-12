@@ -220,7 +220,7 @@ export default function NewBudget() {
               <div className="mt-1 font-display tnum text-3xl font-semibold tracking-tight">
                 {valid ? formatMoney(Number(form.total_amount), form.currency || "IDR") : "—"}
               </div>
-              <div className="mt-1 text-sm text-white/80">
+              <div className="mt-1 text-sm text-background/80">
                 {form.name || t("budgets.phName")} • {form.currency}
               </div>
             </div>

@@ -166,7 +166,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="text-sm font-semibold truncate" title={profile?.email ?? undefined}>{profile?.email ?? profile?.display_name ?? t("nav.userFallback")}</div>
               <div className="text-[11px] text-muted-foreground capitalize">{profile?.role}</div>
             </div>
-            <Button variant="ghost" size="sm" className="shrink-0 h-8 w-8 p-0" onClick={async () => { await signOut(); navgt("/login"); }} aria-label={t("nav.signOut")} title={t("nav.signOut")}><LogOut className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="sm" className="shrink-0 h-11 w-11 p-0" onClick={async () => { await signOut(); navgt("/login"); }} aria-label={t("nav.signOut")} title={t("nav.signOut")}><LogOut className="h-4 w-4" /></Button>
           </div>
         </div>
       </aside>
