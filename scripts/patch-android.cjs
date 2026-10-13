@@ -36,8 +36,7 @@ function patchFile(file, transform, label) {
   }
 }
 
-// google-services.json
-// brand icons + splash (committed under assets/, copied every run)
+  // brand icons + splash (committed under assets/, copied every run)
 {
   const RES = path.join(ANDROID, "app", "src", "main", "res");
   let n = 0;
@@ -81,6 +80,7 @@ function patchFile(file, transform, label) {
       console.log("removed template robot foreground");
     }
   }
+  // brand pine
   const bgXml = path.join(RES, "values", "ic_launcher_background.xml");
   if (fs.existsSync(bgXml)) {
     fs.writeFileSync(

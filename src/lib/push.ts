@@ -47,7 +47,7 @@ export async function initNativePush(): Promise<PushInitResult> {
           window.dispatchEvent(new CustomEvent("budgetapp:push-tap", { detail: { link } }));
         }
       } catch {
-        // A tap must never break the app.
+        // best-effort
       }
     });
 
@@ -69,7 +69,7 @@ async function report(step: string, detail: string): Promise<void> {
       detail: detail.slice(0, 500),
     });
   } catch {
-    // Diagnostics must never break the app.
+    // best-effort
   }
 }
 
@@ -89,6 +89,6 @@ async function savePushToken(token: string): Promise<void> {
       { onConflict: "user_id,token" }
     );
   } catch {
-    // Table may not exist yet (migration not applied) — never break the app.
+    // best-effort (table may not exist yet)
   }
 }

@@ -129,7 +129,7 @@ export default function Messages() {
       <div className="space-y-4 max-w-2xl">
         <h1 className="font-display text-2xl font-semibold tracking-tight">{t("msg.title")}</h1>
         {isLoading ? (
-          <div className="space-y-2">
+          <div className="space-y-2" aria-busy="true">
             {[0, 1, 2].map((i) => (
               <div key={i} className="skeleton h-[76px]" />
             ))}

@@ -21,7 +21,7 @@ export function SwipeRow({ children, actions, className }: { children: React.Rea
           <button
             key={a.label}
             onClick={a.onClick}
-            className={`w-[76px] text-xs font-semibold text-white active:opacity-80 ${a.kind === "destructive" ? "bg-destructive" : "bg-primary"}`}
+            className={`w-[76px] px-1 py-2 text-center text-[11px] leading-tight font-semibold text-white active:opacity-80 ${a.kind === "destructive" ? "bg-destructive" : "bg-primary"}`}
           >
             {a.label}
           </button>

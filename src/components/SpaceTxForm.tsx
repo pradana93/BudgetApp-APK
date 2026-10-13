@@ -258,7 +258,7 @@ export function TxFooter({
       <Button variant="outline" onClick={onCancel} className="h-12 flex-1 sm:flex-none">
         {t("sp.cancel")}
       </Button>
-      <Button onClick={onSave} disabled={saving} className="h-12 flex-1 sm:flex-none text-base">
+      <Button onClick={onSave} disabled={saving} className="h-12 flex-1 sm:flex-none text-sm">
         {editing ? t("sp.save") : t("sp.add")} {t(`sp.${txType}`)}
       </Button>
     </>

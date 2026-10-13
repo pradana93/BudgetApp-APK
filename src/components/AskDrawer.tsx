@@ -46,7 +46,10 @@ export function AskDrawer({ open, onClose }: { open: boolean; onClose: () => voi
 
   React.useEffect(() => {
     if (!open) return;
-    return registerSheetCloser(() => { onClose(); return true; });
+    const unregister = registerSheetCloser(() => { onClose(); return true; });
+    const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", h);
+    return () => { window.removeEventListener("keydown", h); unregister(); };
   }, [open, onClose]);
 
   if (!open) return null;

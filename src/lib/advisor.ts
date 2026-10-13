@@ -195,7 +195,6 @@ export function answerQuestion(q: string, ctx: AskCtx, lang: InsightLang = "en",
   const cats = [...new Set(ctx.requests.map((r) => r.category).filter(Boolean))];
   const hitCat = cats.find((c) => c && s.includes(c.toLowerCase()));
 
-  // Pending / queue
   if (has("pending", "menunggu", "antre", "queue", "awaiting")) {
     const p = ctx.requests.filter((r) => r.status === "pending");
     const dups = p.length ? p.flatMap((r) => findDuplicates(r as LiteReq, p as unknown as LiteReq[])).length : 0;
@@ -205,7 +204,6 @@ export function answerQuestion(q: string, ctx: AskCtx, lang: InsightLang = "en",
       : `${p.length} pending request(s) worth ${money(sum(p))}.${extra}`;
   }
 
-  // Risk / riskiest pending
   if (has("risk", "risiko", "risky", "berisiko", "review", "needs review")) {
     const pend = ctx.requests.filter((r) => r.status === "pending") as unknown as LiteReq[];
     if (pend.length === 0) return id ? "Tidak ada permintaan menunggu." : "No pending requests.";
@@ -223,7 +221,6 @@ export function answerQuestion(q: string, ctx: AskCtx, lang: InsightLang = "en",
       : `Riskiest: ${best.merchant ?? best.category} ${money(num(best.amount))}, score ${bestScore} (${bestReasons.slice(0, 2).join(", ")}).`;
   }
 
-  // Reconciled tally
   if (has("reconcil", "rekonsiliasi")) {
     const rs = ctx.requests.filter((r) => r.status === "reconciled");
     const pct = ctx.requests.length ? Math.round((rs.length / ctx.requests.length) * 100) : 0;
@@ -232,7 +229,6 @@ export function answerQuestion(q: string, ctx: AskCtx, lang: InsightLang = "en",
       : `${rs.length} reconciled request(s) worth ${money(sum(rs))} (${pct}% of all).`;
   }
 
-  // Approved tally
   if (has("approved", "disetujui")) {
     const rs = ctx.requests.filter((r) => r.status === "approved");
     return id
@@ -240,7 +236,6 @@ export function answerQuestion(q: string, ctx: AskCtx, lang: InsightLang = "en",
       : `${rs.length} approved worth ${money(sum(rs))} awaiting reconciliation.`;
   }
 
-  // Rejected tally
   if (has("rejected", "ditolak")) {
     const rs = ctx.requests.filter((r) => r.status === "rejected");
     return id
@@ -248,7 +243,6 @@ export function answerQuestion(q: string, ctx: AskCtx, lang: InsightLang = "en",
       : `${rs.length} rejected worth ${money(sum(rs))}.`;
   }
 
-  // Duplicates
   if (has("duplicate", "duplikat", "similar", "mirip")) {
     const pool = ctx.requests as unknown as LiteReq[];
     let dupGroups = 0;
@@ -259,7 +253,6 @@ export function answerQuestion(q: string, ctx: AskCtx, lang: InsightLang = "en",
       : `${uniq} potential duplicate group(s) (same merchant + amount within 7 days).`;
   }
 
-  // Named category spend?
   if (hitCat && has("spend", "spent", "belanja", "habis", "pengeluaran", "total", "berapa", "how much", "summary", "ringkas")) {
     const rs = realized.filter((r) => r.category === hitCat);
     const monthRs = rs.filter((r) => { const d = new Date(r.created_at); return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear(); });
@@ -269,7 +262,6 @@ export function answerQuestion(q: string, ctx: AskCtx, lang: InsightLang = "en",
       : `${hitCat} spend: ${money(sum(rs))} across ${rs.length} request(s).${extra}`;
   }
 
-  // Runway / forecast / burn rate
   if (has("runway", "burn rate", "burn", "forecast", "proyeksi", "on track", "akan habis", "days left", "hari lagi")) {
     if (ctx.budgets.length === 0) return id ? "Belum ada anggaran." : "No budgets yet.";
     const totalAvail = ctx.budgets.reduce((a, b) => a + num(b.available_amount), 0);
@@ -285,7 +277,6 @@ export function answerQuestion(q: string, ctx: AskCtx, lang: InsightLang = "en",
       : `Runway ~${days} day(s) at ${money(burn)}/day (total available ${money(totalAvail)}).${per}`;
   }
 
-  // Budget remaining / available / health
   if (has("remain", "sisa", "available", "tersedia", "balance", "saldo", "budget", "health", "sehat", "over budget")) {
     if (ctx.budgets.length === 0) return id ? "Belum ada anggaran." : "No budgets yet.";
     const lines = ctx.budgets.slice(0, 3).map((b) => `${b.name}: ${money(num(b.available_amount))}`);
@@ -299,7 +290,6 @@ export function answerQuestion(q: string, ctx: AskCtx, lang: InsightLang = "en",
       : `Remaining: ${lines.join("; ")}. Total available ${money(totalAvail)} (${usage}% used, ${health}).`;
   }
 
-  // Total spend
   if (has("spend", "spent", "belanja", "habis", "pengeluaran", "total spent", "how much", "total")) {
     const month = ctx.requests.filter((r) => { const d = new Date(r.created_at); return (r.status==="approved"||r.status==="reconciled") && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear(); });
     return id
@@ -307,7 +297,6 @@ export function answerQuestion(q: string, ctx: AskCtx, lang: InsightLang = "en",
       : `Total realized spend: ${money(sum(realized))} across ${realized.length} request(s). This month ${money(sum(month))}.`;
   }
 
-  // Top merchant / category / where money went
   if (has("merchant", "toko", "where", "kemana", "top", "terbesar", "most", "by category")) {
     const counts = new Map<string, number>();
     for (const r of realized) {
@@ -322,7 +311,6 @@ export function answerQuestion(q: string, ctx: AskCtx, lang: InsightLang = "en",
     return id ? `Terbesar: ${top[0]} sebesar ${money(top[1])}.${extra}` : `Top: ${top[0]} at ${money(top[1])}.${extra}`;
   }
 
-  // This week / month volume
   if (has("this week", "minggu ini", "week") || has("this month", "bulan ini", "month")) {
     const isWeek = has("week", "minggu");
     let start: Date;
@@ -340,7 +328,6 @@ export function answerQuestion(q: string, ctx: AskCtx, lang: InsightLang = "en",
       : `${isWeek ? "This week" : "This month"}: ${rs.length} request(s) worth ${money(sum(rs))} (${pend} pending).`;
   }
 
-  // Today fallback
   if (has("today", "hari ini")) {
     const start = new Date(now); start.setHours(0,0,0,0);
     const rs = ctx.requests.filter((r) => new Date(r.created_at) >= start);

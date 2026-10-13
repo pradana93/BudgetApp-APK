@@ -20,8 +20,8 @@
     --accent-foreground: 32 70% 24%;
     --destructive: 0 68% 48%;
     --destructive-foreground: 0 0% 100%;
-    --border: 150 12% 62%;
-    --input: 150 12% 62%;
+    --border: 160 10% 48%;
+    --input: 160 10% 48%;
     --ring: 158 55% 27%;
     --radius: 0.75rem;
     color-scheme: light;
@@ -51,8 +51,8 @@
     --accent-foreground: 40 80% 80%;
     --destructive: 0 60% 45%;
     --destructive-foreground: 0 0% 100%;
-    --border: 160 12% 32%;
-    --input: 160 12% 32%;
+    --border: 160 11% 40%;
+    --input: 160 11% 40%;
     --ring: 152 48% 62%;
     color-scheme: dark;
   }

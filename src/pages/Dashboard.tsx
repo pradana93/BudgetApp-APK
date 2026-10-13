@@ -213,7 +213,7 @@ export default function Dashboard(){
     return items.sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime()).slice(0, 8);
   }, [ledger, requests]);
 
-  // Live Pulse — total available + 30d burn + runway + sparkline
+  // Live Pulse
   const totalAvailable = React.useMemo(() => (budgets ?? []).reduce((s, b) => s + Number(b.available_amount), 0), [budgets]);
   const burn30 = React.useMemo(() => {
     const cutoff = Date.now() - 30 * 86_400_000;
@@ -253,11 +253,11 @@ export default function Dashboard(){
         </div>
         <div className="flex items-center gap-3">
           <div className="hidden sm:block h-12 w-28 opacity-90">
-            <ResponsiveContainer width="100%" height="100%"><AreaChart data={trend}><Area type="monotone" dataKey="total" stroke="#fff" strokeWidth={2} fill="rgba(255,255,255,0.18)" dot={false} animationDuration={500} /></AreaChart></ResponsiveContainer>
+            <ResponsiveContainer width="100%" height="100%"><AreaChart data={trend}><Area type="monotone" dataKey="total" stroke="hsl(var(--background))" strokeWidth={2} fill="hsl(var(--background))" fillOpacity={0.18} dot={false} animationDuration={500} /></AreaChart></ResponsiveContainer>
           </div>
           <div className="flex flex-col gap-1.5 items-end">
             <Badge variant="pending" className="bg-background text-foreground hover:bg-background">{t("dash.pendingBadge", { count: pending })}</Badge>
-            {runway !== null && <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${pulseHealth === "over" ? "bg-red-500/20 text-white border border-red-300/30" : pulseHealth === "atRisk" ? "bg-amber-500/20 text-white border border-amber-300/30" : "bg-emerald-500/20 text-white border border-emerald-300/30"}`}>{t("dash.runwayBadge", { n: runway })}</span>}
+            {runway !== null && <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${pulseHealth === "over" ? "bg-red-500/20 text-background border border-background/30" : pulseHealth === "atRisk" ? "bg-amber-500/20 text-background border border-background/30" : "bg-emerald-500/20 text-background border border-background/30"}`}>{t("dash.runwayBadge", { n: runway })}</span>}
           </div>
         </div>
       </div>
@@ -276,7 +276,7 @@ export default function Dashboard(){
       </Card>
     )}
     <div className="grid gap-4 md:grid-cols-3">
-      {loading ? [0, 1, 2].map((i) => <div key={i} className="skeleton h-[104px]" />) : <>
+      {loading ? [0, 1, 2].map((i) => <div key={i} className="skeleton h-[104px]" aria-busy="true" />) : <>
       <Card className="card-lift"><CardHeader><CardTitle className="text-sm font-medium flex items-center gap-2"><span className="rounded-lg bg-primary/12 text-primary p-1.5"><Wallet className="h-4 w-4" /></span>{t("dash.budgets")}</CardTitle></CardHeader><CardContent><div className="stat-value">{budgetsCount}</div></CardContent></Card>
       <Card className="card-lift"><CardHeader><CardTitle className="text-sm font-medium flex items-center gap-2"><span className="rounded-lg bg-primary/12 text-primary p-1.5"><TrendingUp className="h-4 w-4" /></span>{t("dash.totalAllocated")}</CardTitle></CardHeader><CardContent><div className="space-y-1">{spendByCurrency.length===0 ? <div className="stat-value">{formatMoney(0)}</div> : spendByCurrency.map(([c, v]) => <div key={c} className="stat-value">{formatMoney(v, c)}</div>)}</div></CardContent></Card>
       <Card className="card-lift"><CardHeader><CardTitle className="text-sm font-medium flex items-center gap-2"><span className="rounded-lg bg-accent text-accent-foreground p-1.5"><Clock className="h-4 w-4" /></span>{t("dash.pendingRequests")}</CardTitle></CardHeader><CardContent><div className="stat-value">{pendingCount}</div></CardContent></Card>

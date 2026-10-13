@@ -1,5 +1,4 @@
-﻿// Shared FCM sender for edge functions. Import via "../_shared/fcm.ts".
-// Service-account JSON comes from FCM_SERVICE_ACCOUNT_JSON (server-side only).
+﻿// Shared FCM sender for edge functions. Service-account JSON is server-side only.
 
 export type ServiceAccount = {
   project_id: string;

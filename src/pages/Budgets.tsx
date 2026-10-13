@@ -83,7 +83,7 @@ export default function Budgets(){
           {isOwner && <Button onClick={()=>nav("/budgets/new")}>{t("budgets.new")}</Button>}
     </div></div>
     <Card><CardHeader><CardTitle>{t("budgets.all")}</CardTitle></CardHeader><CardContent>
-      {isLoading ? <div className="space-y-2">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-12" />)}</div>
+      {isLoading ? <div className="space-y-2" aria-busy="true">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-12" />)}</div>
       : (data?.length ?? 0) === 0 ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center animate-fade-up">
           <span className="rounded-2xl bg-primary p-3 text-primary-foreground shadow-lg"><Wallet className="h-6 w-6" /></span>

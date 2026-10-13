@@ -2,7 +2,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useLang } from "@/i18n/LanguageContext";
 
-/** Inline load-failure card with retry. Render when a screen's query isError. */
 export function QueryError({ onRetry }: { onRetry: () => void }) {
   const { t } = useLang();
   return (

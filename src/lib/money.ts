@@ -27,7 +27,6 @@ export function subMoney(a: string | number, b: string | number): string {
   return new Decimal(a).sub(new Decimal(b)).toFixed(2);
 }
 
-// Used by Zod schemas
 export function isValidMoney(v: string): boolean {
   try {
     const d = new Decimal(v);

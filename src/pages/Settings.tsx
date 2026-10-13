@@ -19,7 +19,6 @@ import { initNativePush } from "@/lib/push";
 import { notifyUser } from "@/lib/notify";
 import { getLockMode, setLockMode, setPin, clearPin, reauthWithPassword, type LockMode } from "@/lib/applock";
 
-/** Native-only FCM status + self test. The web path uses the PWA block below. */
 function NativePushBlock() {
   const { t } = useLang();
   const { toast } = useToast();
@@ -100,7 +99,7 @@ function ResetPinBlock() {
     }
   };
   if (done) {
-    return <p className="text-xs text-emerald-600">{t("pin.cleared")}</p>;
+    return <p className="text-xs text-emerald-700">{t("pin.cleared")}</p>;
   }
   return (
     <div className="rounded-xl border border-border/60 p-3 space-y-2">
@@ -184,20 +183,20 @@ function DeviceLockCard() {
   };
 
   const options: Array<{ id: LockMode; label: string; desc: string }> = [
-    { id: "off", label: "Off", desc: "No gate" },
-    { id: "biometric", label: "Fingerprint", desc: "System prompt" },
-    { id: "pin4", label: "4-digit PIN", desc: "Quick pad" },
-    { id: "pin6", label: "6-digit PIN", desc: "Stronger pad" },
+    { id: "off", label: t("pin.modeOff"), desc: t("pin.modeOffD") },
+    { id: "biometric", label: t("pin.modeBio"), desc: t("pin.modeBioD") },
+    { id: "pin4", label: t("pin.modePin4"), desc: t("pin.modePin4D") },
+    { id: "pin6", label: t("pin.modePin6"), desc: t("pin.modePin6D") },
   ];
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Fingerprint className="h-4 w-4" /> App lock
+          <Fingerprint className="h-4 w-4" /> {t("pin.lockTitle")}
         </CardTitle>
         <CardDescription>
-          Gate BudgetApp on this device. PINs are hashed on-device; nothing leaves your phone.
+          {t("pin.lockDesc")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -220,7 +219,7 @@ function DeviceLockCard() {
         {(mode === "pin4" || mode === "pin6") && step !== "idle" && (
           <div className="rounded-xl border border-border/60 p-4 text-center">
             <div className="text-sm font-medium">
-              {step === "enter" ? `Enter a ${wantLen}-digit PIN` : "Confirm your PIN"}
+              {step === "enter" ? t("pin.enterPin", { n: wantLen }) : t("pin.confirmPin")}
             </div>
             <div className="mt-3 flex justify-center gap-2.5">
               {Array.from({ length: wantLen }).map((_, i) => (
@@ -246,7 +245,7 @@ function DeviceLockCard() {
             </div>
           </div>
         )}
-        {saved && <p className="text-xs text-emerald-600">{t("pin.saved")}</p>}
+        {saved && <p className="text-xs text-emerald-700">{t("pin.saved")}</p>}
         {(mode === "pin4" || mode === "pin6") && step === "idle" && (
           <ResetPinBlock />
         )}

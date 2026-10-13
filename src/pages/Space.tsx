@@ -449,7 +449,7 @@ export default function Space() {
         </div>
         <div className="mb-3 overflow-hidden">
           <div className="text-xs text-muted-foreground mb-1">{t("sp.daily")}</div>
-          <div className="grid grid-cols-7 gap-0.5 mx-auto w-full max-w-[300px]" role="img" aria-label={t("sp.daily")}>
+          <div className="grid grid-cols-7 gap-0.5 mx-auto w-full max-w-[300px]" role="img" aria-label={`${t("sp.daily")}: ${formatMoney(0)} - ${formatMoney(maxHeat)}`}>
             {Array.from({ length: daysInMonth }, (_, i) => {
               const day = String(i + 1).padStart(2, "0");
               const val = heatmap.get(day) ?? 0;
@@ -458,11 +458,11 @@ export default function Space() {
               return <div key={i} className={cn("aspect-square rounded-[3px]", bg)} title={`${day}: ${formatMoney(val)}`} />;
             })}
           </div>
-          <div className="mt-1 flex items-center justify-end gap-1 text-xs text-muted-foreground"><span>{formatMoney(0)}</span><span className="h-2 w-2 rounded-[2px] bg-muted/30" /><span className="h-2 w-2 rounded-[2px] bg-primary" /><span>{formatMoney(maxHeat)}</span></div>
+          <div className="mt-1 flex items-center justify-end gap-1 text-xs text-muted-foreground"><span>{t("sp.less")}</span><span>{formatMoney(0)}</span><span className="h-2 w-2 rounded-[2px] bg-muted/30" /><span className="h-2 w-2 rounded-[2px] bg-primary" /><span>{formatMoney(maxHeat)}</span><span>{t("sp.more")}</span></div>
         </div>
         <div className="rounded-2xl bg-foreground text-background p-4 space-y-2.5">
           <div className="space-y-1">
-            <span className="text-[11px] uppercase tracking-[0.14em] opacity-70">{t("sp.netLedgers", { n: accounts?.length ?? 0 })}</span>
+            <span className="text-[11px] uppercase tracking-[0.14em] opacity-70">{(accounts?.length ?? 0) === 1 ? t("sp.oneLedger") : t("sp.netLedgers", { n: accounts?.length ?? 0 })}</span>
             <div className="font-display tnum font-semibold leading-none break-words text-[clamp(1.7rem,8vw,2rem)]">{formatMoney(sums.bal.toNumber())}</div>
           </div>
           <div className="h-px bg-background/15" />
@@ -486,21 +486,21 @@ export default function Space() {
           <button onClick={() => setAccFilter("all")} className={cn("snap-start shrink-0 rounded-lg px-2.5 sm:px-3 py-2 text-left min-w-[88px] sm:min-w-[100px] border transition-all", accFilter==="all" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:border-primary/30")}>
             <div className="text-xs font-medium uppercase tracking-wide">{t("sp.all")}</div>
             <div className="font-bold text-sm tabular mt-0.5">{formatMoney(totalBalance.toNumber())}</div>
-            <div className="text-[11px] opacity-70 mt-0.5">{t("sp.txCount", { n: filtered.length })}</div>
+            <div className="text-xs opacity-70 mt-0.5">{t("sp.txCount", { n: filtered.length })}</div>
           </button>
           {accounts?.map((a) => {
             const Icon = ICONS[a.icon] ?? Wallet;
             const bal = balances.get(a.id) ?? new Decimal(0);
             const active = accFilter===a.id;
             return (
-              <button key={a.id} onClick={() => setAccFilter(active ? "all" : a.id)} className={cn("snap-start shrink-0 rounded-lg px-2.5 sm:px-3 py-2 text-left min-w-[88px] sm:min-w-[100px] border transition-all relative group/acct", active ? "bg-card border-primary shadow-sm" : "bg-card border-border hover:shadow-sm")}>
+              <div key={a.id} role="button" tabIndex={0} onClick={() => setAccFilter(active ? "all" : a.id)} onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); setAccFilter(active ? "all" : a.id); } }} className={cn("snap-start shrink-0 rounded-lg px-2.5 sm:px-3 py-2 text-left min-w-[88px] sm:min-w-[100px] border transition-all relative group/acct cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", active ? "bg-card border-primary shadow-sm" : "bg-card border-border hover:shadow-sm")}>
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className={cn("h-5 w-5 rounded flex items-center justify-center text-white shrink-0", GRAD[a.color] ?? GRAD.blue)}><Icon className="h-3 w-3" /></span>
                   <span className="font-medium text-xs truncate">{a.name}</span>
                 </div>
                 <div className="font-bold text-sm text-primary tabular">{formatMoney(bal.toNumber())}</div>
                 <button onClick={(ev) => { ev.stopPropagation(); setConfirmDelete("acc:" + a.id); }} className="flex sm:opacity-0 sm:group-hover/acct:opacity-100 sm:group-focus-within/acct:opacity-100 absolute top-1 right-1 h-5 w-5 rounded bg-destructive/10 text-destructive items-center justify-center after:absolute after:-inset-3 after:content-['']"><Trash2 className="h-3 w-3" /></button>
-              </button>
+              </div>
             );
           })}
           <button onClick={() => setShowAcc(true)} className="shrink-0 rounded-lg border border-dashed border-border px-3 py-2 min-w-[80px] flex flex-col items-center justify-center gap-1 hover:border-primary/40 hover:bg-accent/50 transition-colors">
@@ -524,20 +524,20 @@ export default function Space() {
           <div className="min-w-0 flex-1 sm:flex-none sm:w-[150px]"><SheetSelect value={tagFilter} onPick={setTagFilter} placeholder={t("sp.allTags")} options={[{ value: "all", label: t("sp.allTags") }, ...(tags ?? []).map((t) => ({ value: t.id, label: t.name }))]} /></div>
           <div className="flex items-center rounded-full border bg-card p-0.5">
             <Button variant="ghost" size="sm" className="h-11 w-11 p-0 rounded-full" onClick={() => shift(-1)}><ChevronLeft className="h-3.5 w-3.5" /></Button>
-            <span className="min-w-[90px] text-center text-[11px] font-semibold capitalize">{monthLabel}</span>
+            <span className="min-w-[90px] text-center text-xs font-semibold capitalize">{monthLabel}</span>
             <Button variant="ghost" size="sm" className="h-11 w-11 p-0 rounded-full" onClick={() => shift(1)}><ChevronRight className="h-3.5 w-3.5" /></Button>
           </div>
           {ym.y !== now0.getFullYear() || ym.m !== now0.getMonth() ? (
-            <Button variant="outline" size="sm" className="h-8 rounded-full text-[11px] px-2.5 gap-1" onClick={() => setYm({ y: now0.getFullYear(), m: now0.getMonth() })}><CalendarClock className="h-3 w-3" />{t("sp.now")}</Button>
+            <Button variant="outline" size="sm" className="h-11 rounded-full text-xs px-2.5 gap-1" onClick={() => setYm({ y: now0.getFullYear(), m: now0.getMonth() })}><CalendarClock className="h-3 w-3" />{t("sp.now")}</Button>
           ) : null}
           {(q || catFilter !== "all") && (
-            <Button variant="outline" size="sm" className="h-8 text-[11px]" onClick={() => { setQ(""); setCatFilter("all"); setTagFilter("all"); }}>{t("sp.clear")}</Button>
+            <Button variant="outline" size="sm" className="h-11 text-xs" onClick={() => { setQ(""); setCatFilter("all"); setTagFilter("all"); }}>{t("sp.clear")}</Button>
           )}
         </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="space-y-1.5">{[0,1,2,3].map(i => <div key={i} className="skeleton h-[52px]" />)}</div>
+          <div className="space-y-1.5" aria-busy="true">{[0,1,2,3].map(i => <div key={i} className="skeleton h-[52px]" />)}</div>
         ) : grouped.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center animate-fade-up">
             <span className="rounded-2xl bg-primary p-3 text-primary-foreground shadow-lg"><Wallet className="h-6 w-6" /></span>
@@ -545,7 +545,7 @@ export default function Space() {
             <div className="text-sm text-muted-foreground">{t("sp.noTxMonthSub")}</div>
             <div className="flex gap-2">
               <Button onClick={() => openAdd("expense")} variant="outline" size="sm"><ArrowDownCircle className="h-4 w-4 mr-1" />{t("sp.expense")}</Button>
-              <Button onClick={() => openAdd("income")} size="sm" className="bg-emerald-600 hover:bg-emerald-700"><ArrowUpCircle className="h-4 w-4 mr-1" />{t("sp.income")}</Button>
+              <Button onClick={() => openAdd("income")} size="sm" className="bg-emerald-700 hover:bg-emerald-800"><ArrowUpCircle className="h-4 w-4 mr-1" />{t("sp.income")}</Button>
               <Button onClick={() => openAdd("transfer")} variant="secondary" size="sm"><ArrowLeftRight className="h-4 w-4 mr-1" />{t("sp.transfer")}</Button>
             </div>
           </div>
@@ -581,7 +581,7 @@ export default function Space() {
                           <div className="flex-1 min-w-0 overflow-hidden">
                             <div className="flex items-center gap-1.5">
                               <span className="font-medium text-[13px] truncate">{e.title}</span>
-                              {isTransfer && <Badge variant="secondary" className="text-[9px] h-4 px-1 shrink-0">{t("sp.transfer")}</Badge>}{tagsForNote(e.id).map(tg => <Badge key={tg.id} variant="outline" className="text-[8px] h-3.5 px-1 shrink-0">{tg.name}</Badge>)}
+                              {isTransfer && <Badge variant="secondary" className="text-xs h-5 px-1.5 shrink-0">{t("sp.transfer")}</Badge>}{tagsForNote(e.id).map(tg => <Badge key={tg.id} variant="outline" className="text-xs h-5 px-1.5 shrink-0 max-w-[120px] truncate">{tg.name}</Badge>)}
                             </div>
                             <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                               {isTransfer ? (
@@ -595,7 +595,7 @@ export default function Space() {
                             <div className={cn("font-display tnum text-[15px] font-semibold", amtColor)}>{e.direction === "expense" ? "−" : e.direction === "income" ? "+" : ""}{formatMoney(Number(e.amount ?? 0))}</div>
                             <div className="text-[11px] text-muted-foreground mt-0.5">{new Date(e.entry_date).toLocaleDateString(dateLocale(lang), { day:"2-digit", month:"short" })}</div>
                           </div>
-                          <div className="hidden sm:flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all"><button onClick={(ev) => { ev.stopPropagation(); saveTemplate(e); }} className="relative h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground/30 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/20 after:absolute after:-inset-2 after:content-['']"><Bookmark className="h-3.5 w-3.5" /></button><button onClick={(ev) => { ev.stopPropagation(); setConfirmDelete(e.id); }} className="relative h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 after:absolute after:-inset-2 after:content-['']"><Trash2 className="h-3.5 w-3.5" /></button></div>
+                          <div className="hidden sm:flex gap-4 shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all"><button onClick={(ev) => { ev.stopPropagation(); saveTemplate(e); }} className="relative h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground/30 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/20 after:absolute after:-inset-2 after:content-['']"><Bookmark className="h-3.5 w-3.5" /></button><button onClick={(ev) => { ev.stopPropagation(); setConfirmDelete(e.id); }} className="relative h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 after:absolute after:-inset-2 after:content-['']"><Trash2 className="h-3.5 w-3.5" /></button></div>
                         </div>
                         </SwipeRow>
                       );
@@ -732,7 +732,7 @@ export default function Space() {
           {(tags ?? []).map(t => (
               <span key={t.id} className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs group">
                 <span className="h-2 w-2 rounded-full bg-primary" />{t.name}
-              <button onClick={()=>delTag.mutate(t.id)} className="relative opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 text-destructive after:absolute after:-inset-3 after:content-['']"><X className="h-3 w-3" /></button>
+              <button onClick={()=>delTag.mutate(t.id)} aria-label="Delete tag" className="relative h-7 w-7 flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 text-destructive after:absolute after:-inset-2 after:content-['']"><X className="h-3 w-3" /></button>
             </span>
           ))}
         </div>

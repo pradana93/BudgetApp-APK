@@ -61,6 +61,11 @@ function KeypadBody({
   };
 
   React.useEffect(() => registerSheetCloser(() => { closeAndCollapse(); return true; }), [closeAndCollapse]);
+  React.useEffect(() => {
+    const h = (e: KeyboardEvent) => { if (e.key === "Escape") closeAndCollapse(); };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [closeAndCollapse]);
 
   const typeDigit = (d: string) => {
     if (lastSegment === "0" && d !== "0") onDigits(digits.slice(0, -1) + d);
@@ -106,7 +111,7 @@ function KeypadBody({
             type="button"
             onClick={closeAndCollapse}
             aria-label="Close"
-            className="m3-press rounded-full p-2 text-muted-foreground"
+            className="m3-press rounded-full p-2 text-muted-foreground relative after:absolute after:-inset-2 after:content-['']"
           >
             <X className="h-4 w-4" />
           </button>

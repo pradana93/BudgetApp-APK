@@ -35,7 +35,7 @@ export function UpdateBanner({ update, onDismiss }: { update: AppUpdate; onDismi
           type="button"
           disabled={stage !== null}
           onClick={onDownload}
-          className="flex-1 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+          className="flex-1 rounded-lg bg-primary px-3 py-2 min-h-[44px] text-sm font-medium text-primary-foreground disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           {stage === "downloading"
             ? t("update.downloading")
@@ -46,7 +46,7 @@ export function UpdateBanner({ update, onDismiss }: { update: AppUpdate; onDismi
         <button
           type="button"
           onClick={onDismiss}
-          className="rounded-lg border border-border px-3 py-2 text-sm"
+          className="rounded-lg border border-border px-3 py-2 min-h-[44px] text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           {t("update.later")}
         </button>

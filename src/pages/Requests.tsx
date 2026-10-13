@@ -49,7 +49,7 @@ export default function Requests(){
   return <PullToRefresh onRefresh={refresh}><div className="space-y-4">
     <div className="flex flex-wrap justify-between items-center gap-2"><h1 className="text-2xl font-bold">{t("req.title")}</h1><Link to="/requests/new"><Button>{t("req.new")}</Button></Link></div>
     <Card><CardHeader><CardTitle>{t("req.all")}</CardTitle></CardHeader><CardContent>
-      {isLoading ? <div className="space-y-2">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-12" />)}</div>
+      {isLoading ? <div className="space-y-2" aria-busy="true">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-12" />)}</div>
       : (data?.length ?? 0) === 0 ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center animate-fade-up">
           <span className="rounded-2xl bg-primary p-3 text-primary-foreground shadow-lg"><Receipt className="h-6 w-6" /></span>

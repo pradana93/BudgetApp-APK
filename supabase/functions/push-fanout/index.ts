@@ -54,7 +54,7 @@ serve(async (req) => {
     const who = requester?.display_name || requester?.email || "A member";
     const amount = `Rp ${Number(r.amount).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     const payload = JSON.stringify({
-      title: `New request: ${r.merchant ?? r.category} — ${amount}`,
+      title: `New request: ${r.merchant ?? r.category}, ${amount}`,
       body: `${who} submitted a reimbursement request. / ${who} mengajukan permintaan reimbursement.`,
       url: `/requests/${r.id}`,
     });

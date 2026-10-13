@@ -5,8 +5,7 @@
 // trusted; the caller only supplies the row, recipients come from the DB.
 //
 // Deploy: supabase functions deploy push-event
-// Secrets: PUSH_EVENT_SECRET, FCM_SERVICE_ACCOUNT_JSON,
-//          SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (runtime-provided).
+// Secrets: PUSH_EVENT_SECRET, FCM_SERVICE_ACCOUNT_JSON (runtime env).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import { fcmAccessToken, sendFcmToTokens, type ServiceAccount } from "../_shared/fcm.ts";
 
@@ -72,7 +71,7 @@ Deno.serve(async (req) => {
         return json({ ok: true, skipped: "no recipient" });
       }
       toUserId = owner.id;
-      const what = `${String(row.merchant ?? row.category ?? "Request")} — ${idr(row.amount)}`;
+      const what = `${String(row.merchant ?? row.category ?? "Request")}, ${idr(row.amount)}`;
       title = `New request: ${what}`;
       body = `A member submitted a reimbursement request. / Anggota mengajukan permintaan reimbursement.`;
     } else if (event.type === "UPDATE") {
@@ -84,7 +83,7 @@ Deno.serve(async (req) => {
       const requester = String(row.requester_id ?? "");
       if (!requester) return json({ ok: true, skipped: "no recipient" });
       toUserId = requester;
-      const what = `${String(row.merchant ?? row.category ?? "Request")} — ${idr(row.amount)}`;
+      const what = `${String(row.merchant ?? row.category ?? "Request")}, ${idr(row.amount)}`;
       const verb = after === "approved" ? "approved/disetujui" : after === "rejected" ? "rejected/ditolak" : "reconciled/direkonsiliasi";
       title = `Request ${after}: ${what}`;
       body = `Your request was ${verb}. / Permintaan Anda ${verb}.`;

@@ -48,7 +48,7 @@ serve(async (req) => {
 
     const amount = `Rp ${Number(r.amount).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     const who = requester?.display_name || requester?.email || "A member";
-    const title = `${r.merchant ?? r.category} — ${amount}`;
+    const title = `${r.merchant ?? r.category}, ${amount}`;
     const subject = `New request: ${title}`;
     const text = [
       `${who} submitted a new reimbursement request.`,

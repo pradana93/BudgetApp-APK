@@ -21,7 +21,7 @@ export function tryCloseDrawer(): boolean {
 
 const sheetClosers: Array<() => boolean> = [];
 
-/** Sheets/dialogs register here; last opened wins, like a visual stack. */
+/** Sheets/dialogs register here; last opened wins. */
 export function registerSheetCloser(fn: () => boolean): () => void {
   sheetClosers.push(fn);
   return () => {

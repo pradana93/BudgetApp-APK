@@ -398,7 +398,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
               onClick={() => { setPwMode(true); setPwError(""); setPassword(""); }}
               className="text-xs opacity-60 underline"
             >
-              Forgot PIN? Use password
+              {t("pin.usePwLink")}
             </button>
           </div>
         ) : (
@@ -408,7 +408,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
             disabled={unlocking || lockLeft > 0}
             className="m3-press rounded-full bg-background px-6 h-12 text-sm font-semibold text-foreground disabled:opacity-60"
           >
-            {unlocking ? "…" : "Unlock"}
+              {unlocking ? "…" : t("pin.unlock")}
           </button>
         )}
         {!pwMode && lockMode !== "pin4" && lockMode !== "pin6" && (
@@ -417,7 +417,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
             onClick={() => { setPwMode(true); setPwError(""); setPassword(""); }}
             className="text-xs opacity-60 underline"
           >
-            Fingerprint not working? Use password
+              {t("pin.fpFail")}
           </button>
         )}
         {lockFails >= 3 && (
@@ -434,7 +434,7 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
             }}
             className="text-xs opacity-60 underline"
           >
-            Turn off app lock
+              {t("pin.turnOff")}
           </button>
         )}
       </div>
