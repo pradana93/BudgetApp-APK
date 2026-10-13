@@ -45,6 +45,34 @@ export async function fcmAccessToken(sa: ServiceAccount): Promise<string> {
 
 export type FcmResult = { sent: number; dead: string[] };
 
+/** Data-only delivery for custom native rendering (no system tray). */
+export async function sendFcmDataOnly(opts: {
+  projectId: string;
+  accessToken: string;
+  tokens: string[];
+  fields: Record<string, string>;
+}): Promise<FcmResult> {
+  let sent = 0;
+  const dead: string[] = [];
+  for (const token of opts.tokens) {
+    const res = await fetch(
+      `https://fcm.googleapis.com/v1/projects/${opts.projectId}/messages:send`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${opts.accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ message: { token, data: opts.fields } }),
+      }
+    );
+    if (res.ok) {
+      sent++;
+    } else {
+      const text = await res.text();
+      if (res.status === 404 || text.includes("UNREGISTERED") || text.includes("INVALID_ARGUMENT")) dead.push(token);
+    }
+  }
+  return { sent, dead };
+}
+
 /** Sends a visible notification payload; returns count + tokens to prune. */
 export async function sendFcmToTokens(opts: {
   projectId: string;

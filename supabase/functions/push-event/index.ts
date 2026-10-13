@@ -7,7 +7,7 @@
 // Deploy: supabase functions deploy push-event
 // Secrets: PUSH_EVENT_SECRET, FCM_SERVICE_ACCOUNT_JSON (runtime env).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
-import { fcmAccessToken, sendFcmToTokens, type ServiceAccount } from "../_shared/fcm.ts";
+import { fcmAccessToken, sendFcmToTokens, sendFcmDataOnly, type ServiceAccount } from "../_shared/fcm.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -100,14 +100,24 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: "FCM not configured" }, 500);
     }
     const accessToken = await fcmAccessToken(sa);
-    const { sent, dead } = await sendFcmToTokens({
-      projectId: sa.project_id,
-      accessToken,
-      tokens,
-      title,
-      body,
-      data: { request_id: String(row.id), link },
-    });
+    // New requests go data-only so ApprovalMessagingService renders native
+    // Approve / Review actions. Status updates keep the stock tray payload.
+    const approval = event.type === "INSERT";
+    const { sent, dead } = approval
+      ? await sendFcmDataOnly({
+          projectId: sa.project_id,
+          accessToken,
+          tokens,
+          fields: { kind: "approval", title, body, request_id: String(row.id), link },
+        })
+      : await sendFcmToTokens({
+          projectId: sa.project_id,
+          accessToken,
+          tokens,
+          title,
+          body,
+          data: { request_id: String(row.id), link },
+        });
     if (dead.length > 0) {
       await admin.from("push_tokens").delete().in("token", dead);
     }

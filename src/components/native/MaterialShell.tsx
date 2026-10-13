@@ -96,6 +96,21 @@ export function MaterialShell({ children }: { children: React.ReactNode }) {
           if (res.message) toast({ title: res.message });
           if (!res.ok && res.message) toast({ title: res.message, variant: "destructive" });
         });
+        // Cold start: a killed app launched from a notification action,
+        // widget, or shortcut carries its URL here instead of appUrlOpen.
+        try {
+          const ret = await App.getLaunchUrl();
+          if (alive && ret?.url) {
+            const action = parseDeepLink(ret.url);
+            if (action) {
+              const res = await runDeepLink(action, (to) => nav(to));
+              if (res.message) toast({ title: res.message });
+              if (!res.ok && res.message) toast({ title: res.message, variant: "destructive" });
+            }
+          }
+        } catch {
+          // No launch URL — normal cold start.
+        }
       } catch {
         // Deep links unavailable — normal links still work.
       }
