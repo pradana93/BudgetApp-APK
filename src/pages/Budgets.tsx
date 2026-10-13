@@ -16,12 +16,13 @@ import { useLang } from "@/i18n/LanguageContext";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { Wallet } from "lucide-react";
 import { HealthRing } from "@/components/HealthRing";
+import { BLUEPRINTS, currentMonthRange, type BlueprintId } from "@/lib/blueprints";
 import { QueryError } from "@/components/QueryError";
 
 export default function Budgets(){
   useRealtime();
   const { profile } = useSession();
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const nav = useNavigate();
   const isOwner = profile?.role==="owner";
   const qc=useQueryClient(); const { toast }=useToast();
@@ -74,6 +75,29 @@ export default function Budgets(){
     await new Promise((r) => setTimeout(r, 300));
   }, [qc]);
 
+  const [bpBusy, setBpBusy] = React.useState<BlueprintId | null>(null);
+  const runBlueprint = async (id: BlueprintId) => {
+    if (!profile || bpBusy) return;
+    setBpBusy(id);
+    try {
+      const bp = BLUEPRINTS.find((b) => b.id === id);
+      if (!bp) return;
+      const { start, end } = currentMonthRange();
+      const rows = (bp.items[lang] ?? bp.items.en).map((name) => ({
+        name, total_amount: 0, currency: "IDR",
+        period_start: start, period_end: end, status: "active", owner_id: profile.id,
+      }));
+      const { error } = await supabase.from("budgets").insert(rows);
+      if (error) throw error;
+      await qc.invalidateQueries({ queryKey: ["budgets"] });
+      toast({ title: t("bp.created", { n: rows.length }) });
+    } catch (e) {
+      toast({ title: t("bd.cloneFailed"), description: e instanceof Error ? e.message : String(e), variant: "destructive" });
+    } finally {
+      setBpBusy(null);
+    }
+  };
+
   if (budgetsError) return <div className="space-y-4"><QueryError onRetry={() => void refetchBudgets()} /></div>;
 
   return <PullToRefresh onRefresh={refresh}><div className="space-y-4">
@@ -82,6 +106,21 @@ export default function Budgets(){
       <Button variant="outline" onClick={exportCsv}>{t("budgets.export")}</Button>
           {isOwner && <Button onClick={()=>nav("/budgets/new")}>{t("budgets.new")}</Button>}
     </div></div>
+    {isOwner && (
+    <Card><CardHeader><CardTitle className="text-base">{t("bp.title")}</CardTitle></CardHeader><CardContent>
+      <p className="text-sm text-muted-foreground mb-3">{t("bp.desc")}</p>
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+        {BLUEPRINTS.map((b) => (
+          <button key={b.id} type="button" disabled={bpBusy !== null} onClick={() => void runBlueprint(b.id)}
+            className="snap-start shrink-0 min-w-[150px] max-w-[180px] rounded-xl border bg-card p-3 text-left transition-colors hover:border-primary/40 disabled:opacity-60">
+            <div className="text-sm font-semibold">{t(`bp.${b.id}` as const)}</div>
+            <div className="text-xs text-muted-foreground mt-0.5">{t(`bp.${b.id}D` as const)}</div>
+            <div className="mt-1.5 text-xs font-medium text-primary">{bpBusy === b.id ? t("common.loading") : t("bp.count", { n: b.items.en.length })}</div>
+          </button>
+        ))}
+      </div>
+    </CardContent></Card>
+    )}
     <Card><CardHeader><CardTitle>{t("budgets.all")}</CardTitle></CardHeader><CardContent>
       {isLoading ? <div className="space-y-2" aria-busy="true">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-12" />)}</div>
       : (data?.length ?? 0) === 0 ? (

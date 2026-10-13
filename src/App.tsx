@@ -28,6 +28,7 @@ import Space from "@/pages/Space";
 import Changelogs from "@/pages/Changelogs";
 import Triage from "@/pages/Triage";
 import Messages from "@/pages/Messages";
+import Receipts from "@/pages/Receipts";
 
 const qc = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } } });
 
@@ -84,6 +85,7 @@ export default function App(){
             <Route path="/space" element={<ProtectedRoute><Shell><Space /></Shell></ProtectedRoute>} />
             <Route path="/triage" element={<ProtectedRoute ownerOnly><Shell><Triage /></Shell></ProtectedRoute>} />
             <Route path="/messages" element={<ProtectedRoute><Shell><Messages /></Shell></ProtectedRoute>} />
+            <Route path="/receipts" element={<ProtectedRoute><Shell><Receipts /></Shell></ProtectedRoute>} />
             <Route path="/changelogs" element={<ProtectedRoute><Shell><Changelogs /></Shell></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useSession } from "@/hooks/useSession";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { LayoutDashboard, Wallet, Receipt, Settings, ShieldCheck, Bell, LogOut, Search, Trophy, CalendarDays, NotebookPen, History, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, Wallet, Receipt, Settings, ShieldCheck, Bell, LogOut, Search, Trophy, CalendarDays, NotebookPen, History, Image, type LucideIcon } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserAvatar } from "@/components/UserAvatar";
 import { CommandPalette } from "@/components/CommandPalette";
@@ -28,6 +28,7 @@ const adminNav = { to: "/admin", key: "nav.admin" as const, icon: ShieldCheck };
 const rewardsNav = { to: "/rewards", key: "nav.rewards" as const, icon: Trophy };
 const calendarNav = { to: "/calendar", key: "nav.calendar" as const, icon: CalendarDays };
 const spaceNav = { to: "/space", key: "nav.space" as const, icon: NotebookPen };
+const receiptsNav = { to: "/receipts", key: "nav.receipts" as const, icon: Image };
 const changelogNav = { to: "/changelogs", key: "nav.changelogs" as const, icon: History };
 
 type Tab = { to: string; key: StringKey; icon: LucideIcon; badge?: number };
@@ -44,6 +45,7 @@ const TITLES: Record<string, StringKey> = {
   "/rewards": "nav.rewards",
   "/calendar": "nav.calendar",
   "/space": "nav.space",
+  "/receipts": "nav.receipts",
   "/messages": "msg.title",
   "/changelogs": "nav.changelogs",
 };
@@ -59,7 +61,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { profile, signOut } = useSession();
   const { t } = useLang();
   const avatarCls = useAvatarTheme(profile?.id);
-  const baseItems = [...nav.slice(0, 3), calendarNav, spaceNav, changelogNav, rewardsNav, nav[3]];
+  const baseItems = [...nav.slice(0, 3), calendarNav, spaceNav, receiptsNav, changelogNav, rewardsNav, nav[3]];
   const fullItems = profile?.role === "owner" ? [nav[0], nav[1], nav[2], calendarNav, spaceNav, adminNav, changelogNav, rewardsNav, nav[3]] : baseItems;
   const loc = useLocation();
   const navgt = useNavigate();
