@@ -25,6 +25,7 @@ function NativePushBlock() {
   const { profile } = useSession();
   const [status, setStatus] = React.useState<"checking" | "ready" | "blocked" | "unregistered">("checking");
   const [busy, setBusy] = React.useState(false);
+  const [prefs, setPrefs] = React.useState<{ digest: boolean; due: boolean } | null>(null);
   const check = React.useCallback(async () => {
     try {
       const { PushNotifications } = await import("@capacitor/push-notifications");
@@ -38,6 +39,19 @@ function NativePushBlock() {
     }
   }, []);
   React.useEffect(() => { void check(); }, [check]);
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase.from("notification_prefs").select("digest_enabled,due_enabled").eq("user_id", user.id).maybeSingle();
+        const row = data as { digest_enabled?: boolean; due_enabled?: boolean } | null;
+        setPrefs({ digest: row?.digest_enabled ?? true, due: row?.due_enabled ?? true });
+      } catch {
+        setPrefs({ digest: true, due: true });
+      }
+    })();
+  }, []);
   const enable = async () => {
     setBusy(true);
     try { await initNativePush(); await check(); } finally { setBusy(false); }
@@ -48,6 +62,19 @@ function NativePushBlock() {
       await notifyUser(profile?.id, t("set.testTitle"), t("set.testBody"));
       toast({ title: t("set.testSent") });
     } finally { setBusy(false); }
+  };
+  const flipPref = async (key: "digest" | "due") => {
+    if (!prefs || !profile) return;
+    const next = { ...prefs, [key]: !prefs[key] };
+    setPrefs(next);
+    try {
+      await supabase.from("notification_prefs").upsert(
+        { user_id: profile.id, digest_enabled: next.digest, due_enabled: next.due },
+        { onConflict: "user_id" }
+      );
+    } catch {
+      // best-effort; server defaults to on
+    }
   };
   return (
     <div className="space-y-2">
@@ -60,6 +87,24 @@ function NativePushBlock() {
         )}
         <Button variant="outline" size="sm" disabled={busy || status !== "ready"} onClick={() => void test()}>{t("set.testPush")}</Button>
       </div>
+      {prefs && (
+        <div className="space-y-2 pt-1">
+          {([["digest", "set.digestTgl"], ["due", "set.dueTgl"]] as const).map(([k, label]) => (
+            <div key={k} className="flex items-center justify-between gap-2 rounded-xl border border-border/60 px-3 py-2">
+              <span className="text-sm">{t(label)}</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={prefs[k]}
+                onClick={() => void flipPref(k)}
+                className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${prefs[k] ? "bg-primary" : "bg-muted"}`}
+              >
+                <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${prefs[k] ? "left-6" : "left-1"}`} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

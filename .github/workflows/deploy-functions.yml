@@ -19,7 +19,9 @@ jobs:
           node-version: 22
       - name: Install Supabase CLI
         run: npm install -g supabase@latest && supabase --version
-      - name: Deploy push-event
-        run: supabase functions deploy push-event --project-ref frxzokdrpvdqcmbkjwcw
+      - name: Deploy push functions
+        run: |
+          supabase functions deploy push-event --project-ref frxzokdrpvdqcmbkjwcw
+          supabase functions deploy push-scheduled --project-ref frxzokdrpvdqcmbkjwcw
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
