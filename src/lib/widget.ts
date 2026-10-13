@@ -7,7 +7,7 @@ export type BudgetLike = {
   allocated_amount: number | string;
   currency?: string | null;
 };
-export type RequestLike = { status: string };
+export type RequestLike = { status: string; id?: string };
 
 /**
  * Pushes a home-widget snapshot (available total + pending count) into
@@ -26,10 +26,13 @@ export function useWidgetSnapshot(
       allocated += Number(b.allocated_amount) || 0;
     }
     const pending = (requests ?? []).filter((r) => r.status === "pending").length;
+    const pendings = (requests ?? []).filter((r) => r.status === "pending");
+    const oldest = pendings.length > 0 ? pendings[pendings.length - 1].id ?? null : null;
     const currency = budgets[0]?.currency ?? "IDR";
     return JSON.stringify({
       available: formatMoney(total - allocated, currency),
       pending,
+      topPendingId: oldest,
       updated: new Date().toISOString(),
     });
   }, [budgets, requests]);

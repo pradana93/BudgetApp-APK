@@ -85,6 +85,14 @@ export default function BudgetDetail(){
     onError: (e: Error) => toast({ title: t("bd.cloneFailed"), description: e.message, variant: "destructive" }),
   });
 
+  const setMode = useMutation({ mutationFn: async (m: "off" | "rollover" | "reset") => {
+    const { error } = await supabase.from("budgets").update({ rollover_mode: m }).eq("id", id!);
+    if (error) throw error;
+  },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["budgets", id] }); qc.invalidateQueries({ queryKey: ["budgets"] }); },
+    onError: (e: Error) => toast({ title: t("bd.rollFailed"), description: e.message, variant: "destructive" }),
+  });
+
   const exportCsv = async ()=>{    if(!ledger) return;
     const rows = [["date","type","debit","credit","description"], ...ledger.map(l=>[l.created_at, l.reference_type, String(l.debit), String(l.credit), (l.description??"").replace(/,/g," ")])];
     const csv = rows.map(r=>r.join(",")).join("\n");
@@ -102,6 +110,19 @@ export default function BudgetDetail(){
   if(!budget) return <div className="p-4 text-sm text-muted-foreground">{t("common.loading")}</div>;
   return <div className="space-y-6">
     <div className="flex flex-wrap justify-between gap-2"><div><h1 className="text-2xl font-bold">{budget.name} <Badge variant={healthVariant} className="ml-1 align-middle">{healthLabel}</Badge></h1><p className="text-sm text-muted-foreground">{formatMoney(Number(budget.total_amount),budget.currency)} total • {formatMoney(Number(budget.allocated_amount),budget.currency)} allocated • {formatMoney(Number(budget.available_amount),budget.currency)} available</p></div><div className="flex gap-2 shrink-0"><Button variant="outline" onClick={exportCsv}>{t("bd.export")}</Button>{isOwner && <Button variant="outline" onClick={()=>clone.mutate()} disabled={clone.isPending}>{clone.isPending ? t("common.loading") : t("bd.clone")}</Button>}</div></div>
+    {isOwner && (
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-muted-foreground">{t("bd.autoTitle")}</span>
+        <div className="flex rounded-full border bg-card p-0.5">
+          {(["off", "rollover", "reset"] as const).map((m) => (
+            <button key={m} type="button" onClick={() => setMode.mutate(m)} disabled={setMode.isPending}
+              className={`rounded-full px-2.5 py-1 text-xs font-medium transition-all ${(budget.rollover_mode ?? "off") === m ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground"}`}>
+              {t(m === "off" ? "bd.autoOff" : m === "rollover" ? "bd.autoRollover" : "bd.autoReset")}
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
     <Card>
       <CardHeader><CardTitle className="flex items-center gap-2">{t("bd.aiTitle")} <Badge variant="secondary">{t("bd.movements", { n: insights.movementCount })}</Badge></CardTitle></CardHeader>
       <CardContent className="space-y-4">

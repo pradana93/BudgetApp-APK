@@ -37,6 +37,65 @@ async function prefOf(admin: ReturnType<typeof createClient>, userId: string): P
   return { digest: row?.digest_enabled ?? true, due: row?.due_enabled ?? true };
 }
 
+type Admin = ReturnType<typeof createClient>;
+
+/** Period rollover: ended active budgets with a rule get a successor. */
+async function runAutopilot(admin: Admin, sa: ServiceAccount, accessToken: string) {
+  const today = jakarta().toISOString().slice(0, 10);
+  const { data: old } = await admin
+    .from("budgets")
+    .select("id,owner_id,name,total_amount,available_amount,currency,period_start,period_end,rollover_mode")
+    .eq("status", "active")
+    .neq("rollover_mode", "off")
+    .not("period_end", "is", null)
+    .lt("period_end", today);
+  const rolled: Array<{ from: string; to: string }> = [];
+  for (const b of ((old ?? []) as Record<string, unknown>[])) {
+    const { data: kids } = await admin.from("budgets").select("id").eq("rolled_from", String(b.id)).limit(1);
+    if (kids && (kids as unknown[]).length > 0) continue;
+    const s = new Date(String(b.period_start ?? b.period_end));
+    const e = new Date(String(b.period_end));
+    const span = (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth()) + 1;
+    const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const ns = new Date(s);
+    ns.setMonth(ns.getMonth() + span);
+    const ne = new Date(e);
+    ne.setMonth(ne.getMonth() + span);
+    const total = b.rollover_mode === "rollover" ? Number(b.available_amount ?? 0) : Number(b.total_amount ?? 0);
+    const { data: created, error } = await admin
+      .from("budgets")
+      .insert({
+        name: String(b.name),
+        total_amount: total,
+        currency: (b.currency as string) ?? "IDR",
+        period_start: iso(ns),
+        period_end: iso(ne),
+        status: "active",
+        owner_id: String(b.owner_id),
+        rolled_from: String(b.id),
+      })
+      .select("id")
+      .single();
+    if (error || !created) continue;
+    await admin.from("budgets").update({ status: "closed" }).eq("id", String(b.id));
+    rolled.push({ from: String(b.id), to: (created as { id: string }).id });
+    const { data: rows } = await admin.from("push_tokens").select("token").eq("user_id", String(b.owner_id));
+    const tokens = [...new Set(((rows ?? []) as { token: string }[]).map((r) => r.token).filter(Boolean))];
+    if (tokens.length > 0) {
+      const { sent, dead } = await sendFcmToTokens({
+        projectId: sa.project_id,
+        accessToken,
+        tokens,
+        title: `New period started: ${String(b.name)}`,
+        body: `Carry-over ${idr(total)}. / Lanjutan ${idr(total)}.`,
+        data: { link: `/budgets/${(created as { id: string }).id}` },
+      });
+      if (dead.length > 0) await admin.from("push_tokens").delete().in("token", dead);
+    }
+  }
+  return { ok: true, autopilot: { rolled: rolled.length, pairs: rolled } };
+}
+
 Deno.serve(async (req) => {
   try {
     if (req.method !== "POST") return json({ ok: false, error: "POST only" }, 405);
@@ -51,6 +110,9 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: "FCM not configured" }, 500);
     }
     const accessToken = await fcmAccessToken(sa);
+
+    const body = (await req.json().catch(() => ({}))) as { task?: string };
+    if (body.task === "autopilot") return json(await runAutopilot(admin, sa, accessToken));
     const out: Record<string, unknown> = { ok: true };
 
     async function toUser(userId: string, title: string, body: string, data: Record<string, string>): Promise<number> {

@@ -29,10 +29,12 @@ public class BudgetWidgetProvider extends AppWidgetProvider {
             String raw = prefs.getString("snapshot", "{}");
             String available = "—";
             String pending = "—";
+            String topPendingId = null;
             try {
                 JSONObject o = new JSONObject(raw);
                 if (o.has("available")) available = o.optString("available", "—");
                 if (o.has("pending")) pending = String.valueOf(o.optInt("pending", 0));
+                if (o.has("topPendingId") && !o.isNull("topPendingId")) topPendingId = o.optString("topPendingId", null);
             } catch (Exception ignored) {
             }
             for (int id : ids) {
@@ -41,6 +43,12 @@ public class BudgetWidgetProvider extends AppWidgetProvider {
                 v.setTextViewText(R.id.widget_pending, pending);
                 v.setOnClickPendingIntent(R.id.widget_root, deep(ctx, "budgetapp://dashboard", id * 10 + 1));
                 v.setOnClickPendingIntent(R.id.widget_add, deep(ctx, "budgetapp://new-request", id * 10 + 2));
+                if (topPendingId != null && !topPendingId.isEmpty()) {
+                    v.setViewVisibility(R.id.widget_approve, android.view.View.VISIBLE);
+                    v.setOnClickPendingIntent(R.id.widget_approve, deep(ctx, "budgetapp://approve/" + topPendingId, id * 10 + 4));
+                } else {
+                    v.setViewVisibility(R.id.widget_approve, android.view.View.GONE);
+                }
                 mgr.updateAppWidget(id, v);
             }
         } catch (Exception ignored) {

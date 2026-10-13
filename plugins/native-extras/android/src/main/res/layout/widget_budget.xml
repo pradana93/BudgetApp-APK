@@ -43,6 +43,16 @@
             android:textColor="#5F7166" />
 
         <Button
+            android:id="@+id/widget_approve"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Approve"
+            android:textSize="13sp"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/widget_btn"
+            android:visibility="gone" />
+
+        <Button
             android:id="@+id/widget_add"
             android:layout_width="wrap_content"
             android:layout_height="36dp"

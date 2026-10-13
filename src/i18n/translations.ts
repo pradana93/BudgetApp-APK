@@ -610,6 +610,11 @@ const en = {
   "bd.clone": "Duplicate for next month",
   "bd.cloned": "Budget duplicated",
   "bd.cloneFailed": "Duplicate failed",
+  "bd.autoTitle": "Period rollover",
+  "bd.autoOff": "Off",
+  "bd.autoRollover": "Carry available",
+  "bd.autoReset": "Fresh totals",
+  "bd.rollFailed": "Couldn't save rollover rule",
 
   "rd.comments": "Discussion",
   "rd.commentPh": "Write a comment…",
@@ -1490,6 +1495,11 @@ const id: Record<StringKey, string> = {
   "bd.clone": "Duplikat untuk bulan depan",
   "bd.cloned": "Anggaran diduplikat",
   "bd.cloneFailed": "Duplikasi gagal",
+  "bd.autoTitle": "Rollover periode",
+  "bd.autoOff": "Mati",
+  "bd.autoRollover": "Bawa sisa",
+  "bd.autoReset": "Total baru",
+  "bd.rollFailed": "Aturan rollover gagal disimpan",
 
   "rd.comments": "Diskusi",
   "rd.commentPh": "Tulis komentar…",
