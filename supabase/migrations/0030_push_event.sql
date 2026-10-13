@@ -25,6 +25,7 @@ begin
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'apikey', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyeHpva2RycHZkcWNtYmtqd2N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkxOTI4MTUsImV4cCI6MjEwNDc2ODgxNX0.H7wFMejnwyxDemigL-3dBqBfnYr5xKAyl4sRHWjoWdY',
+      'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyeHpva2RycHZkcWNtYmtqd2N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkxOTI4MTUsImV4cCI6MjEwNDc2ODgxNX0.H7wFMejnwyxDemigL-3dBqBfnYr5xKAyl4sRHWjoWdY',
       'x-push-secret', v_secret
     ),
     body := v_payload,
