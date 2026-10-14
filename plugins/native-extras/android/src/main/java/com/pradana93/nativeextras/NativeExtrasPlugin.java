@@ -68,9 +68,45 @@ public class NativeExtrasPlugin extends Plugin {
     }
 
     /**
-     * One-tap update: downloads the APK to the app cache, then fires the
-     * package installer. The OS still shows its own Install confirmation
-     * (unskippable for sideloads) — but there is no browser detour.
+     * Whether the OS currently allows this app to install packages
+     * (Android 8+ unknown-sources consent). Always true below API 26.
+     */
+    @PluginMethod
+    public void canInstallPackages(PluginCall call) {
+        boolean ok = true;
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                ok = getContext().getPackageManager().canRequestPackageInstalls();
+            }
+        } catch (Exception ignored) {
+        }
+        JSObject ret = new JSObject();
+        ret.put("value", ok);
+        call.resolve(ret);
+    }
+
+    /** Opens this app's "install unknown apps" system screen. */
+    @PluginMethod
+    public void openInstallSettings(PluginCall call) {
+        try {
+            Context ctx = getContext();
+            Intent i = new Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                    Uri.parse("package:" + ctx.getPackageName()));
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            ctx.startActivity(i);
+            JSObject ret = new JSObject();
+            ret.put("ok", true);
+            call.resolve(ret);
+        } catch (Exception e) {
+            call.reject(e.getMessage() != null ? e.getMessage() : "cannot open settings");
+        }
+    }
+
+    /**
+     * One-tap update: downloads the APK to the app cache, verifies its
+     * size, then fires the package installer. The OS still shows its own
+     * Install confirmation (unskippable for sideloads) — but there is no
+     * browser detour and no file hunting.
      */
     @PluginMethod
     public void updateApk(PluginCall call) {
@@ -81,9 +117,12 @@ public class NativeExtrasPlugin extends Plugin {
             return;
         }
         new Thread(() -> {
+            java.io.File out = null;
             try {
                 java.net.URL u = new java.net.URL(url);
                 java.net.HttpURLConnection c = (java.net.HttpURLConnection) u.openConnection();
+                c.setInstanceFollowRedirects(true);
+                c.setRequestProperty("User-Agent", "BudgetApp-Updater");
                 c.setConnectTimeout(20000);
                 c.setReadTimeout(120000);
                 c.connect();
@@ -91,25 +130,42 @@ public class NativeExtrasPlugin extends Plugin {
                     throw new java.io.IOException("http " + c.getResponseCode());
                 }
                 Context ctx = getContext();
-                java.io.File out = new java.io.File(ctx.getCacheDir(), filename);
+                out = new java.io.File(ctx.getCacheDir(), filename);
+                if (out.exists() && !out.delete()) {
+                    throw new java.io.IOException("cannot clear stale download");
+                }
+                long expected = c.getContentLengthLong();
+                long written = 0;
                 try (java.io.InputStream in = c.getInputStream();
                      java.io.FileOutputStream f = new java.io.FileOutputStream(out)) {
                     byte[] buf = new byte[8192];
                     int n;
                     while ((n = in.read(buf)) != -1) {
                         f.write(buf, 0, n);
+                        written += n;
                     }
+                }
+                if (expected > 0 && written != expected) {
+                    throw new java.io.IOException("incomplete download");
                 }
                 Uri uri = androidx.core.content.FileProvider.getUriForFile(
                         ctx, ctx.getPackageName() + ".fileprovider", out);
                 Intent i = new Intent(Intent.ACTION_VIEW);
                 i.setDataAndType(uri, "application/vnd.android.package-archive");
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                if (i.resolveActivity(ctx.getPackageManager()) == null) {
+                    throw new java.io.IOException("no installer found");
+                }
                 ctx.startActivity(i);
                 JSObject ret = new JSObject();
                 ret.put("ok", true);
                 call.resolve(ret);
             } catch (Exception e) {
+                if (out != null && out.exists()) {
+                    // Never leave a corrupt partial file behind.
+                    // noinspection ResultOfMethodCallIgnored
+                    out.delete();
+                }
                 call.reject(e.getMessage() != null ? e.getMessage() : "download failed");
             }
         }).start();

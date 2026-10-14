@@ -61,34 +61,52 @@ export async function checkForAppUpdate(): Promise<AppUpdate | null> {
   }
 }
 
-export type UpdateStage = "downloading" | "installing" | "browser";
+export type UpdateStage = "downloading" | "installing";
+
+type Extras = {
+  updateApk(o: { url: string; filename: string }): Promise<unknown>;
+  canInstallPackages(): Promise<{ value: boolean }>;
+  openInstallSettings(): Promise<unknown>;
+};
+
+function extras() {
+  return Capacitor.registerPlugin<Extras>("NativeExtras");
+}
+
+/** Whether the OS currently lets this app install packages. Best-effort true. */
+export async function canSelfInstall(): Promise<boolean> {
+  try {
+    const r = await extras().canInstallPackages();
+    return r?.value === true;
+  } catch {
+    return true;
+  }
+}
+
+/** Opens this app's "install unknown apps" system screen. */
+export async function openInstallSettings(): Promise<void> {
+  await extras().openInstallSettings();
+}
+
+/** Opens the APK URL in the browser (explicit fallback only). */
+export async function openUpdateInBrowser(apkUrl: string): Promise<void> {
+  const { Browser } = await import("@capacitor/browser");
+  await Browser.open({ url: apkUrl });
+}
 
 /**
  * One-tap update: downloads inside the app, then opens the package
  * installer straight away. The OS still shows its own Install
- * confirmation (unskippable for sideloads) — but there is no browser
- * detour and no file hunting. Falls back to the browser on any failure.
+ * confirmation (unskippable for sideloads). Throws on failure so the
+ * UI can offer retry — never silently detours to the browser.
  */
 export async function downloadUpdateApk(
   apkUrl: string,
   onStage?: (s: UpdateStage) => void
 ): Promise<void> {
-  if (Capacitor.isNativePlatform()) {
-    try {
-      const proxy = Capacitor.registerPlugin<{
-        updateApk(o: { url: string; filename: string }): Promise<unknown>;
-      }>("NativeExtras");
-      onStage?.("downloading");
-      const name =
-        apkUrl.split("/").pop()?.split("?")[0] || "budget-app-update.apk";
-      await proxy.updateApk({ url: apkUrl, filename: name });
-      onStage?.("installing");
-      return;
-    } catch {
-      // fall through to browser
-    }
-  }
-  onStage?.("browser");
-  const { Browser } = await import("@capacitor/browser");
-  await Browser.open({ url: apkUrl });
+  const name =
+    apkUrl.split("/").pop()?.split("?")[0] || "budget-app-update.apk";
+  onStage?.("downloading");
+  await extras().updateApk({ url: apkUrl, filename: name });
+  onStage?.("installing");
 }
