@@ -321,12 +321,22 @@ patchFile(
     },
     "app native-extras dep"
   );
-  // MainActivity plugin registration (Capacitor 6 template has an empty activity class)
+  // MainActivity plugin registration. ORDER MATTERS: registerPlugin must run
+  // BEFORE super.onCreate, because the bridge snapshots its plugin list
+  // (and the JS PluginHeaders) during super.onCreate — a later call is
+  // silently ignored and every call fails with "plugin not implemented".
   const mainActivity = path.join(ANDROID, "app", "src", "main", "java", "com", "pradana93", "budgetapp", "MainActivity.java");
   patchFile(
     mainActivity,
     (s) => {
-      if (s.includes("NativeExtrasPlugin")) return s;
+      if (s.includes("NativeExtrasPlugin")) {
+        const regIdx = s.indexOf("registerPlugin(NativeExtrasPlugin.class)");
+        const superIdx = s.indexOf("super.onCreate");
+        if (regIdx === -1 || superIdx === -1 || regIdx > superIdx) {
+          throw new Error("MainActivity: NativeExtrasPlugin registration must precede super.onCreate");
+        }
+        return s;
+      }
       if (/public class MainActivity extends BridgeActivity \{\s*\}/.test(s)) {
         return s
           .replace(
@@ -335,7 +345,7 @@ patchFile(
           )
           .replace(
             "public class MainActivity extends BridgeActivity {}",
-            "public class MainActivity extends BridgeActivity {\n    @Override\n    public void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        registerPlugin(NativeExtrasPlugin.class);\n    }\n}"
+            "public class MainActivity extends BridgeActivity {\n    @Override\n    public void onCreate(Bundle savedInstanceState) {\n        registerPlugin(NativeExtrasPlugin.class);\n        super.onCreate(savedInstanceState);\n    }\n}"
           );
       }
       console.log("WARN: MainActivity template changed — register NativeExtrasPlugin manually");
