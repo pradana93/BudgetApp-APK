@@ -202,7 +202,7 @@ export default function RequestDetail(){
 
   return <div className="space-y-6 max-w-2xl relative">
     {showConfetti && <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center animate-bounce"><PartyPopper className="h-10 w-10 text-amber-500" /></div>}
-    <div className="flex justify-between items-start"><div><h1 className="text-2xl font-bold">{data.merchant ?? data.category}</h1><p className="text-sm text-muted-foreground">{data.description}</p></div><Badge variant={data.status as never}>{data.status}</Badge></div>
+    <div className="flex justify-between items-start"><div><h1 className="text-2xl font-bold">{data.merchant ?? data.category}</h1><p className="text-sm text-muted-foreground">{data.description}</p></div><span className="flex gap-1.5 shrink-0">{(data as { use_float?: boolean }).use_float && <Badge variant="secondary">{t("req.floatUsed")}</Badge>}<Badge variant={data.status as never}>{data.status}</Badge></span></div>
     <Card><CardHeader><CardTitle>{t("rd.request")}</CardTitle></CardHeader><CardContent className="space-y-3 text-sm">
       <div className="grid grid-cols-2 gap-3"><div><span className="text-muted-foreground">{t("rd.amount")}</span><div className="font-medium">{formatMoney(Number(data.amount))}</div></div><div><span className="text-muted-foreground">{t("rd.category")}</span><div>{data.category}</div></div></div>
       <div><span className="text-muted-foreground">{t("rd.budgetId")}</span><div className="font-mono text-xs">{data.budget_id}</div></div>

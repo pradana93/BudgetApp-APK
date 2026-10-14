@@ -39,6 +39,15 @@ export default function Dashboard(){
   const { data: ledger } = useQuery({ queryKey:["dashboard-ledger"], queryFn: async()=>{
     const { data, error } = await supabase.from("ledger_entries").select("id,budget_id,debit,credit,reference_type,description,created_at").order("created_at",{ascending:false}).limit(20); if(error) throw error; return data;
   }});
+  const { data: myFloat } = useQuery({
+    queryKey: ["dashboard-float", profile?.id],
+    queryFn: async () => {
+      if (!profile || profile.role === "owner") return null;
+      const { data } = await supabase.from("member_floats").select("balance").eq("user_id", profile.id).maybeSingle();
+      return data as { balance: number } | null;
+    },
+    enabled: !!profile && profile.role !== "owner",
+  });
   const loading = loadingBudgets || loadingRequests;
   useWidgetSnapshot(budgets, requests);
   const pending = requests?.filter(r=>r.status==="pending").length ?? 0;
@@ -259,8 +268,14 @@ export default function Dashboard(){
             <Badge variant="pending" className="bg-background text-foreground hover:bg-background">{t("dash.pendingBadge", { count: pending })}</Badge>
             {runway !== null && <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${pulseHealth === "over" ? "bg-red-500/20 text-background border border-background/30" : pulseHealth === "atRisk" ? "bg-amber-500/20 text-background border border-background/30" : "bg-emerald-500/20 text-background border border-background/30"}`}>{t("dash.runwayBadge", { n: runway })}</span>}
           </div>
-        </div>
       </div>
+    </div>
+    {!isOwner && myFloat && (
+      <Card><CardContent className="py-4 flex items-center justify-between gap-2">
+        <span className="text-sm text-muted-foreground">{t("float.title")}</span>
+        <span className="font-display tnum text-xl font-semibold">{formatMoney(Number(myFloat.balance))}</span>
+      </CardContent></Card>
+    )}
     </div>
     {!loading && (budgets?.length ?? 0) === 0 && (requests?.length ?? 0) === 0 && (
       <Card className="overflow-hidden">

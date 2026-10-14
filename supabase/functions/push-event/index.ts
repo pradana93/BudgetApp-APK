@@ -21,6 +21,11 @@ function idr(n: unknown): string {
   return `Rp ${Number(n ?? 0).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+/** Jakarta wall-clock from a UTC instant (WIB, no DST). */
+function jakarta(d = new Date()): Date {
+  return new Date(d.getTime() + 7 * 3600 * 1000);
+}
+
 Deno.serve(async (req) => {
   try {
     if (req.method !== "POST") return json({ ok: false, error: "POST only" }, 405);
@@ -74,6 +79,31 @@ Deno.serve(async (req) => {
       const what = `${String(row.merchant ?? row.category ?? "Request")}, ${idr(row.amount)}`;
       title = `New request: ${what}`;
       body = `A member submitted a reimbursement request. / Anggota mengajukan permintaan reimbursement.`;
+      // Monthly cap flag: submitted this month (excl. rejected) vs the member's cap.
+      try {
+        const { data: cap } = await admin
+          .from("member_caps")
+          .select("monthly_cap")
+          .eq("user_id", requester)
+          .maybeSingle();
+        const capRow = cap as { monthly_cap?: unknown } | null;
+        const capAmt = Number(capRow?.monthly_cap ?? 0);
+        if (capAmt > 0) {
+          const since = `${jakarta().toISOString().slice(0, 7)}-01`;
+          const { data: mine } = await admin
+            .from("reimbursement_requests")
+            .select("amount")
+            .eq("requester_id", requester)
+            .neq("status", "rejected")
+            .gte("created_at", since);
+          const spent = ((mine ?? []) as { amount: unknown }[]).reduce((s, r) => s + Number(r.amount ?? 0), 0);
+          const ratio = spent / capAmt;
+          if (ratio >= 1) body += ` Over monthly cap. / Lewat batas bulanan.`;
+          else if (ratio >= 0.8) body += ` Near monthly cap. / Dekat batas bulanan.`;
+        }
+      } catch {
+        // Cap flag is advisory; never block the push.
+      }
     } else if (event.type === "UPDATE") {
       const before = String(event.old_record?.status ?? "");
       const after = String(row.status ?? "");

@@ -117,6 +117,32 @@ export default function NewRequest(){
     enabled: !!profile,
   });
 
+  const [useFloat, setUseFloat] = React.useState(false);
+  const { data: capRow } = useQuery({
+    queryKey: ["my-cap"],
+    queryFn: async () => {
+      if (!profile) return null;
+      const { data } = await supabase.from("member_caps").select("monthly_cap").eq("user_id", profile.id).maybeSingle();
+      return data as { monthly_cap: number } | null;
+    },
+    enabled: !!profile,
+  });
+  const { data: floatRow } = useQuery({
+    queryKey: ["my-float"],
+    queryFn: async () => {
+      if (!profile) return null;
+      const { data } = await supabase.from("member_floats").select("balance").eq("user_id", profile.id).maybeSingle();
+      return data as { balance: number } | null;
+    },
+    enabled: !!profile,
+  });
+  const monthSpent = React.useMemo(() => {
+    const now = new Date();
+    return (history ?? [])
+      .filter((h) => h.status !== "rejected" && (() => { const d = new Date(h.created_at); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); })())
+      .reduce((s, h) => s + Number(h.amount ?? 0), 0);
+  }, [history]);
+
   const suggestion = React.useMemo(() => {
     if (!form.merchant.trim() && !form.amount.trim()) return null;
     return suggestCategory({ merchant: form.merchant, amount: form.amount, history: history ?? [], categories, lang });
@@ -240,7 +266,7 @@ export default function NewRequest(){
   const mut = useMutation({ mutationFn: async()=>{
     const parsed = schema.parse(form);
     const { data, error } = await supabase.from("reimbursement_requests").insert({
-      budget_id: parsed.budget_id, requester_id: profile!.id, amount: Number(parsed.amount), category: parsed.category, merchant: parsed.merchant||null, description: parsed.description||null, due_date: parsed.due_date || null
+      budget_id: parsed.budget_id, requester_id: profile!.id, amount: Number(parsed.amount), category: parsed.category, merchant: parsed.merchant||null, description: parsed.description||null, due_date: parsed.due_date || null, use_float: useFloat
     }).select().single();
     if(error) throw error;
     if(file && data){
@@ -483,6 +509,23 @@ export default function NewRequest(){
               </div>
             )}
           </div>
+          {capRow && Number(capRow.monthly_cap) > 0 && (
+            <div className="rounded-lg border border-border/60 p-3 text-sm space-y-1">
+              <div className="text-muted-foreground">{t("cap.pace", { used: formatMoney(monthSpent), cap: formatMoney(Number(capRow.monthly_cap)) })}</div>
+              {amountValid && monthSpent + Number(form.amount) > Number(capRow.monthly_cap) && (
+                <div className="text-amber-600 font-medium">{t("cap.breachWarn")}</div>
+              )}
+            </div>
+          )}
+          {floatRow && (
+            <button type="button" role="switch" aria-checked={useFloat} onClick={() => setUseFloat((v) => !v)}
+              className="w-full flex items-center justify-between gap-2 rounded-xl border border-border/60 px-3 py-2 text-left">
+              <span className="text-sm"><span className="font-medium">{t("float.use")}</span><br /><span className="text-muted-foreground">{t("float.balance", { amount: formatMoney(Number(floatRow.balance)) })}</span></span>
+              <span className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${useFloat ? "bg-primary" : "bg-muted"}`}>
+                <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${useFloat ? "left-6" : "left-1"}`} />
+              </span>
+            </button>
+          )}
           {err && <div className="text-sm text-destructive">{err}</div>}
           <div className="flex justify-between"><Button type="button" variant="outline" onClick={()=>setStep(1)}>{t("new.back")}</Button><Button type="submit" disabled={mut.isPending}>{mut.isPending?t("new.submitting"):t("new.submit")}</Button></div>
         </form>

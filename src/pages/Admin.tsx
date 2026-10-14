@@ -36,6 +36,74 @@ async function fetchAll<T>(table: string, orderBy = "created_at", ascending = fa
   return (data ?? []) as T[];
 }
 
+/** Per-member cap editor + float top-up. Owner only (page is owner-gated). */
+function CapFloatRow({ u }: { u: { id: string; email: string; display_name?: string | null } }) {
+  const { t } = useLang();
+  const { toast } = useToast();
+  const [cap, setCap] = React.useState("");
+  const [topup, setTopup] = React.useState("");
+  const [busy, setBusy] = React.useState(false);
+  const { data: capRow } = useQuery({
+    queryKey: ["cap", u.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("member_caps").select("monthly_cap").eq("user_id", u.id).maybeSingle();
+      return data as { monthly_cap: number } | null;
+    },
+  });
+  const { data: floatRow, refetch: refetchFloat } = useQuery({
+    queryKey: ["float", u.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("member_floats").select("balance").eq("user_id", u.id).maybeSingle();
+      return data as { balance: number } | null;
+    },
+  });
+  const saveCap = async () => {
+    const v = Number(cap);
+    if (!(v > 0) || busy) return;
+    setBusy(true);
+    try {
+      const { error } = await supabase.from("member_caps").upsert({ user_id: u.id, monthly_cap: v }, { onConflict: "user_id" });
+      if (error) throw error;
+      setCap("");
+      toast({ title: t("common.save") });
+    } catch (e) {
+      toast({ title: t("admin.saveFailed"), description: e instanceof Error ? e.message : String(e), variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  };
+  const doTopup = async () => {
+    const v = Number(topup);
+    if (!(v > 0) || busy) return;
+    setBusy(true);
+    try {
+      const { error } = await supabase.rpc("topup_float", { p_user_id: u.id, p_amount: v });
+      if (error) throw error;
+      setTopup("");
+      await refetchFloat();
+      toast({ title: t("float.topup") });
+    } catch (e) {
+      toast({ title: t("admin.saveFailed"), description: e instanceof Error ? e.message : String(e), variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/60 p-3">
+      <span className="min-w-0 flex-1 basis-40">
+        <span className="block truncate text-sm font-medium">{u.display_name ?? u.email}</span>
+        <span className="block text-xs text-muted-foreground tabular">
+          {capRow ? formatMoney(Number(capRow.monthly_cap)) : "—"} • {floatRow ? formatMoney(Number(floatRow.balance)) : "—"}
+        </span>
+      </span>
+      <Input value={cap} onChange={(e) => setCap(e.target.value)} inputMode="decimal" placeholder="0" aria-label={t("cap.title")} className="w-28 h-11" />
+      <Button size="sm" disabled={busy} onClick={() => void saveCap()}>{t("common.save")}</Button>
+      <Input value={topup} onChange={(e) => setTopup(e.target.value)} inputMode="decimal" placeholder="0" aria-label={t("float.topup")} className="w-28 h-11" />
+      <Button size="sm" disabled={busy} onClick={() => void doTopup()}>{t("float.topup")}</Button>
+    </div>
+  );
+}
+
 export default function Admin() {
   useRealtime();
   const qc = useQueryClient();
@@ -451,9 +519,16 @@ export default function Admin() {
           {byCategory.length === 0 ? <ChartEmpty>{t("admin.noSpend")}</ChartEmpty> :
           <ResponsiveContainer width="100%" height="100%"><BarChart data={byCategory} margin={{ top: 16, right: 4, left: -22, bottom: 0 }}><XAxis dataKey="name" {...slimAxis} tick={{ ...smallTick }} interval={0} /><YAxis hide /><Tooltip content={<MoneyTip format={(v) => formatMoney(v)} />} cursor={{ fill: ink.track, opacity: 0.45 }} /><Bar dataKey="total" {...pineBar} animationDuration={500} animationEasing="ease-out"><LabelList dataKey="total" position="top" fill={ink.muted} fontSize={11} formatter={(v: unknown) => compactMoney(Number(v))} /></Bar></BarChart></ResponsiveContainer>}
         </CardContent></Card>
-        <Card className="overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between gap-2">
-            <CardTitle className="flex items-center gap-2">{t("admin.users")} {users && <Badge variant="secondary">{users.length}</Badge>}</CardTitle>
+      <Card className="overflow-hidden">
+        <CardHeader><CardTitle>{t("cap.title")}</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {(users ?? []).filter((u) => u.role === "member").map((u) => <CapFloatRow key={u.id} u={u} />)}
+        </CardContent>
+      </Card>
+
+      <Card className="overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2">{t("admin.users")} {users && <Badge variant="secondary">{users.length}</Badge>}</CardTitle>
             <Button size="sm" onClick={() => setShowAddUser((v) => !v)}>{t("admin.addUser")}</Button>
           </CardHeader>
           <CardContent className="space-y-3">
